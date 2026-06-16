@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 11 — Higher-Order Functions</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 11 of 30</div>
+    <h1>Higher-Order Functions</h1>
+    <p class="subtitle">map, filter, reduce — the functional trio that every JS developer must master.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read this <em>after</em> the lesson to solidify what you learn:
+    <a href="https://javascript.info/array-methods" target="_blank">javascript.info — Array Methods</a>.
+    Pay special attention to the reduce examples — they go much deeper than what most tutorials cover.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. What is a Higher-Order Function?</h2>
+
+  <p>A <strong>higher-order function</strong> is a function that does at least one of these two things:</p>
+  <ul>
+    <li>Takes a function as an argument (a <em>callback</em>)</li>
+    <li>Returns a function as its result</li>
+  </ul>
+
+  <p>This is only possible because JavaScript treats functions as <strong>first-class values</strong> — they can be stored in variables, passed around, and returned just like numbers or strings.</p>
+
+  <pre><code><span class="cmt">// A simple higher-order function that takes a function as an argument</span>
+<span class="kw">function</span> <span class="fn">doTwice</span>(fn) {
+  <span class="fn">fn</span>();
+  <span class="fn">fn</span>();
+}
+
+<span class="fn">doTwice</span>(() => <span class="fn">console</span>.log(<span class="str">"hello"</span>));
+<span class="cmt">// hello</span>
+<span class="cmt">// hello</span>
+
+<span class="cmt">// A higher-order function that returns a function</span>
+<span class="kw">function</span> <span class="fn">multiplier</span>(factor) {
+  <span class="kw">return</span> (num) => num * factor;
+}
+
+<span class="kw">const</span> double = <span class="fn">multiplier</span>(<span class="num">2</span>);
+<span class="kw">const</span> triple = <span class="fn">multiplier</span>(<span class="num">3</span>);
+
+<span class="fn">double</span>(<span class="num">5</span>); <span class="cmt">// 10</span>
+<span class="fn">triple</span>(<span class="num">4</span>); <span class="cmt">// 12</span></code></pre>
+
+  <p>The built-in array methods <code>map</code>, <code>filter</code>, <code>reduce</code>, <code>forEach</code>, <code>find</code>, <code>some</code>, and <code>every</code> are all higher-order functions. They take a callback and apply it across the array. This is one of the most important patterns in all of JavaScript.</p>
+
+  <!-- SECTION 2 -->
+  <h2>2. forEach — Iterate with Side Effects</h2>
+
+  <p><code>forEach</code> calls your callback once for each element. It is the functional replacement for a <code>for</code> loop when you want to <em>do something</em> with each element but don't need a new array back.</p>
+
+  <pre><code><span class="kw">const</span> fruits = [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"cherry"</span>];
+
+fruits.<span class="fn">forEach</span>((item, index, array) => {
+  <span class="fn">console</span>.log(<span class="str">`</span><span class="num">${index}</span><span class="str">: </span><span class="num">${item}</span><span class="str">`</span>);
+});
+<span class="cmt">// 0: apple</span>
+<span class="cmt">// 1: banana</span>
+<span class="cmt">// 2: cherry</span>
+
+<span class="cmt">// forEach always returns undefined</span>
+<span class="kw">const</span> result = fruits.<span class="fn">forEach</span>(x => x);
+<span class="fn">console</span>.log(result); <span class="cmt">// undefined</span></code></pre>
+
+  <div class="callout warn">
+    <strong>forEach is not chainable</strong>
+    Because <code>forEach</code> always returns <code>undefined</code>, you cannot chain another method after it. If you need to chain, use <code>map</code> instead.
+  </div>
+
+  <h3>forEach vs for...of</h3>
+  <table>
+    <thead>
+      <tr><th>Feature</th><th>forEach</th><th>for...of</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Can break/continue</td><td>No</td><td>Yes</td></tr>
+      <tr><td>Works on non-arrays</td><td>No (arrays only)</td><td>Yes (any iterable)</td></tr>
+      <tr><td>Returns value</td><td>undefined</td><td>N/A</td></tr>
+      <tr><td>Index access</td><td>Yes (2nd param)</td><td>Via entries()</td></tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 3 -->
+  <h2>3. map — Transform Every Element</h2>
+
+  <p><code>map</code> creates a <strong>new array</strong> by calling your callback on each element and collecting the return values. The original array is never modified. The new array always has the same length as the original.</p>
+
+  <pre><code><span class="kw">const</span> numbers = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>];
+
+<span class="cmt">// Double every number</span>
+<span class="kw">const</span> doubled = numbers.<span class="fn">map</span>(n => n * <span class="num">2</span>);
+<span class="fn">console</span>.log(doubled);  <span class="cmt">// [2, 4, 6, 8]</span>
+<span class="fn">console</span>.log(numbers);  <span class="cmt">// [1, 2, 3, 4] — original unchanged</span>
+
+<span class="cmt">// Extract a property from each object</span>
+<span class="kw">const</span> users = [
+  { name: <span class="str">"Alice"</span>, age: <span class="num">28</span> },
+  { name: <span class="str">"Bob"</span>, age: <span class="num">34</span> },
+  { name: <span class="str">"Carol"</span>, age: <span class="num">22</span> },
+];
+
+<span class="kw">const</span> names = users.<span class="fn">map</span>(user => user.name);
+<span class="fn">console</span>.log(names); <span class="cmt">// ["Alice", "Bob", "Carol"]</span>
+
+<span class="cmt">// Format data for display</span>
+<span class="kw">const</span> formatted = users.<span class="fn">map</span>(user => ({
+  label: <span class="str">`</span><span class="num">${user.name}</span><span class="str"> (</span><span class="num">${user.age}</span><span class="str">)`</span>,
+  value: user.name.<span class="fn">toLowerCase</span>(),
+}));
+<span class="cmt">// [{ label: "Alice (28)", value: "alice" }, ...]</span></code></pre>
+
+  <div class="callout tip">
+    <strong>When to use map</strong>
+    Reach for <code>map</code> whenever you need a transformed version of an array. "I want the same number of items, just different." That's <code>map</code>.
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. filter — Keep Elements That Pass a Test</h2>
+
+  <p><code>filter</code> creates a <strong>new array</strong> containing only the elements for which your callback returned a truthy value. The result may be shorter (or even empty) than the original.</p>
+
+  <pre><code><span class="kw">const</span> numbers = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>];
+
+<span class="cmt">// Keep only even numbers</span>
+<span class="kw">const</span> evens = numbers.<span class="fn">filter</span>(n => n % <span class="num">2</span> === <span class="num">0</span>);
+<span class="fn">console</span>.log(evens); <span class="cmt">// [2, 4, 6]</span>
+
+<span class="cmt">// Filter objects by condition</span>
+<span class="kw">const</span> users = [
+  { name: <span class="str">"Alice"</span>, active: <span class="kw">true</span> },
+  { name: <span class="str">"Bob"</span>, active: <span class="kw">false</span> },
+  { name: <span class="str">"Carol"</span>, active: <span class="kw">true</span> },
+];
+
+<span class="kw">const</span> activeUsers = users.<span class="fn">filter</span>(u => u.active);
+<span class="cmt">// [{ name: "Alice", active: true }, { name: "Carol", active: true }]</span>
+
+<span class="cmt">// Remove nullish values from an array</span>
+<span class="kw">const</span> mixed = [<span class="num">1</span>, <span class="kw">null</span>, <span class="num">2</span>, <span class="kw">undefined</span>, <span class="num">3</span>, <span class="str">""</span>, <span class="num">4</span>];
+<span class="kw">const</span> clean = mixed.<span class="fn">filter</span>(<span class="typ">Boolean</span>); <span class="cmt">// passes each value through Boolean()</span>
+<span class="fn">console</span>.log(clean); <span class="cmt">// [1, 2, 3, 4]</span></code></pre>
+
+  <div class="callout info">
+    <strong>filter(Boolean)</strong>
+    Passing the <code>Boolean</code> constructor directly as a callback is a common idiom. It's equivalent to <code>filter(x => Boolean(x))</code> — removes all falsy values.
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2>5. reduce — Accumulate to a Single Value</h2>
+
+  <p><code>reduce</code> is the most powerful and flexible of the trio. It processes the array element by element, threading an <em>accumulator</em> through each step, and returns a single final value. That value can be a number, string, object, or even another array.</p>
+
+  <pre><code><span class="cmt">// Signature: arr.reduce((accumulator, currentItem, index, array) => ..., initialValue)</span>
+
+<span class="kw">const</span> nums = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>];
+
+<span class="cmt">// Sum all numbers</span>
+<span class="kw">const</span> sum = nums.<span class="fn">reduce</span>((acc, n) => acc + n, <span class="num">0</span>);
+<span class="fn">console</span>.log(sum); <span class="cmt">// 10</span>
+
+<span class="cmt">// Find the maximum</span>
+<span class="kw">const</span> max = nums.<span class="fn">reduce</span>((acc, n) => (n > acc ? n : acc), -<span class="typ">Infinity</span>);
+<span class="fn">console</span>.log(max); <span class="cmt">// 4</span>
+
+<span class="cmt">// Count occurrences of each value</span>
+<span class="kw">const</span> letters = [<span class="str">"a"</span>, <span class="str">"b"</span>, <span class="str">"a"</span>, <span class="str">"c"</span>, <span class="str">"b"</span>, <span class="str">"a"</span>];
+<span class="kw">const</span> counts = letters.<span class="fn">reduce</span>((acc, letter) => {
+  acc[letter] = (acc[letter] || <span class="num">0</span>) + <span class="num">1</span>;
+  <span class="kw">return</span> acc;
+}, {});
+<span class="fn">console</span>.log(counts); <span class="cmt">// { a: 3, b: 2, c: 1 }</span>
+
+<span class="cmt">// Group objects by a property</span>
+<span class="kw">const</span> people = [
+  { name: <span class="str">"Alice"</span>, dept: <span class="str">"eng"</span> },
+  { name: <span class="str">"Bob"</span>, dept: <span class="str">"design"</span> },
+  { name: <span class="str">"Carol"</span>, dept: <span class="str">"eng"</span> },
+];
+<span class="kw">const</span> byDept = people.<span class="fn">reduce</span>((acc, person) => {
+  <span class="kw">const</span> key = person.dept;
+  acc[key] = acc[key] || [];
+  acc[key].<span class="fn">push</span>(person);
+  <span class="kw">return</span> acc;
+}, {});
+<span class="cmt">// { eng: [Alice, Carol], design: [Bob] }</span></code></pre>
+
+  <div class="callout danger">
+    <strong>Always provide the initial value</strong>
+    If you omit the initial value, <code>reduce</code> uses the first element as the accumulator and starts iterating from index 1. This breaks when the array has one element and blows up on an empty array. Always pass the second argument.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. find and findIndex</h2>
+
+  <p><code>find</code> returns the <em>first element</em> that satisfies the callback. If nothing matches, it returns <code>undefined</code>. <code>findIndex</code> does the same but returns the <em>index</em> instead (-1 if not found).</p>
+
+  <pre><code><span class="kw">const</span> users = [
+  { id: <span class="num">1</span>, name: <span class="str">"Alice"</span> },
+  { id: <span class="num">2</span>, name: <span class="str">"Bob"</span> },
+  { id: <span class="num">3</span>, name: <span class="str">"Carol"</span> },
+];
+
+<span class="kw">const</span> found = users.<span class="fn">find</span>(u => u.id === <span class="num">2</span>);
+<span class="fn">console</span>.log(found); <span class="cmt">// { id: 2, name: "Bob" }</span>
+
+<span class="kw">const</span> idx = users.<span class="fn">findIndex</span>(u => u.id === <span class="num">2</span>);
+<span class="fn">console</span>.log(idx); <span class="cmt">// 1</span>
+
+<span class="cmt">// vs indexOf — indexOf uses === (strict equality on the value itself)</span>
+<span class="kw">const</span> nums = [<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>];
+nums.<span class="fn">indexOf</span>(<span class="num">20</span>);          <span class="cmt">// 1 — works for primitives</span>
+nums.<span class="fn">findIndex</span>(n => n > <span class="num">15</span>); <span class="cmt">// 1 — find lets you use any condition</span></code></pre>
+
+  <!-- SECTION 7 -->
+  <h2>7. some and every</h2>
+
+  <p>These two return a boolean. Both short-circuit — they stop iterating as soon as they have a definitive answer.</p>
+
+  <pre><code><span class="kw">const</span> scores = [<span class="num">72</span>, <span class="num">88</span>, <span class="num">45</span>, <span class="num">91</span>, <span class="num">60</span>];
+
+<span class="cmt">// some: true if AT LEAST ONE passes the test</span>
+<span class="kw">const</span> anyFailing = scores.<span class="fn">some</span>(s => s &lt; <span class="num">50</span>);
+<span class="fn">console</span>.log(anyFailing); <span class="cmt">// true (45 fails)</span>
+
+<span class="cmt">// every: true only if ALL pass the test</span>
+<span class="kw">const</span> allPassing = scores.<span class="fn">every</span>(s => s >= <span class="num">50</span>);
+<span class="fn">console</span>.log(allPassing); <span class="cmt">// false (45 does not pass)</span>
+
+<span class="cmt">// Short-circuit: every stops the moment it finds a false</span>
+<span class="kw">const</span> allPositive = [<span class="num">1</span>, <span class="num">2</span>, -<span class="num">1</span>, <span class="num">3</span>].<span class="fn">every</span>(n => {
+  <span class="fn">console</span>.log(<span class="str">"checking"</span>, n);
+  <span class="kw">return</span> n > <span class="num">0</span>;
+});
+<span class="cmt">// checking 1</span>
+<span class="cmt">// checking 2</span>
+<span class="cmt">// checking -1 ← stops here, never checks 3</span></code></pre>
+
+  <table>
+    <thead>
+      <tr><th>Method</th><th>Returns</th><th>Short-circuits when</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>some(fn)</code></td><td>boolean</td><td>First truthy result → returns true immediately</td></tr>
+      <tr><td><code>every(fn)</code></td><td>boolean</td><td>First falsy result → returns false immediately</td></tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 8 -->
+  <h2>8. Chaining</h2>
+
+  <p>Because <code>map</code> and <code>filter</code> return new arrays, you can chain them together to build readable data pipelines. Think of each step as a transformation stage.</p>
+
+  <pre><code><span class="kw">const</span> orders = [
+  { product: <span class="str">"Laptop"</span>, price: <span class="num">1200</span>, shipped: <span class="kw">true</span> },
+  { product: <span class="str">"Mouse"</span>, price: <span class="num">25</span>, shipped: <span class="kw">false</span> },
+  { product: <span class="str">"Monitor"</span>, price: <span class="num">400</span>, shipped: <span class="kw">true</span> },
+  { product: <span class="str">"Keyboard"</span>, price: <span class="num">80</span>, shipped: <span class="kw">true</span> },
+];
+
+<span class="cmt">// Total revenue from shipped orders over $100</span>
+<span class="kw">const</span> revenue = orders
+  .<span class="fn">filter</span>(o => o.shipped)          <span class="cmt">// keep shipped</span>
+  .<span class="fn">filter</span>(o => o.price > <span class="num">100</span>)     <span class="cmt">// keep expensive</span>
+  .<span class="fn">map</span>(o => o.price)               <span class="cmt">// extract prices</span>
+  .<span class="fn">reduce</span>((sum, p) => sum + p, <span class="num">0</span>); <span class="cmt">// sum them</span>
+
+<span class="fn">console</span>.log(revenue); <span class="cmt">// 1600 (Laptop + Monitor)</span></code></pre>
+
+  <div class="callout tip">
+    <strong>Performance tip</strong>
+    Put <code>filter</code> before <code>map</code> when chaining — reducing the array length first means <code>map</code> does less work. This matters on large datasets.
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What does this return?</p>
+      <div class="question-code">[1, 2, 3].map(x => x * 2)</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> [2, 4, 6]</label>
+        <label class="option"><input type="radio" name="q1" value="b"> undefined</label>
+        <label class="option"><input type="radio" name="q1" value="c"> [1, 2, 3]</label>
+        <label class="option"><input type="radio" name="q1" value="d"> 6</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','a','map returns a NEW array of the same length with each element transformed. Here each element is doubled, giving [2, 4, 6].')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What does this return?</p>
+      <div class="question-code">[1, 2, 3, 4].filter(x => x % 2 === 0)</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> [1, 3]</label>
+        <label class="option"><input type="radio" name="q2" value="b"> [2, 4]</label>
+        <label class="option"><input type="radio" name="q2" value="c"> [1, 2, 3, 4]</label>
+        <label class="option"><input type="radio" name="q2" value="d"> 2</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','b','filter keeps only elements for which the callback returns truthy. x % 2 === 0 is true only for even numbers, so the result is [2, 4].')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What does this return?</p>
+      <div class="question-code">[1, 2, 3, 4].reduce((acc, x) => acc + x, 0)</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> [1, 2, 3, 4]</label>
+        <label class="option"><input type="radio" name="q3" value="b"> 4</label>
+        <label class="option"><input type="radio" name="q3" value="c"> 10</label>
+        <label class="option"><input type="radio" name="q3" value="d"> undefined</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','c','reduce accumulates: 0+1=1, 1+2=3, 3+3=6, 6+4=10. The initial value is 0, so it sums all elements and returns 10.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What does <code>forEach</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> The original array</label>
+        <label class="option"><input type="radio" name="q4" value="b"> A new transformed array</label>
+        <label class="option"><input type="radio" name="q4" value="c"> undefined</label>
+        <label class="option"><input type="radio" name="q4" value="d"> The last element</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','c','forEach always returns undefined. It is designed for side effects (logging, DOM updates), not for producing a value. This is why you cannot chain after it.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. What does this return?</p>
+      <div class="question-code">[1, 2, 3].find(x => x > 1)</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> [2, 3]</label>
+        <label class="option"><input type="radio" name="q5" value="b"> 2</label>
+        <label class="option"><input type="radio" name="q5" value="c"> true</label>
+        <label class="option"><input type="radio" name="q5" value="d"> 1</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','b','find returns the first element that satisfies the callback — not an array, not a boolean, just the element itself. The first element greater than 1 is 2.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What does <code>[1, 2, 3].every(x => x > 0)</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> false</label>
+        <label class="option"><input type="radio" name="q6" value="b"> [1, 2, 3]</label>
+        <label class="option"><input type="radio" name="q6" value="c"> 3</label>
+        <label class="option"><input type="radio" name="q6" value="d"> true</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','d','every returns true only if ALL elements pass. 1 > 0, 2 > 0, and 3 > 0 are all true, so every returns true.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Destructuring, Spread &amp; Rest</strong> — ES6 syntax that lets you unpack arrays and objects, merge data structures, and write far more expressive function signatures.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent anything that was unclear, surprising, or that you want to go deeper on. Reduce in particular has unlimited depth — ask about transducers, composing reducers, or building map/filter using only reduce.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 11 — Higher-Order Functions</div>
+    <div class="nav-links">
+      <a href="./0010-closures.html">← Previous: Closures</a>
+      <a href="./0012-destructuring-spread-rest.html">Next: Destructuring, Spread &amp; Rest →</a>
+      <a href="https://javascript.info/array-methods" target="_blank">javascript.info: Array Methods ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

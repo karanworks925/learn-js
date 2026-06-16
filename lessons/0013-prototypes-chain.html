@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 13 — Prototypes &amp; the Prototype Chain</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 13 of 30</div>
+    <h1>Prototypes &amp; the Prototype Chain</h1>
+    <p class="subtitle">JavaScript's inheritance model — everything classes are built on.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read this <em>after</em> the lesson:
+    <a href="https://javascript.info/prototype-inheritance" target="_blank">javascript.info — Prototype Inheritance</a>.
+    This is one of the most important chapters in all of JS. Re-read it at least twice.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. Every Object Has a Prototype</h2>
+
+  <p>In JavaScript, every object has a hidden internal slot called <code>[[Prototype]]</code>. This slot holds a reference to another object — or <code>null</code> at the very end of the chain. This linked object is called the object's <strong>prototype</strong>.</p>
+
+  <p>The prototype itself is also just an object, so it too has a <code>[[Prototype]]</code>. This creates a <strong>chain</strong>. At the top of this chain for all plain objects sits <code>Object.prototype</code>, whose own <code>[[Prototype]]</code> is <code>null</code>.</p>
+
+  <pre><code><span class="cmt">// Visualizing the chain for a plain object literal:</span>
+<span class="cmt">//</span>
+<span class="cmt">//  myObj  →  Object.prototype  →  null</span>
+<span class="cmt">//</span>
+<span class="cmt">// myObj has its own properties</span>
+<span class="cmt">// Object.prototype has: toString, hasOwnProperty, valueOf, etc.</span>
+<span class="cmt">// null = end of the chain</span>
+
+<span class="kw">const</span> myObj = { name: <span class="str">"Karan"</span> };
+
+<span class="cmt">// You can verify the chain:</span>
+<span class="fn">Object</span>.<span class="fn">getPrototypeOf</span>(myObj) === <span class="fn">Object</span>.prototype; <span class="cmt">// true</span>
+<span class="fn">Object</span>.<span class="fn">getPrototypeOf</span>(<span class="fn">Object</span>.prototype);          <span class="cmt">// null</span></code></pre>
+
+  <div class="callout info">
+    <strong>Why does this matter?</strong>
+    This is <em>how</em> methods like <code>.toString()</code>, <code>.hasOwnProperty()</code>, and <code>.valueOf()</code> are available on every object you create. You never defined them — they live on <code>Object.prototype</code> and your object inherits them through the chain.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. Accessing the Prototype</h2>
+
+  <pre><code><span class="kw">const</span> obj = { x: <span class="num">1</span> };
+
+<span class="cmt">// CORRECT — official ES5+ method</span>
+<span class="fn">Object</span>.<span class="fn">getPrototypeOf</span>(obj); <span class="cmt">// returns Object.prototype</span>
+
+<span class="cmt">// DEPRECATED — still works but avoid in production</span>
+obj.__proto__; <span class="cmt">// same result, but __proto__ is non-standard/deprecated</span>
+
+<span class="cmt">// Setting a prototype at creation time</span>
+<span class="kw">const</span> animal = { breathes: <span class="kw">true</span> };
+<span class="kw">const</span> dog = <span class="fn">Object</span>.<span class="fn">create</span>(animal);
+<span class="fn">Object</span>.<span class="fn">getPrototypeOf</span>(dog) === animal; <span class="cmt">// true</span></code></pre>
+
+  <div class="callout warn">
+    <strong>__proto__ is deprecated</strong>
+    You will see <code>__proto__</code> everywhere in older code and Stack Overflow answers. Understand it, but use <code>Object.getPrototypeOf()</code> in anything you write.
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. Property Lookup via the Prototype Chain</h2>
+
+  <p>When you write <code>obj.prop</code>, JavaScript doesn't just look at <code>obj</code>. It follows a specific algorithm:</p>
+
+  <ol>
+    <li>Look for <code>prop</code> as an <em>own</em> property of <code>obj</code>. If found, return it.</li>
+    <li>If not found, move to <code>obj</code>'s <code>[[Prototype]]</code> and repeat.</li>
+    <li>Keep walking up the chain.</li>
+    <li>If <code>null</code> is reached (end of chain) without finding the property, return <code>undefined</code>.</li>
+  </ol>
+
+  <pre><code><span class="kw">const</span> animal = {
+  breathes: <span class="kw">true</span>,
+  <span class="fn">describe</span>() {
+    <span class="kw">return</span> <span class="str">`I breathe: </span><span class="num">${this.breathes}</span><span class="str">`</span>;
+  },
+};
+
+<span class="kw">const</span> dog = <span class="fn">Object</span>.<span class="fn">create</span>(animal);
+dog.name = <span class="str">"Rex"</span>; <span class="cmt">// own property on dog</span>
+
+<span class="cmt">// Lookup: dog.name → found on dog itself</span>
+dog.name;      <span class="cmt">// "Rex"</span>
+
+<span class="cmt">// Lookup: dog.breathes → NOT on dog, found on animal (dog's prototype)</span>
+dog.breathes;  <span class="cmt">// true</span>
+
+<span class="cmt">// Lookup: dog.describe() → NOT on dog, found on animal</span>
+dog.<span class="fn">describe</span>();  <span class="cmt">// "I breathe: true" — 'this' refers to dog</span>
+
+<span class="cmt">// Lookup: dog.toString() → not on dog, not on animal</span>
+<span class="cmt">//         found on Object.prototype (the end of the chain)</span>
+dog.<span class="fn">toString</span>(); <span class="cmt">// "[object Object]"</span>
+
+<span class="cmt">// Not found at all</span>
+dog.fly;  <span class="cmt">// undefined — reached null, not found</span></code></pre>
+
+  <div class="callout tip">
+    <strong>Mental model</strong>
+    Think of the prototype chain as a series of lookup tables. When you ask for a property, JS checks each table in order, starting with the object itself. The first match wins. If no table has the property, you get undefined.
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. Object.create()</h2>
+
+  <p><code>Object.create(proto)</code> creates a brand-new empty object whose <code>[[Prototype]]</code> is set to <code>proto</code>. It's the cleanest, most explicit way to set up a prototype chain.</p>
+
+  <pre><code><span class="kw">const</span> vehicleProto = {
+  <span class="fn">start</span>() { <span class="kw">return</span> <span class="str">`</span><span class="num">${this.make}</span><span class="str"> started`</span>; },
+  <span class="fn">stop</span>()  { <span class="kw">return</span> <span class="str">`</span><span class="num">${this.make}</span><span class="str"> stopped`</span>; },
+};
+
+<span class="kw">const</span> car = <span class="fn">Object</span>.<span class="fn">create</span>(vehicleProto);
+car.make = <span class="str">"Toyota"</span>;
+car.model = <span class="str">"Corolla"</span>;
+
+car.<span class="fn">start</span>(); <span class="cmt">// "Toyota started" — method found on prototype</span>
+
+<span class="cmt">// Object.create(null) — no prototype at all</span>
+<span class="cmt">// Creates a pure dictionary with no inherited methods</span>
+<span class="kw">const</span> dict = <span class="fn">Object</span>.<span class="fn">create</span>(<span class="kw">null</span>);
+dict.name = <span class="str">"Karan"</span>;
+<span class="cmt">// dict.toString is undefined — no inherited methods</span>
+<span class="cmt">// Useful when you want a clean map with no prototype interference</span></code></pre>
+
+  <!-- SECTION 5 -->
+  <h2>5. hasOwnProperty and the <code>in</code> Operator</h2>
+
+  <p>These two are frequently confused in interviews. The difference is whether they look only at own properties or traverse the chain.</p>
+
+  <pre><code><span class="kw">const</span> animal = { breathes: <span class="kw">true</span> };
+<span class="kw">const</span> dog = <span class="fn">Object</span>.<span class="fn">create</span>(animal);
+dog.name = <span class="str">"Rex"</span>;
+
+<span class="cmt">// hasOwnProperty — only own properties, NOT inherited</span>
+dog.<span class="fn">hasOwnProperty</span>(<span class="str">"name"</span>);     <span class="cmt">// true  — own property</span>
+dog.<span class="fn">hasOwnProperty</span>(<span class="str">"breathes"</span>); <span class="cmt">// false — inherited, not own</span>
+
+<span class="cmt">// 'in' operator — checks own AND prototype chain</span>
+<span class="str">"name"</span> <span class="kw">in</span> dog;     <span class="cmt">// true</span>
+<span class="str">"breathes"</span> <span class="kw">in</span> dog; <span class="cmt">// true  — found via prototype chain</span>
+<span class="str">"fly"</span> <span class="kw">in</span> dog;      <span class="cmt">// false — not found anywhere</span>
+
+<span class="cmt">// Modern alternative (ES2022) — safer than hasOwnProperty</span>
+<span class="fn">Object</span>.<span class="fn">hasOwn</span>(dog, <span class="str">"name"</span>);     <span class="cmt">// true</span>
+<span class="fn">Object</span>.<span class="fn">hasOwn</span>(dog, <span class="str">"breathes"</span>); <span class="cmt">// false</span></code></pre>
+
+  <table>
+    <thead>
+      <tr><th>Check</th><th>Own property</th><th>Inherited property</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>hasOwnProperty("key")</code></td><td>true</td><td>false</td></tr>
+      <tr><td><code>Object.hasOwn(obj, "key")</code></td><td>true</td><td>false</td></tr>
+      <tr><td><code>"key" in obj</code></td><td>true</td><td>true</td></tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 6 -->
+  <h2>6. Constructor Functions — The Pre-Class Pattern</h2>
+
+  <p>Before ES6 classes, JavaScript developers used <strong>constructor functions</strong> to create many objects sharing the same prototype. You still need to understand this pattern because you'll encounter it in older codebases and interview questions.</p>
+
+  <pre><code><span class="cmt">// Convention: constructor functions start with a capital letter</span>
+<span class="kw">function</span> <span class="fn">Person</span>(name, age) {
+  <span class="kw">this</span>.name = name;
+  <span class="kw">this</span>.age = age;
+}
+
+<span class="cmt">// Methods go on the prototype — shared by ALL instances</span>
+<span class="fn">Person</span>.prototype.<span class="fn">greet</span> = <span class="kw">function</span>() {
+  <span class="kw">return</span> <span class="str">`Hi, I'm </span><span class="num">${this.name}</span><span class="str">`</span>;
+};
+
+<span class="kw">const</span> alice = <span class="kw">new</span> <span class="fn">Person</span>(<span class="str">"Alice"</span>, <span class="num">28</span>);
+<span class="kw">const</span> bob   = <span class="kw">new</span> <span class="fn">Person</span>(<span class="str">"Bob"</span>, <span class="num">34</span>);
+
+alice.<span class="fn">greet</span>(); <span class="cmt">// "Hi, I'm Alice"</span>
+bob.<span class="fn">greet</span>();   <span class="cmt">// "Hi, I'm Bob"</span>
+
+<span class="cmt">// Both instances share the SAME greet function via the prototype</span>
+alice.<span class="fn">greet</span> === bob.<span class="fn">greet</span>; <span class="cmt">// true — one function, many instances</span></code></pre>
+
+  <h3>What <code>new</code> does — step by step</h3>
+  <p>When you write <code>new Person("Alice", 28)</code>, JavaScript does four things automatically:</p>
+  <ol>
+    <li>Creates a new empty object <code>{}</code></li>
+    <li>Sets that object's <code>[[Prototype]]</code> to <code>Person.prototype</code></li>
+    <li>Runs the constructor function with <code>this</code> pointing to the new object</li>
+    <li>Returns the new object (unless the constructor explicitly returns a different object)</li>
+  </ol>
+
+  <div class="callout info">
+    <strong>Why put methods on the prototype?</strong>
+    If you put <code>greet</code> inside the constructor as <code>this.greet = function() {...}</code>, a new function is created for <em>every</em> instance. With 1000 Person objects, that's 1000 identical functions in memory. Putting it on <code>Person.prototype</code> means all instances share one function. Always put methods on the prototype.
+  </div>
+
+  <!-- SECTION 7 -->
+  <h2>7. The <code>prototype</code> Property vs <code>[[Prototype]]</code></h2>
+
+  <p>This is the most commonly confused concept about prototypes — even experienced developers mix it up. There are <em>two different things</em>:</p>
+
+  <table>
+    <thead>
+      <tr><th>Thing</th><th>What it is</th><th>Who has it</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>Person.prototype</code></td><td>An ordinary object that will become the [[Prototype]] of instances created by <code>new Person()</code></td><td>Functions (specifically, constructor functions)</td></tr>
+      <tr><td><code>obj.[[Prototype]]</code></td><td>The actual prototype link of an object — accessed via <code>Object.getPrototypeOf(obj)</code></td><td>Every object</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code><span class="kw">function</span> <span class="fn">Dog</span>(name) {
+  <span class="kw">this</span>.name = name;
+}
+<span class="fn">Dog</span>.prototype.<span class="fn">bark</span> = <span class="kw">function</span>() { <span class="kw">return</span> <span class="str">"Woof!"</span>; };
+
+<span class="kw">const</span> rex = <span class="kw">new</span> <span class="fn">Dog</span>(<span class="str">"Rex"</span>);
+
+<span class="cmt">// rex's [[Prototype]] IS Dog.prototype</span>
+<span class="fn">Object</span>.<span class="fn">getPrototypeOf</span>(rex) === <span class="fn">Dog</span>.prototype; <span class="cmt">// true</span>
+rex.__proto__ === <span class="fn">Dog</span>.prototype;               <span class="cmt">// true (deprecated but shown for clarity)</span>
+
+<span class="cmt">// Dog.prototype's [[Prototype]] is Object.prototype</span>
+<span class="fn">Object</span>.<span class="fn">getPrototypeOf</span>(<span class="fn">Dog</span>.prototype) === <span class="fn">Object</span>.prototype; <span class="cmt">// true</span>
+
+<span class="cmt">// Full chain: rex → Dog.prototype → Object.prototype → null</span></code></pre>
+
+  <div class="callout danger">
+    <strong>Interview trap</strong>
+    When an interviewer asks "what is the prototype of rex?" the answer is <code>Dog.prototype</code>. <code>Dog</code> itself is the constructor function — not the prototype. The <em>prototype</em> is the object that <code>Dog.prototype</code> points to.
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. Where does JS look for <code>obj.method()</code> if <code>method</code> is not directly on <code>obj</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> It throws a ReferenceError immediately</label>
+        <label class="option"><input type="radio" name="q1" value="b"> It looks on the global object (window)</label>
+        <label class="option"><input type="radio" name="q1" value="c"> It looks up the prototype chain — obj's [[Prototype]], then its [[Prototype]], until found or null</label>
+        <label class="option"><input type="radio" name="q1" value="d"> It returns undefined without checking anything else</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','c','JS walks up the prototype chain when a property is not found on the object itself. It keeps going until it finds the property or reaches null (end of chain), in which case it returns undefined.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What does <code>Object.create(proto)</code> do?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> Copies all properties of proto into a new object</label>
+        <label class="option"><input type="radio" name="q2" value="b"> Creates a new object with proto as its [[Prototype]]</label>
+        <label class="option"><input type="radio" name="q2" value="c"> Calls new proto() and returns the result</label>
+        <label class="option"><input type="radio" name="q2" value="d"> Freezes proto so it cannot be modified</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','b','Object.create(proto) creates a brand-new empty object and sets its [[Prototype]] to proto. No copying happens — it sets up a prototype link.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What does <code>"toString" in {}</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> false — plain objects have no toString</label>
+        <label class="option"><input type="radio" name="q3" value="b"> true — toString is inherited from Object.prototype</label>
+        <label class="option"><input type="radio" name="q3" value="c"> undefined</label>
+        <label class="option"><input type="radio" name="q3" value="d"> TypeError</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','b','The in operator checks own AND inherited properties. toString lives on Object.prototype, which is in the prototype chain of every plain object. So it returns true.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What does <code>{}.hasOwnProperty("toString")</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> true</label>
+        <label class="option"><input type="radio" name="q4" value="b"> false</label>
+        <label class="option"><input type="radio" name="q4" value="c"> undefined</label>
+        <label class="option"><input type="radio" name="q4" value="d"> TypeError</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','b','hasOwnProperty returns true ONLY for own (non-inherited) properties. toString is inherited from Object.prototype, so it returns false for any plain object literal.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. After <code>const d = new Dog("Rex")</code>, what is <code>Object.getPrototypeOf(d)</code>?</p>
+      <div class="question-code">function Dog(name) { this.name = name; }</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> Dog (the constructor function itself)</label>
+        <label class="option"><input type="radio" name="q5" value="b"> Object.prototype</label>
+        <label class="option"><input type="radio" name="q5" value="c"> Dog.prototype</label>
+        <label class="option"><input type="radio" name="q5" value="d"> null</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','When you use new, JS sets the new object\'s [[Prototype]] to the constructor\'s .prototype property. So d\'s prototype is Dog.prototype — NOT the Dog function itself.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What sits at the very top of the prototype chain for all plain objects?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> Function.prototype</label>
+        <label class="option"><input type="radio" name="q6" value="b"> null</label>
+        <label class="option"><input type="radio" name="q6" value="c"> undefined</label>
+        <label class="option"><input type="radio" name="q6" value="d"> Object.prototype</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','d','Object.prototype is the top of the chain for all plain objects. It provides toString, hasOwnProperty, valueOf, etc. Object.prototype\'s own [[Prototype]] is null — that\'s the true end of the chain.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>ES6 Classes &amp; Inheritance</strong> — the <code>class</code> keyword, <code>extends</code>, <code>super</code>, private fields, and exactly how classes map to the prototype system you just learned.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent to walk through the prototype chain of any object — arrays, functions, or class instances. The chain for arrays (<code>arr → Array.prototype → Object.prototype → null</code>) and functions (<code>fn → Function.prototype → Object.prototype → null</code>) are especially worth understanding.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 13 — Prototypes &amp; the Prototype Chain</div>
+    <div class="nav-links">
+      <a href="./0012-destructuring-spread-rest.html">← Previous: Destructuring, Spread &amp; Rest</a>
+      <a href="./0014-classes-inheritance.html">Next: Classes &amp; Inheritance →</a>
+      <a href="https://javascript.info/prototype-inheritance" target="_blank">javascript.info: Prototype Inheritance ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

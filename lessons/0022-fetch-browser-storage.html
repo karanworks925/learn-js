@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 22 — Fetch API &amp; Browser Storage</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 22 of 30</div>
+    <h1>Fetch API &amp; Browser Storage</h1>
+    <p class="subtitle">Network requests and data persistence — the two foundations of every real web app.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read this <em>after</em> the lesson:
+    <a href="https://javascript.info/fetch" target="_blank">javascript.info — Fetch</a> and
+    <a href="https://javascript.info/localstorage" target="_blank">javascript.info — localStorage</a>.
+    The fetch article covers error handling patterns in depth — worth reading twice.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. The fetch() API</h2>
+
+  <p><code>fetch()</code> is the modern browser API for making HTTP requests. It replaced the older <code>XMLHttpRequest</code> (XHR) and is Promise-based, making it easy to use with <code>async/await</code>.</p>
+
+  <p>There is a subtlety that catches almost every developer the first time: <strong>fetch has two steps</strong>.</p>
+
+<pre><code><span class="cmt">// Step 1: fetch() gives you a Response object — the headers arrived</span>
+<span class="cmt">// Step 2: .json() reads the body stream and parses it — the body arrived</span>
+<span class="kw">async</span> <span class="kw">function</span> <span class="fn">getUser</span>(id) {
+  <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`https://api.example.com/users/<span class="str">${id}</span>`</span>);
+  <span class="kw">const</span> user = <span class="kw">await</span> response.<span class="fn">json</span>(); <span class="cmt">// this is also async</span>
+  <span class="fn">console</span>.log(user);
+}
+
+<span class="cmt">// What the Response object contains before you call .json()</span>
+response.status   <span class="cmt">// 200, 404, 500, etc.</span>
+response.ok       <span class="cmt">// true if status is 200–299</span>
+response.headers  <span class="cmt">// Headers object</span>
+response.url      <span class="cmt">// final URL (after redirects)</span></code></pre>
+
+  <div class="callout info">
+    <strong>Why two awaits?</strong>
+    HTTP responses come in as a stream. The first await resolves when the headers arrive — at that point the body may still be downloading. Calling <code>.json()</code> (or <code>.text()</code>, <code>.blob()</code>) reads the full stream and resolves when the body is complete.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. The Critical Gotcha: fetch Does NOT Reject on HTTP Errors</h2>
+
+  <p>This is the most important thing to know about <code>fetch</code>, and the most common source of silent bugs.</p>
+
+  <table>
+    <thead>
+      <tr><th>Situation</th><th>Does fetch() reject?</th><th>response.ok</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Server returns 200 OK</td><td>No (resolves)</td><td><code>true</code></td></tr>
+      <tr><td>Server returns 404 Not Found</td><td>No (resolves!)</td><td><code>false</code></td></tr>
+      <tr><td>Server returns 500 Server Error</td><td>No (resolves!)</td><td><code>false</code></td></tr>
+      <tr><td>No internet / DNS failure</td><td>Yes (rejects)</td><td>N/A</td></tr>
+      <tr><td>CORS blocked</td><td>Yes (rejects)</td><td>N/A</td></tr>
+    </tbody>
+  </table>
+
+  <p>The correct pattern — always check <code>response.ok</code>:</p>
+
+<pre><code><span class="kw">async</span> <span class="kw">function</span> <span class="fn">fetchUser</span>(id) {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/api/users/${id}`</span>);
+
+    <span class="cmt">// MUST check this — fetch won't throw for 404/500</span>
+    <span class="kw">if</span> (!res.ok) {
+      <span class="kw">throw new</span> <span class="typ">Error</span>(<span class="str">`HTTP error: ${res.status}`</span>);
+    }
+
+    <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();
+    <span class="kw">return</span> data;
+  } <span class="kw">catch</span> (err) {
+    <span class="cmt">// catches BOTH network failures AND our thrown HTTP error</span>
+    <span class="fn">console</span>.error(<span class="str">'Fetch failed:'</span>, err.message);
+    <span class="kw">throw</span> err; <span class="cmt">// re-throw so the caller can handle it</span>
+  }
+}</code></pre>
+
+  <div class="callout danger">
+    <strong>Silent failure trap</strong>
+    If you skip the <code>response.ok</code> check and the server returns a 404, your code will happily call <code>response.json()</code> and parse the error body (often HTML). You'll get confusing data or a JSON parse error — not the clear error message you expected.
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. POST Requests — Sending Data to a Server</h2>
+
+  <p>Pass a second argument to <code>fetch()</code> with the method, headers, and body.</p>
+
+<pre><code><span class="kw">async</span> <span class="kw">function</span> <span class="fn">createUser</span>(userData) {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/users'</span>, {
+    method: <span class="str">'POST'</span>,
+    headers: {
+      <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>,
+      <span class="str">'Authorization'</span>: <span class="str">`Bearer ${token}`</span>
+    },
+    body: <span class="typ">JSON</span>.<span class="fn">stringify</span>(userData) <span class="cmt">// object → JSON string</span>
+  });
+
+  <span class="kw">if</span> (!res.ok) <span class="kw">throw new</span> <span class="typ">Error</span>(<span class="str">`${res.status}`</span>);
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+}
+
+<span class="cmt">// Usage</span>
+<span class="fn">createUser</span>({ name: <span class="str">'Karan'</span>, email: <span class="str">'karan@example.com'</span> })
+  .<span class="fn">then</span>(user =&gt; <span class="fn">console</span>.log(<span class="str">'Created:'</span>, user))
+  .<span class="fn">catch</span>(err =&gt; <span class="fn">console</span>.error(err));</code></pre>
+
+  <div class="callout warn">
+    <strong>Don't forget Content-Type</strong>
+    If you omit the <code>Content-Type: application/json</code> header, many servers won't know how to parse the body and will return a 400 Bad Request. Always set it when sending JSON.
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. JSON.stringify and JSON.parse</h2>
+
+  <p>JSON (JavaScript Object Notation) is the standard data format for web APIs. These two functions are the bridge between JS objects and JSON strings.</p>
+
+<pre><code><span class="kw">const</span> user = { name: <span class="str">'Karan'</span>, age: <span class="num">22</span>, active: <span class="kw">true</span> };
+
+<span class="cmt">// Object → JSON string (for sending over the network or storing)</span>
+<span class="kw">const</span> jsonString = <span class="typ">JSON</span>.<span class="fn">stringify</span>(user);
+<span class="cmt">// '{"name":"Karan","age":22,"active":true}'</span>
+
+<span class="cmt">// JSON string → Object (for reading from the network or storage)</span>
+<span class="kw">const</span> parsed = <span class="typ">JSON</span>.<span class="fn">parse</span>(jsonString);
+<span class="cmt">// { name: 'Karan', age: 22, active: true }</span>
+
+<span class="cmt">// Pretty-printing for debugging (3rd arg = indentation)</span>
+<span class="fn">console</span>.log(<span class="typ">JSON</span>.<span class="fn">stringify</span>(user, <span class="kw">null</span>, <span class="num">2</span>));
+
+<span class="cmt">// What stringify CANNOT handle:</span>
+<span class="typ">JSON</span>.<span class="fn">stringify</span>({ fn: () =&gt; {}, sym: <span class="fn">Symbol</span>() });
+<span class="cmt">// → '{}' — functions and symbols are silently dropped</span>
+
+<span class="typ">JSON</span>.<span class="fn">stringify</span>(<span class="kw">undefined</span>); <span class="cmt">// → undefined (not a string)</span>
+
+<span class="cmt">// Circular references throw:</span>
+<span class="kw">const</span> obj = {};
+obj.self = obj;
+<span class="typ">JSON</span>.<span class="fn">stringify</span>(obj); <span class="cmt">// ❌ TypeError: circular structure</span></code></pre>
+
+  <!-- SECTION 5 -->
+  <h2>5. localStorage — Persistent Client-Side Storage</h2>
+
+  <p><code>localStorage</code> stores data in the browser that persists indefinitely — even after the tab closes and the browser restarts. The key API:</p>
+
+<pre><code><span class="cmt">// Storing a string</span>
+<span class="fn">localStorage</span>.<span class="fn">setItem</span>(<span class="str">'theme'</span>, <span class="str">'dark'</span>);
+
+<span class="cmt">// Reading it back</span>
+<span class="kw">const</span> theme = <span class="fn">localStorage</span>.<span class="fn">getItem</span>(<span class="str">'theme'</span>); <span class="cmt">// 'dark'</span>
+<span class="kw">const</span> missing = <span class="fn">localStorage</span>.<span class="fn">getItem</span>(<span class="str">'nope'</span>);  <span class="cmt">// null (not undefined)</span>
+
+<span class="cmt">// Removing one item</span>
+<span class="fn">localStorage</span>.<span class="fn">removeItem</span>(<span class="str">'theme'</span>);
+
+<span class="cmt">// Nuking everything</span>
+<span class="fn">localStorage</span>.<span class="fn">clear</span>();
+
+<span class="cmt">// CRITICAL: localStorage only stores strings</span>
+<span class="cmt">// Store an object correctly:</span>
+<span class="kw">const</span> user = { name: <span class="str">'Karan'</span>, score: <span class="num">42</span> };
+<span class="fn">localStorage</span>.<span class="fn">setItem</span>(<span class="str">'user'</span>, <span class="typ">JSON</span>.<span class="fn">stringify</span>(user));
+
+<span class="cmt">// Read it back correctly:</span>
+<span class="kw">const</span> savedUser = <span class="typ">JSON</span>.<span class="fn">parse</span>(<span class="fn">localStorage</span>.<span class="fn">getItem</span>(<span class="str">'user'</span>));
+
+<span class="cmt">// Safe read with fallback:</span>
+<span class="kw">function</span> <span class="fn">getFromStorage</span>(key, fallback = <span class="kw">null</span>) {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> item = <span class="fn">localStorage</span>.<span class="fn">getItem</span>(key);
+    <span class="kw">return</span> item ? <span class="typ">JSON</span>.<span class="fn">parse</span>(item) : fallback;
+  } <span class="kw">catch</span> {
+    <span class="kw">return</span> fallback;
+  }
+}</code></pre>
+
+  <div class="callout danger">
+    <strong>The string-only trap</strong>
+    <code>localStorage.setItem('user', { name: 'Karan' })</code> stores the string <code>"[object Object]"</code> — the result of calling <code>.toString()</code> on the object. Always wrap objects in <code>JSON.stringify()</code> before storing.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. sessionStorage — Tab-Scoped Storage</h2>
+
+  <p><code>sessionStorage</code> has the exact same API as <code>localStorage</code> — same methods, same string-only rule. The only differences are its <strong>lifetime</strong> and <strong>scope</strong>.</p>
+
+  <table>
+    <thead>
+      <tr><th></th><th>localStorage</th><th>sessionStorage</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Persists after tab close?</td><td>Yes</td><td>No — cleared when tab closes</td></tr>
+      <tr><td>Shared across tabs?</td><td>Yes (same origin)</td><td>No — each tab has its own</td></tr>
+      <tr><td>Shared across windows?</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Storage limit</td><td>~5MB</td><td>~5MB</td></tr>
+      <tr><td>API</td><td>Same</td><td>Same</td></tr>
+    </tbody>
+  </table>
+
+<pre><code><span class="cmt">// sessionStorage: perfect for temporary UI state</span>
+<span class="cmt">// e.g. remember which step a multi-step form was on</span>
+<span class="fn">sessionStorage</span>.<span class="fn">setItem</span>(<span class="str">'formStep'</span>, <span class="str">'2'</span>);
+
+<span class="cmt">// When the tab closes, this is automatically wiped</span>
+<span class="cmt">// Great for: unsaved drafts, scroll positions, UI accordion states</span></code></pre>
+
+  <!-- SECTION 7 -->
+  <h2>7. Cookies — When the Server Needs to Know</h2>
+
+  <p>Cookies are the oldest client-side storage mechanism. Their defining characteristic: they are <strong>automatically sent to the server with every HTTP request</strong> to the same domain. This makes them the right tool for authentication tokens and server-session tracking.</p>
+
+<pre><code><span class="cmt">// Reading cookies (awkward string format)</span>
+<span class="fn">console</span>.log(<span class="fn">document</span>.cookie);
+<span class="cmt">// "theme=dark; userId=42; sessionToken=abc123"</span>
+
+<span class="cmt">// Setting a cookie from JS</span>
+<span class="fn">document</span>.cookie = <span class="str">"theme=dark; path=/; max-age=86400"</span>;
+<span class="cmt">// max-age in seconds: 86400 = 1 day</span>
+
+<span class="cmt">// Cookies have attributes that localStorage doesn't:</span>
+<span class="cmt">// expires / max-age — when it expires</span>
+<span class="cmt">// path — which URL paths the cookie is sent to</span>
+<span class="cmt">// domain — which domain it belongs to</span>
+<span class="cmt">// Secure — only sent over HTTPS</span>
+<span class="cmt">// HttpOnly — cannot be read by JS (server sets this for security)</span>
+<span class="cmt">// SameSite — CSRF protection (Strict / Lax / None)</span>
+
+<span class="cmt">// You CANNOT set HttpOnly from JavaScript — servers set it via Set-Cookie headers</span>
+<span class="cmt">// This is intentional: HttpOnly cookies protect auth tokens from XSS</span></code></pre>
+
+  <table>
+    <thead>
+      <tr><th>Storage Type</th><th>Sent to Server?</th><th>Lifetime</th><th>Capacity</th><th>Best For</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>localStorage</td><td>No</td><td>Forever</td><td>~5MB</td><td>User preferences, cached data</td></tr>
+      <tr><td>sessionStorage</td><td>No</td><td>Tab session</td><td>~5MB</td><td>Temporary form state, wizard steps</td></tr>
+      <tr><td>Cookies</td><td>Yes (auto)</td><td>Configurable</td><td>~4KB</td><td>Auth tokens, server sessions</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout tip">
+    <strong>Decision rule</strong>
+    If the server needs to see the data — use cookies. If it's purely client-side — use localStorage or sessionStorage. For auth: let the server set HttpOnly cookies so JavaScript can't steal the token even if there's an XSS vulnerability.
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't look back at the lesson. Try to recall from memory.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. Does <code>fetch()</code> reject the Promise if the server responds with a 404?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> Yes — any error status causes fetch to reject</label>
+        <label class="option"><input type="radio" name="q1" value="b"> No — fetch only rejects for network failures; HTTP errors like 404 must be checked via <code>response.ok</code></label>
+        <label class="option"><input type="radio" name="q1" value="c"> Yes — 4xx codes reject; 5xx codes resolve</label>
+        <label class="option"><input type="radio" name="q1" value="d"> It depends on the browser</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','fetch() only rejects on network-level failures (no internet, DNS error, CORS block). A 404 from the server is a valid HTTP response — fetch resolves with a Response object whose response.ok is false. You must check this manually.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What does <code>response.json()</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> A JSON string</label>
+        <label class="option"><input type="radio" name="q2" value="b"> The parsed JavaScript object directly</label>
+        <label class="option"><input type="radio" name="q2" value="c"> A Promise that resolves to the parsed JSON value</label>
+        <label class="option"><input type="radio" name="q2" value="d"> A ReadableStream</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','response.json() returns a Promise because it reads the response body as a stream — the body may still be downloading when you call it. You must await it (or .then()) to get the parsed value.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What is actually stored by this line?</p>
+      <div class="question-code">localStorage.setItem('user', { name: 'Karan' });</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> The object <code>{ name: 'Karan' }</code></label>
+        <label class="option"><input type="radio" name="q3" value="b"> The string <code>'{"name":"Karan"}'</code></label>
+        <label class="option"><input type="radio" name="q3" value="c"> The string <code>"[object Object]"</code></label>
+        <label class="option"><input type="radio" name="q3" value="d"> Nothing — this throws a TypeError</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','c','localStorage only stores strings. When you pass an object, JavaScript calls .toString() on it, which returns &quot;[object Object]&quot;. To store an object correctly, use JSON.stringify() first: localStorage.setItem(\'user\', JSON.stringify({ name: \'Karan\' })).')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What is the key difference between <code>localStorage</code> and <code>sessionStorage</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> <code>sessionStorage</code> has a larger storage limit</label>
+        <label class="option"><input type="radio" name="q4" value="b"> <code>localStorage</code> persists indefinitely; <code>sessionStorage</code> is cleared when the browser tab is closed</label>
+        <label class="option"><input type="radio" name="q4" value="c"> <code>localStorage</code> is sent to the server; <code>sessionStorage</code> stays in the browser</label>
+        <label class="option"><input type="radio" name="q4" value="d"> They are identical except for the name</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','b','Both have the same ~5MB limit and the same API. The difference is lifetime and scope: localStorage persists across sessions and is shared across all tabs of the same origin. sessionStorage is isolated to a single tab and is wiped when that tab closes.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. How do you correctly send a JSON body in a POST request with fetch?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> Pass the object directly as the body: <code>body: { name: 'Karan' }</code></label>
+        <label class="option"><input type="radio" name="q5" value="b"> Set <code>Content-Type: application/json</code> header and use <code>JSON.stringify(data)</code> as the body</label>
+        <label class="option"><input type="radio" name="q5" value="c"> Set the body as a URL-encoded string like form data</label>
+        <label class="option"><input type="radio" name="q5" value="d"> Use <code>JSON.parse(data)</code> as the body</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','b','The body must be a string (or Blob/FormData/etc.) — not a plain object. Use JSON.stringify() to convert it. The Content-Type header tells the server how to interpret the body. Without it, many servers return 400 Bad Request.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. Which storage mechanism is automatically sent to the server with every HTTP request?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> localStorage</label>
+        <label class="option"><input type="radio" name="q6" value="b"> sessionStorage</label>
+        <label class="option"><input type="radio" name="q6" value="c"> Cookies</label>
+        <label class="option"><input type="radio" name="q6" value="d"> IndexedDB</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','c','Cookies are the only browser storage that automatically attach to every HTTP request made to their domain. This is why they are used for authentication — the server receives your session token with every request without any extra code. localStorage and sessionStorage are never sent to the server.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Functional Programming</strong> — pure functions, immutability, function composition, and currying. This is the paradigm that makes React make sense, and it will change how you design functions forever.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> The two-step fetch resolution confuses a lot of people at first. If it still feels unclear, ask your teacher agent to walk through what is actually happening byte-by-byte when a server sends back a response.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 22 — Fetch API &amp; Browser Storage</div>
+    <div class="nav-links">
+      <a href="./0021-events-event-delegation.html">← Previous: Events &amp; Delegation</a>
+      <a href="./0023-functional-programming.html">Next: Functional Programming →</a>
+      <a href="https://javascript.info/fetch" target="_blank">javascript.info: Fetch ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

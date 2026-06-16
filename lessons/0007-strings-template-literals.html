@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 07 — Strings &amp; Template Literals</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 07 of 30</div>
+    <h1>Strings &amp; Template Literals</h1>
+    <p class="subtitle">Text is everywhere — master every string method JavaScript offers.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>📖 Primary Source for this lesson</strong>
+    Read this <em>after</em> the lesson:
+    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" target="_blank">MDN — String</a>.
+    The MDN String reference is the single best place to bookmark every method with examples and browser support.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. String Basics</h2>
+
+  <p>Strings in JavaScript are <strong>immutable sequences of characters</strong>. You cannot change an individual character in a string — every "transformation" creates a brand new string and leaves the original untouched.</p>
+
+  <pre><code><span class="kw">const</span> str = <span class="str">"hello"</span>;
+
+<span class="cmt">// length property — number of characters</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.length);    <span class="cmt">// 5</span>
+
+<span class="cmt">// Accessing characters by index (0-based)</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str[<span class="num">0</span>]);         <span class="cmt">// "h"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str[<span class="num">10</span>]);        <span class="cmt">// undefined (out of bounds)</span>
+
+<span class="cmt">// charAt — older alternative</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">charAt</span>(<span class="num">0</span>));  <span class="cmt">// "h"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">charAt</span>(<span class="num">10</span>)); <span class="cmt">// "" (empty string — different from undefined)</span>
+
+<span class="cmt">// Strings are compared lexicographically (dictionary order)</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"apple"</span> < <span class="str">"banana"</span>);  <span class="cmt">// true</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"Z"</span> < <span class="str">"a"</span>);          <span class="cmt">// true — uppercase letters have lower char codes</span></code></pre>
+
+  <div class="callout info">
+    <strong>Immutability in practice</strong>
+    <code>str[0] = "H"</code> silently does nothing in non-strict mode — it won't throw an error, but the string is unchanged. This surprises many developers.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. Searching Strings</h2>
+
+  <table>
+    <thead>
+      <tr><th>Method</th><th>Returns</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>indexOf(sub)</code></td><td>Number (index or -1)</td><td>First occurrence position</td></tr>
+      <tr><td><code>lastIndexOf(sub)</code></td><td>Number (index or -1)</td><td>Last occurrence position</td></tr>
+      <tr><td><code>includes(sub)</code></td><td>Boolean</td><td>Preferred for existence checks</td></tr>
+      <tr><td><code>startsWith(prefix)</code></td><td>Boolean</td><td>Checks beginning</td></tr>
+      <tr><td><code>endsWith(suffix)</code></td><td>Boolean</td><td>Checks end</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code><span class="kw">const</span> sentence = <span class="str">"The quick brown fox jumps over the lazy dog"</span>;
+
+<span class="fn">console</span>.<span class="fn">log</span>(sentence.<span class="fn">indexOf</span>(<span class="str">"fox"</span>));        <span class="cmt">// 16</span>
+<span class="fn">console</span>.<span class="fn">log</span>(sentence.<span class="fn">indexOf</span>(<span class="str">"cat"</span>));        <span class="cmt">// -1 (not found)</span>
+<span class="fn">console</span>.<span class="fn">log</span>(sentence.<span class="fn">lastIndexOf</span>(<span class="str">"the"</span>));    <span class="cmt">// 31</span>
+<span class="fn">console</span>.<span class="fn">log</span>(sentence.<span class="fn">includes</span>(<span class="str">"fox"</span>));       <span class="cmt">// true</span>
+<span class="fn">console</span>.<span class="fn">log</span>(sentence.<span class="fn">startsWith</span>(<span class="str">"The"</span>));    <span class="cmt">// true</span>
+<span class="fn">console</span>.<span class="fn">log</span>(sentence.<span class="fn">endsWith</span>(<span class="str">"dog"</span>));      <span class="cmt">// true</span>
+
+<span class="cmt">// All methods are case-sensitive</span>
+<span class="fn">console</span>.<span class="fn">log</span>(sentence.<span class="fn">includes</span>(<span class="str">"Fox"</span>));       <span class="cmt">// false</span></code></pre>
+
+  <!-- SECTION 3 -->
+  <h2>3. Extracting Substrings</h2>
+
+  <p>There are three ways to extract a portion of a string. <code>slice</code> is the one you should use and memorize.</p>
+
+  <pre><code><span class="kw">const</span> str = <span class="str">"Hello, World!"</span>;
+<span class="cmt">//            0123456789...</span>
+
+<span class="cmt">// slice(start, end) — end is EXCLUDED</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">slice</span>(<span class="num">0</span>, <span class="num">5</span>));    <span class="cmt">// "Hello"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">slice</span>(<span class="num">7</span>));       <span class="cmt">// "World!" (no end = go to end)</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">slice</span>(-<span class="num">6</span>));      <span class="cmt">// "World!" (negative = count from end)</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">slice</span>(-<span class="num">6</span>, -<span class="num">1</span>)); <span class="cmt">// "World"</span>
+
+<span class="cmt">// substring(start, end) — same idea but no negative indices</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">substring</span>(<span class="num">0</span>, <span class="num">5</span>)); <span class="cmt">// "Hello"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">substring</span>(-<span class="num">6</span>));  <span class="cmt">// "Hello, World!" — negative treated as 0</span>
+
+<span class="cmt">// at(index) — modern, supports negative indexing cleanly</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">at</span>(<span class="num">0</span>));          <span class="cmt">// "H"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">at</span>(-<span class="num">1</span>));         <span class="cmt">// "!" (last character)</span></code></pre>
+
+  <div class="callout tip">
+    <strong>Recommendation</strong>
+    Use <code>slice()</code> for everything. It supports negative indices (count from end), is consistent, and is not deprecated. Avoid <code>substr()</code> — it's been removed from the standard.
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. Transforming Strings</h2>
+
+  <p>Remember: every method returns a <em>new</em> string. The original is unchanged.</p>
+
+  <pre><code><span class="kw">const</span> str = <span class="str">"  Hello, World!  "</span>;
+
+<span class="cmt">// Case</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">toUpperCase</span>());        <span class="cmt">// "  HELLO, WORLD!  "</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">toLowerCase</span>());        <span class="cmt">// "  hello, world!  "</span>
+
+<span class="cmt">// Trimming whitespace</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">trim</span>());               <span class="cmt">// "Hello, World!"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">trimStart</span>());          <span class="cmt">// "Hello, World!  "</span>
+<span class="fn">console</span>.<span class="fn">log</span>(str.<span class="fn">trimEnd</span>());            <span class="cmt">// "  Hello, World!"</span>
+
+<span class="cmt">// Padding — great for formatting numbers, IDs, time displays</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"7"</span>.<span class="fn">padStart</span>(<span class="num">3</span>, <span class="str">"0"</span>));    <span class="cmt">// "007"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"hi"</span>.<span class="fn">padEnd</span>(<span class="num">5</span>, <span class="str">"."</span>));    <span class="cmt">// "hi..."</span>
+
+<span class="cmt">// Repeat</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"ha"</span>.<span class="fn">repeat</span>(<span class="num">3</span>));           <span class="cmt">// "hahaha"</span>
+
+<span class="cmt">// Replace</span>
+<span class="kw">const</span> msg = <span class="str">"I love cats. Cats are great."</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(msg.<span class="fn">replace</span>(<span class="str">"cats"</span>, <span class="str">"dogs"</span>));    <span class="cmt">// "I love dogs. Cats are great." — first only</span>
+<span class="fn">console</span>.<span class="fn">log</span>(msg.<span class="fn">replaceAll</span>(<span class="str">"cats"</span>, <span class="str">"dogs"</span>)); <span class="cmt">// still only "I love dogs..." — case sensitive!</span>
+
+<span class="cmt">// Case-insensitive replace requires a regex</span>
+<span class="fn">console</span>.<span class="fn">log</span>(msg.<span class="fn">replace</span>(<span class="str">/cats/gi</span>, <span class="str">"dogs"</span>));  <span class="cmt">// "I love dogs. dogs are great."</span></code></pre>
+
+  <!-- SECTION 5 -->
+  <h2>5. Splitting &amp; Joining</h2>
+
+  <p><code>split</code> converts a string into an array; array's <code>join</code> does the reverse. Together they enable many string manipulation patterns.</p>
+
+  <pre><code><span class="cmt">// split(separator) — string → array</span>
+<span class="kw">const</span> csv = <span class="str">"alice,bob,carol"</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(csv.<span class="fn">split</span>(<span class="str">","</span>));         <span class="cmt">// ["alice", "bob", "carol"]</span>
+<span class="fn">console</span>.<span class="fn">log</span>(csv.<span class="fn">split</span>(<span class="str">","</span>, <span class="num">2</span>));      <span class="cmt">// ["alice", "bob"] — limit parameter</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"hello"</span>.<span class="fn">split</span>(<span class="str">""</span>));     <span class="cmt">// ["h","e","l","l","o"] — split every char</span>
+
+<span class="cmt">// join(separator) — array → string</span>
+<span class="kw">const</span> words = [<span class="str">"one"</span>, <span class="str">"two"</span>, <span class="str">"three"</span>];
+<span class="fn">console</span>.<span class="fn">log</span>(words.<span class="fn">join</span>(<span class="str">" - "</span>));     <span class="cmt">// "one - two - three"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(words.<span class="fn">join</span>(<span class="str">""</span>));        <span class="cmt">// "onetwothree"</span>
+
+<span class="cmt">// Classic pattern: reverse a string</span>
+<span class="kw">const</span> reversed = <span class="str">"hello"</span>.<span class="fn">split</span>(<span class="str">""</span>).<span class="fn">reverse</span>().<span class="fn">join</span>(<span class="str">""</span>);
+<span class="fn">console</span>.<span class="fn">log</span>(reversed);              <span class="cmt">// "olleh"</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Unicode caution</strong>
+    The split/reverse/join trick breaks for emoji and multi-byte characters because they consist of multiple UTF-16 code units. For production use, prefer the spread operator: <code>[...str].reverse().join("")</code>, which handles Unicode better.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. Template Literals</h2>
+
+  <p>Template literals (backtick strings) are one of the most important ES6 features. They replace string concatenation and enable multi-line strings cleanly.</p>
+
+  <pre><code><span class="kw">const</span> name = <span class="str">"Karan"</span>;
+<span class="kw">const</span> score = <span class="num">95</span>;
+
+<span class="cmt">// Old way — concatenation (ugly, error-prone)</span>
+<span class="kw">const</span> msg1 = <span class="str">"Hello, "</span> + name + <span class="str">"! Your score is "</span> + score + <span class="str">"."</span>;
+
+<span class="cmt">// Template literal — interpolation with ${}</span>
+<span class="kw">const</span> msg2 = `Hello, ${name}! Your score is ${score}.`;
+
+<span class="cmt">// Any expression works inside ${}
+</span><span class="kw">const</span> msg3 = `${name.<span class="fn">toUpperCase</span>()} scored ${score >= <span class="num">90</span> ? <span class="str">"A"</span> : <span class="str">"B"</span>}`;
+<span class="fn">console</span>.<span class="fn">log</span>(msg3); <span class="cmt">// "KARAN scored A"</span>
+
+<span class="cmt">// Multi-line strings — no \n needed</span>
+<span class="kw">const</span> html = `
+  &lt;div class="card"&gt;
+    &lt;h2&gt;${name}&lt;/h2&gt;
+    &lt;p&gt;Score: ${score}&lt;/p&gt;
+  &lt;/div&gt;
+`;</code></pre>
+
+  <h3>Tagged Template Literals</h3>
+  <p>A tag is a function placed in front of a template literal. The function receives the string parts and interpolated values separately, giving you total control over how the string is assembled. This powers libraries like <strong>styled-components</strong> and safe SQL query builders.</p>
+
+  <pre><code><span class="cmt">// Tag function signature: (strings, ...values)</span>
+<span class="kw">function</span> <span class="fn">highlight</span>(strings, ...values) {
+  <span class="kw">return</span> strings.<span class="fn">reduce</span>((result, str, i) => {
+    <span class="kw">const</span> val = values[i] !== <span class="kw">undefined</span>
+      ? `&lt;strong&gt;${values[i]}&lt;/strong&gt;`
+      : <span class="str">""</span>;
+    <span class="kw">return</span> result + str + val;
+  }, <span class="str">""</span>);
+}
+
+<span class="kw">const</span> user = <span class="str">"Karan"</span>, score = <span class="num">95</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">highlight</span>`Hello ${user}, you scored ${score}!`);
+<span class="cmt">// "Hello &lt;strong&gt;Karan&lt;/strong&gt;, you scored &lt;strong&gt;95&lt;/strong&gt;!"</span>
+
+<span class="cmt">// styled-components uses this pattern — this is real production JS:</span>
+<span class="cmt">// const Button = styled.button`color: ${props => props.primary ? 'blue' : 'gray'};`;</span></code></pre>
+
+  <!-- SECTION 7 -->
+  <h2>7. String Gotchas</h2>
+
+  <p>These are the common traps that catch even experienced developers.</p>
+
+  <h3>Type Conversions</h3>
+  <pre><code><span class="cmt">// Number → String</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="typ">String</span>(<span class="num">42</span>));         <span class="cmt">// "42" — explicit, preferred</span>
+<span class="fn">console</span>.<span class="fn">log</span>((<span class="num">42</span>).<span class="fn">toString</span>());    <span class="cmt">// "42"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="num">42</span> + <span class="str">""</span>);           <span class="cmt">// "42" — implicit, works but less readable</span>
+
+<span class="cmt">// String → Number</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="typ">Number</span>(<span class="str">"42"</span>));       <span class="cmt">// 42 — explicit, preferred</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">parseInt</span>(<span class="str">"42px"</span>));   <span class="cmt">// 42 — stops at first non-numeric char</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">parseFloat</span>(<span class="str">"3.14em"</span>)); <span class="cmt">// 3.14</span>
+<span class="fn">console</span>.<span class="fn">log</span>(+<span class="str">"42"</span>);             <span class="cmt">// 42 — unary plus, works but cryptic</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="typ">Number</span>(<span class="str">""</span>));         <span class="cmt">// 0 — watch out!</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="typ">Number</span>(<span class="str">"abc"</span>));      <span class="cmt">// NaN</span></code></pre>
+
+  <div class="callout danger">
+    <strong>NaN is never equal to itself</strong>
+    <code>NaN === NaN</code> is <code>false</code> — this is the one value in JavaScript that is not equal to itself. Always use <code>Number.isNaN(value)</code> to check for NaN. Never use <code>value === NaN</code>.
+  </div>
+
+  <pre><code><span class="cmt">// Checking for NaN</span>
+<span class="kw">const</span> result = <span class="typ">Number</span>(<span class="str">"abc"</span>);   <span class="cmt">// NaN</span>
+
+result === <span class="typ">NaN</span>;                  <span class="cmt">// false — always false, useless</span>
+<span class="typ">isNaN</span>(result);                   <span class="cmt">// true — but also returns true for isNaN("abc") (coerces first)</span>
+<span class="typ">Number</span>.<span class="fn">isNaN</span>(result);            <span class="cmt">// true — correct, no coercion</span>
+<span class="typ">Number</span>.<span class="fn">isNaN</span>(<span class="str">"abc"</span>);             <span class="cmt">// false — "abc" is not NaN, it's a string</span></code></pre>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">⚡ Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What does this return?</p>
+      <div class="question-code">"hello".slice(1, 3)</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> "hel"</label>
+        <label class="option"><input type="radio" name="q1" value="b"> "el"</label>
+        <label class="option"><input type="radio" name="q1" value="c"> "ell"</label>
+        <label class="option"><input type="radio" name="q1" value="d"> "ello"</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','slice(start, end) extracts from index 1 up to but NOT including index 3. Index 1 is &quot;e&quot;, index 2 is &quot;l&quot;, index 3 is excluded. Result: &quot;el&quot;.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What does this return?</p>
+      <div class="question-code">"  hello  ".trim()</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> "  hello  " (unchanged)</label>
+        <label class="option"><input type="radio" name="q2" value="b"> "hello" </label>
+        <label class="option"><input type="radio" name="q2" value="c"> "hello  " (left only)</label>
+        <label class="option"><input type="radio" name="q2" value="d"> "" (empty string)</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','b','trim() removes whitespace from BOTH ends of the string. trimStart() removes left only, trimEnd() removes right only.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What does this return?</p>
+      <div class="question-code">"5".padStart(3, "0")</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> "500"</label>
+        <label class="option"><input type="radio" name="q3" value="b"> "055"</label>
+        <label class="option"><input type="radio" name="q3" value="c"> "005"</label>
+        <label class="option"><input type="radio" name="q3" value="d"> "000"</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','c','padStart(targetLength, padString) pads the START (left side) until the total string length is 3. &quot;5&quot; has length 1, so two &quot;0&quot;s are added at the front: &quot;005&quot;.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What does <code>"a,b,c".split(",")</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> "a b c"</label>
+        <label class="option"><input type="radio" name="q4" value="b"> ["a,b,c"]</label>
+        <label class="option"><input type="radio" name="q4" value="c"> ["a", "b", "c"]</label>
+        <label class="option"><input type="radio" name="q4" value="d"> { 0: "a", 1: "b", 2: "c" }</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','c','split(separator) splits the string at each occurrence of the separator and returns an array of the parts. Each comma becomes a split point.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. What does this template literal evaluate to?</p>
+      <div class="question-code">`${2 + 2} items`</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> "${2 + 2} items" (literal string)</label>
+        <label class="option"><input type="radio" name="q5" value="b"> "2 + 2 items"</label>
+        <label class="option"><input type="radio" name="q5" value="c"> "4 items"</label>
+        <label class="option"><input type="radio" name="q5" value="d"> NaN items</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','Template literals evaluate any JS expression inside ${}. 2 + 2 evaluates to 4, which is coerced to the string &quot;4&quot;, resulting in &quot;4 items&quot;.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What does this return?</p>
+      <div class="question-code">"hello".replace("l", "r")</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> "herro" (all occurrences replaced)</label>
+        <label class="option"><input type="radio" name="q6" value="b"> "herlo" (only first replaced)</label>
+        <label class="option"><input type="radio" name="q6" value="c"> "herlo" — wait, which one? The first "l" is at index 2.</label>
+        <label class="option"><input type="radio" name="q6" value="d"> TypeError</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','b','replace() with a string pattern only replaces the FIRST occurrence. &quot;hello&quot; has two &quot;l&quot;s (index 2 and 3). Only the first is replaced: &quot;herlo&quot;. Use replaceAll() or a /g regex to replace all.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Scope &amp; Lexical Environment</strong> — this is where JavaScript starts making sense at a deeper level. Understanding how JS finds your variables is the prerequisite for closures and <code>this</code>.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent anything that surprised you. String methods trip up even senior devs — good questions here are: "When would I use tagged templates in a real project?" or "What's the performance difference between string concatenation and template literals?"
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 07 — Strings &amp; Template Literals</div>
+    <div class="nav-links">
+      <a href="./0006-objects-basics.html">← Prev: Objects</a>
+      <a href="./0008-scope-lexical-environment.html">Next: Scope →</a>
+      <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String" target="_blank">MDN: String ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

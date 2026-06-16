@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 19 — async/await</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 19 of 30</div>
+    <h1>async/await</h1>
+    <p class="subtitle">Async/await makes asynchronous code read like synchronous code — but under the hood it's still Promises.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read after the lesson:
+    <a href="https://javascript.info/async-await" target="_blank">javascript.info — async/await</a>.
+    This builds directly on the Promises lesson — if anything here is unclear, go back to Lesson 18 first.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. async Functions</h2>
+
+  <p>The <code>async</code> keyword before a function declaration does two things:</p>
+  <ol>
+    <li>It makes the function <strong>always return a Promise</strong> — no matter what you return inside</li>
+    <li>It enables the use of <code>await</code> inside the function body</li>
+  </ol>
+
+  <pre><code><span class="cmt">// Returning a plain value — automatically wrapped in Promise.resolve()</span>
+<span class="kw">async function</span> <span class="fn">getNumber</span>() {
+  <span class="kw">return</span> <span class="num">42</span>;
+}
+
+<span class="fn">getNumber</span>().<span class="fn">then</span>(n => <span class="fn">console</span>.log(n)); <span class="cmt">// 42</span>
+<span class="cmt">// Same as: Promise.resolve(42).then(...)</span>
+
+<span class="cmt">// Returning a Promise — the function's Promise adopts its state</span>
+<span class="kw">async function</span> <span class="fn">fetchData</span>() {
+  <span class="kw">return</span> <span class="fn">fetch</span>(<span class="str">'https://api.example.com/data'</span>); <span class="cmt">// fetch returns a Promise</span>
+}
+<span class="cmt">// The returned Promise waits for fetch to resolve</span>
+
+<span class="cmt">// Throwing inside an async function — rejects the returned Promise</span>
+<span class="kw">async function</span> <span class="fn">fail</span>() {
+  <span class="kw">throw new</span> <span class="typ">Error</span>(<span class="str">"Something went wrong"</span>);
+}
+<span class="fn">fail</span>().<span class="fn">catch</span>(err => <span class="fn">console</span>.error(err.message)); <span class="cmt">// "Something went wrong"</span></code></pre>
+
+  <div class="callout info">
+    <strong>async Functions Are Always Async</strong>
+    Even if the body of an async function is completely synchronous, the return value is still wrapped in a Promise. <code>async function f() {'{'} return 1; {'}'}</code> returns <code>Promise{'<'}1{'>'}</code>. The caller always gets a Promise.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. The await Keyword</h2>
+
+  <p><code>await</code> can only be used inside an <code>async</code> function (or at the top level of an ES Module). It does one thing: <strong>pauses the execution of the current async function</strong> until the Promise settles, then returns the resolved value.</p>
+
+  <pre><code><span class="kw">async function</span> <span class="fn">loadUser</span>() {
+  <span class="fn">console</span>.log(<span class="str">"Fetching user..."</span>);
+
+  <span class="cmt">// Execution PAUSES here until the fetch Promise resolves.</span>
+  <span class="cmt">// The event loop is NOT blocked — other code continues running.</span>
+  <span class="kw">const</span> response = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'https://api.example.com/user/1'</span>);
+
+  <span class="cmt">// This line only runs after the fetch completes</span>
+  <span class="kw">const</span> user = <span class="kw">await</span> response.<span class="fn">json</span>();
+
+  <span class="fn">console</span>.log(<span class="str">"Got user:"</span>, user.name);
+  <span class="kw">return</span> user;
+}
+
+<span class="fn">loadUser</span>(); <span class="cmt">// starts the async function</span>
+<span class="fn">console</span>.log(<span class="str">"This runs immediately while loadUser is waiting"</span>);</code></pre>
+
+  <p>The critical thing to understand: <code>await</code> pauses <em>only the async function it lives in</em>. The rest of the JavaScript program keeps running. The event loop continues picking up other tasks. This is not blocking.</p>
+
+  <div class="callout warn">
+    <strong>await Outside async is a SyntaxError</strong>
+    You cannot use <code>await</code> inside a regular function, an arrow function that is not async, or at the top level of a CommonJS module. The only exceptions are: async functions and ES Module top-level (ES2022+).
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. Error Handling with try/catch</h2>
+
+  <p>When an awaited Promise rejects, <code>await</code> throws that rejection as an error — which means you can catch it with a standard <code>try/catch</code> block. This is one of the biggest readability improvements over <code>.catch()</code> chaining.</p>
+
+  <pre><code><span class="cmt">// Promise .catch() style — catching at the end</span>
+<span class="fn">fetchUser</span>(id)
+  .<span class="fn">then</span>(user => <span class="fn">processUser</span>(user))
+  .<span class="fn">then</span>(result => <span class="fn">saveResult</span>(result))
+  .<span class="fn">catch</span>(err => <span class="fn">console</span>.error(<span class="str">"Failed:"</span>, err));
+
+<span class="cmt">// async/await style — reads like synchronous error handling</span>
+<span class="kw">async function</span> <span class="fn">run</span>() {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> user = <span class="kw">await</span> <span class="fn">fetchUser</span>(id);
+    <span class="kw">const</span> result = <span class="kw">await</span> <span class="fn">processUser</span>(user);
+    <span class="kw">await</span> <span class="fn">saveResult</span>(result);
+  } <span class="kw">catch</span> (err) {
+    <span class="fn">console</span>.error(<span class="str">"Failed:"</span>, err);
+    <span class="cmt">// All three errors caught in one place</span>
+  } <span class="kw">finally</span> {
+    <span class="fn">hideSpinner</span>(); <span class="cmt">// always runs</span>
+  }
+}</code></pre>
+
+  <div class="callout tip">
+    <strong>Granular Error Handling</strong>
+    You can wrap individual <code>await</code> expressions in their own <code>try/catch</code> blocks when different errors need different handling. Or use the pattern <code>const [err, result] = await somePromise.then(v => [null, v]).catch(e => [e, null])</code> to avoid nesting entirely (sometimes called the "go-style" pattern).
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. Sequential vs Parallel Execution</h2>
+
+  <p>This is one of the most important performance topics in async JavaScript, and one of the most common interview questions. Getting it wrong means slow code in production.</p>
+
+  <h3>Sequential — Each Waits for the Previous</h3>
+  <pre><code><span class="cmt">// BAD for independent operations — total time = t1 + t2 + t3</span>
+<span class="kw">async function</span> <span class="fn">loadDashboard</span>() {
+  <span class="kw">const</span> user     = <span class="kw">await</span> <span class="fn">fetchUser</span>();     <span class="cmt">// waits 300ms</span>
+  <span class="kw">const</span> orders   = <span class="kw">await</span> <span class="fn">fetchOrders</span>();   <span class="cmt">// waits another 400ms</span>
+  <span class="kw">const</span> settings = <span class="kw">await</span> <span class="fn">fetchSettings</span>(); <span class="cmt">// waits another 200ms</span>
+  <span class="cmt">// Total: ~900ms — but these three are independent!</span>
+  <span class="kw">return</span> { user, orders, settings };
+}</code></pre>
+
+  <h3>Parallel — Start All, Wait for All</h3>
+  <pre><code><span class="cmt">// GOOD — total time = max(t1, t2, t3) = ~400ms</span>
+<span class="kw">async function</span> <span class="fn">loadDashboard</span>() {
+  <span class="cmt">// Start all three at the same time</span>
+  <span class="kw">const</span> [user, orders, settings] = <span class="kw">await</span> <span class="typ">Promise</span>.<span class="fn">all</span>([
+    <span class="fn">fetchUser</span>(),
+    <span class="fn">fetchOrders</span>(),
+    <span class="fn">fetchSettings</span>(),
+  ]);
+  <span class="kw">return</span> { user, orders, settings };
+}</code></pre>
+
+  <div class="callout danger">
+    <strong>The Sequential Trap is Extremely Common</strong>
+    Writing <code>const a = await p1; const b = await p2;</code> when p1 and p2 are independent is one of the most frequent performance bugs in real-world async code. In a large app, this can add seconds to page load time. Always ask: "Do these operations depend on each other?" If not, use <code>Promise.all()</code>.
+  </div>
+
+  <h3>Manual Parallel Start (without Promise.all)</h3>
+  <pre><code><span class="cmt">// Another valid pattern: start Promises first, await later</span>
+<span class="kw">async function</span> <span class="fn">loadDashboard</span>() {
+  <span class="kw">const</span> userPromise     = <span class="fn">fetchUser</span>();     <span class="cmt">// starts immediately</span>
+  <span class="kw">const</span> ordersPromise   = <span class="fn">fetchOrders</span>();   <span class="cmt">// starts immediately</span>
+  <span class="kw">const</span> settingsPromise = <span class="fn">fetchSettings</span>(); <span class="cmt">// starts immediately</span>
+
+  <span class="kw">const</span> user     = <span class="kw">await</span> userPromise;     <span class="cmt">// now we wait</span>
+  <span class="kw">const</span> orders   = <span class="kw">await</span> ordersPromise;
+  <span class="kw">const</span> settings = <span class="kw">await</span> settingsPromise;
+
+  <span class="kw">return</span> { user, orders, settings };
+}</code></pre>
+
+  <!-- SECTION 5 -->
+  <h2>5. async/await vs Promises — When to Use Each</h2>
+
+  <table>
+    <thead>
+      <tr><th>Scenario</th><th>Recommended approach</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Sequential async steps with clear dependencies</td><td>async/await — cleaner and easier to read</td></tr>
+      <tr><td>Running multiple Promises in parallel</td><td>Promise.all() / Promise.allSettled() (mix with await)</td></tr>
+      <tr><td>Racing Promises or getting first success</td><td>Promise.race() / Promise.any()</td></tr>
+      <tr><td>Wrapping a callback API into a Promise</td><td>new Promise()</td></tr>
+      <tr><td>Event handlers (onClick, addEventListener)</td><td>Can be async — just be careful with unhandled rejections</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <strong>They Are Not Competitors</strong>
+    async/await and Promises work together. <code>await</code> is syntactic sugar over <code>.then()</code> — it compiles to Promise chains under the hood. Mixing both is common, correct, and often the clearest approach. For example: <code>const [a, b] = await Promise.all([p1, p2])</code> uses both.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. Common Mistakes</h2>
+
+  <h3>Mistake 1 — Forgetting await</h3>
+  <pre><code><span class="kw">async function</span> <span class="fn">getUser</span>() {
+  <span class="kw">const</span> user = <span class="fn">fetchUser</span>(); <span class="cmt">// ❌ forgot await — user is a Promise, not the value!</span>
+  <span class="fn">console</span>.log(user.name);   <span class="cmt">// undefined — Promise objects have no .name property</span>
+}
+
+<span class="cmt">// Fix:</span>
+<span class="kw">const</span> user = <span class="kw">await</span> <span class="fn">fetchUser</span>(); <span class="cmt">// ✅</span></code></pre>
+
+  <h3>Mistake 2 — Sequential When Parallel is Possible</h3>
+  <pre><code><span class="cmt">// ❌ slow — see Section 4 above for the fix</span>
+<span class="kw">const</span> a = <span class="kw">await</span> <span class="fn">fetchA</span>();
+<span class="kw">const</span> b = <span class="kw">await</span> <span class="fn">fetchB</span>(); <span class="cmt">// waits for A before starting B</span></code></pre>
+
+  <h3>Mistake 3 — Not Handling Errors</h3>
+  <pre><code><span class="cmt">// ❌ unhandled rejection — will crash the process in Node.js</span>
+<span class="kw">async function</span> <span class="fn">run</span>() {
+  <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">mightFail</span>(); <span class="cmt">// if this rejects, nothing catches it</span>
+}
+<span class="fn">run</span>(); <span class="cmt">// missing .catch() here!</span>
+
+<span class="cmt">// ✅ always handle rejections</span>
+<span class="fn">run</span>().<span class="fn">catch</span>(console.error);
+<span class="cmt">// or use try/catch inside the async function</span></code></pre>
+
+  <h3>Mistake 4 — await Inside forEach</h3>
+  <pre><code><span class="cmt">// ❌ WRONG — forEach does not await async callbacks</span>
+<span class="kw">async function</span> <span class="fn">processAll</span>(items) {
+  items.<span class="fn">forEach</span>(<span class="kw">async</span> (item) => {
+    <span class="kw">await</span> <span class="fn">process</span>(item); <span class="cmt">// the await is inside the callback, not processAll</span>
+  });
+  <span class="cmt">// processAll finishes immediately — items are NOT fully processed!</span>
+}
+
+<span class="cmt">// ✅ CORRECT — use for...of, which respects await</span>
+<span class="kw">async function</span> <span class="fn">processAll</span>(items) {
+  <span class="kw">for</span> (<span class="kw">const</span> item <span class="kw">of</span> items) {
+    <span class="kw">await</span> <span class="fn">process</span>(item); <span class="cmt">// sequential — each waits for the previous</span>
+  }
+}
+
+<span class="cmt">// ✅ ALSO CORRECT — if order doesn't matter, run in parallel</span>
+<span class="kw">async function</span> <span class="fn">processAll</span>(items) {
+  <span class="kw">await</span> <span class="typ">Promise</span>.<span class="fn">all</span>(items.<span class="fn">map</span>(item => <span class="fn">process</span>(item)));
+}</code></pre>
+
+  <div class="callout danger">
+    <strong>The forEach Mistake is Extremely Common</strong>
+    This trips up developers at every level. <code>Array.forEach()</code> is not async-aware. It fires each callback but does not wait for the returned Promise to settle. The function appears to "finish" before any async work is done. Use <code>for...of</code> for sequential, or <code>Promise.all(arr.map(...))</code> for parallel.
+  </div>
+
+  <!-- SECTION 7 -->
+  <h2>7. Async Iteration</h2>
+
+  <p>When data arrives in chunks over time (streams, pagination, WebSockets), you can use <code>for await...of</code> to consume async iterables — values that arrive asynchronously one at a time.</p>
+
+  <pre><code><span class="cmt">// Async generator — yields values asynchronously</span>
+<span class="kw">async function</span>* <span class="fn">fetchPages</span>(url) {
+  <span class="kw">let</span> page = <span class="num">1</span>;
+  <span class="kw">while</span> (<span class="kw">true</span>) {
+    <span class="kw">const</span> data = <span class="kw">await</span> <span class="fn">fetch</span>(`${url}?page=${page}`).<span class="fn">then</span>(r => r.<span class="fn">json</span>());
+    <span class="kw">if</span> (!data.results.length) <span class="kw">break</span>;
+    <span class="kw">yield</span> data.results;
+    page++;
+  }
+}
+
+<span class="cmt">// Consuming an async iterable with for await...of</span>
+<span class="kw">async function</span> <span class="fn">getAllResults</span>() {
+  <span class="kw">for await</span> (<span class="kw">const</span> page <span class="kw">of</span> <span class="fn">fetchPages</span>(<span class="str">'https://api.example.com/items'</span>)) {
+    <span class="fn">console</span>.log(<span class="str">"Got page:"</span>, page);
+    <span class="cmt">// waits for the next page before continuing</span>
+  }
+}</code></pre>
+
+  <p>Node.js streams, browser <code>ReadableStream</code>, and many database cursors are async iterables. <code>for await...of</code> is the clean, modern way to consume them.</p>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What does an <code>async</code> function <em>always</em> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> The value returned by the last statement</label>
+        <label class="option"><input type="radio" name="q1" value="b"> A Promise — even if you return a plain value, it is wrapped in Promise.resolve()</label>
+        <label class="option"><input type="radio" name="q1" value="c"> undefined, unless you return something explicitly</label>
+        <label class="option"><input type="radio" name="q1" value="d"> An async iterator</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','async functions always return a Promise. If you return a plain value like 42, the function returns Promise.resolve(42). If you throw, the function returns a rejected Promise. The caller always gets a Promise.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. Does <code>await</code> block the entire JavaScript thread while waiting?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> Yes — that is why async functions must not do heavy work</label>
+        <label class="option"><input type="radio" name="q2" value="b"> No — it pauses only the current async function; the event loop continues running other code</label>
+        <label class="option"><input type="radio" name="q2" value="c"> Yes, but only for up to 100ms</label>
+        <label class="option"><input type="radio" name="q2" value="d"> No — it runs in a background thread</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','b','await pauses execution of the current async function only. The JS engine returns to the event loop, which continues processing microtasks and macrotasks. Other code keeps running. await is non-blocking at the thread level.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. Is this code sequential or parallel? How long does it take if each fetch takes 300ms?</p>
+      <div class="question-code">const a = await fetchA();
+const b = await fetchB();</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> Parallel — ~300ms total</label>
+        <label class="option"><input type="radio" name="q3" value="b"> Sequential — ~600ms total (fetchB doesn't start until fetchA resolves)</label>
+        <label class="option"><input type="radio" name="q3" value="c"> Parallel — ~600ms total</label>
+        <label class="option"><input type="radio" name="q3" value="d"> Sequential — ~300ms total</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','b','Sequential — ~600ms total. fetchB does not start until the await on fetchA resolves. If the two operations are independent, this wastes 300ms. Fix: const [a, b] = await Promise.all([fetchA(), fetchB()]).')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. How do you run <code>fetchA()</code> and <code>fetchB()</code> in parallel using async/await?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> <code>const a = await fetchA(), b = await fetchB();</code></label>
+        <label class="option"><input type="radio" name="q4" value="b"> <code>const [a, b] = await Promise.all([fetchA(), fetchB()]);</code></label>
+        <label class="option"><input type="radio" name="q4" value="c"> <code>async const [a, b] = [fetchA(), fetchB()];</code></label>
+        <label class="option"><input type="radio" name="q4" value="d"> You cannot — parallel execution requires Web Workers</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','b','const [a, b] = await Promise.all([fetchA(), fetchB()]) starts both Promises simultaneously, then awaits the array of results. This is the idiomatic, correct way to run independent async operations in parallel with async/await.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. Does <code>await</code> work correctly inside an <code>Array.forEach()</code> callback?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> Yes — forEach is async-aware</label>
+        <label class="option"><input type="radio" name="q5" value="b"> No — forEach does not await the return value of its callback; the outer function does not wait. Use for...of instead.</label>
+        <label class="option"><input type="radio" name="q5" value="c"> Yes, but only if the forEach callback is also marked async</label>
+        <label class="option"><input type="radio" name="q5" value="d"> It depends on the JavaScript engine version</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','b','forEach fires each callback but ignores the returned Promise. Even if the callback is async, forEach does not wait for it to settle. The outer async function sees forEach as synchronous and returns before any of the awaits inside complete. Use for...of for sequential, or Promise.all(arr.map(...)) for parallel.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. If an awaited Promise rejects inside an async function with <em>no</em> try/catch, what happens?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> The error is silently ignored and execution continues with undefined</label>
+        <label class="option"><input type="radio" name="q6" value="b"> The async function's returned Promise rejects with the same reason (unhandled rejection if the caller doesn't catch it)</label>
+        <label class="option"><input type="radio" name="q6" value="c"> JavaScript automatically retries the awaited operation once</label>
+        <label class="option"><input type="radio" name="q6" value="d"> A synchronous ReferenceError is thrown immediately</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','b','When an awaited Promise rejects with no try/catch, the async function itself rejects with that reason. If the caller does not handle the returned Promise (no .catch() and no try/catch), it becomes an unhandled Promise rejection — which crashes Node.js processes and triggers a warning in browsers.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>DOM Manipulation</strong> — now that you have a firm grip on async JavaScript, you will learn how to read and modify the browser's document tree. This is where JavaScript meets the visible webpage.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent anything that was unclear. Two great follow-up questions for this lesson: "How does the JavaScript engine actually implement await internally?" (generators + Promises) and "How do I handle the case where I want parallel operations but only need the first one that succeeds?" (Promise.any).
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 19 — async/await</div>
+    <div class="nav-links">
+      <a href="./0018-callbacks-promises.html">← Prev: Callbacks &amp; Promises</a>
+      <a href="./0020-dom-manipulation.html">Next: DOM Manipulation →</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '&#10003; Correct! ' : '&#10007; Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

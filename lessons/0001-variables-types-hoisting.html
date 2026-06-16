@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 01 — Variables, Types & Hoisting</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 01 of 15</div>
+    <h1>Variables, Types &amp; Hoisting</h1>
+    <p class="subtitle">The foundation that separates "I can write JS" from "I understand JS".</p>
+  </header>
+
+  <!-- PRIMARY SOURCE -->
+  <div class="primary-source">
+    <strong>📖 Primary Source for this lesson</strong>
+    Read this <em>after</em> the lesson to solidify what you learn:
+    <a href="https://javascript.info/variables" target="_blank">javascript.info — Variables</a> &amp;
+    <a href="https://javascript.info/types" target="_blank">javascript.info — Data Types</a>.
+    These are the highest-quality JS learning resources available.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. The Three Ways to Declare a Variable</h2>
+
+  <p>JavaScript has three keywords for variable declarations. This is <em>frequently tested in interviews</em>.</p>
+
+  <table>
+    <thead>
+      <tr><th>Keyword</th><th>Scope</th><th>Hoisted?</th><th>Re-declarable?</th><th>Re-assignable?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>var</code></td><td>Function</td><td>Yes (as <code>undefined</code>)</td><td>Yes</td><td>Yes</td></tr>
+      <tr><td><code>let</code></td><td>Block</td><td>Yes (TDZ — not accessible)</td><td>No</td><td>Yes</td></tr>
+      <tr><td><code>const</code></td><td>Block</td><td>Yes (TDZ — not accessible)</td><td>No</td><td>No *</td></tr>
+    </tbody>
+  </table>
+
+  <p>* <code>const</code> prevents <em>re-assignment</em>, not mutation. You can still modify properties of a <code>const</code> object.</p>
+
+  <div class="callout info">
+    <strong>Rule of thumb</strong>
+    Default to <code>const</code>. Use <code>let</code> only when you know the value will change. Never use <code>var</code> in new code — its function scope and hoisting behavior cause subtle bugs.
+  </div>
+
+  <pre><code><span class="kw">const</span> name = <span class="str">"Karan"</span>;
+<span class="cmt">// name = "Someone else"; // ❌ TypeError: Assignment to constant variable</span>
+
+<span class="kw">const</span> user = { age: <span class="num">22</span> };
+user.age = <span class="num">23</span>; <span class="cmt">// ✅ Fine — we're mutating the object, not re-assigning the variable</span>
+user = {}; <span class="cmt">// ❌ TypeError — re-assignment is forbidden</span></code></pre>
+
+  <!-- SECTION 2 -->
+  <h2>2. JavaScript's 8 Data Types</h2>
+
+  <p>JS has <strong>7 primitive types</strong> and <strong>1 object type</strong>. This distinction matters deeply for how values are copied and compared.</p>
+
+  <table>
+    <thead>
+      <tr><th>Type</th><th>Example</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>number</code></td><td><code>42</code>, <code>3.14</code>, <code>NaN</code>, <code>Infinity</code></td><td>One type for all numbers (no int/float split)</td></tr>
+      <tr><td><code>bigint</code></td><td><code>9007199254740993n</code></td><td>For integers beyond <code>Number.MAX_SAFE_INTEGER</code></td></tr>
+      <tr><td><code>string</code></td><td><code>"hello"</code>, <code>'world'</code>, <code>`template`</code></td><td>Immutable sequence of characters</td></tr>
+      <tr><td><code>boolean</code></td><td><code>true</code>, <code>false</code></td><td>—</td></tr>
+      <tr><td><code>null</code></td><td><code>null</code></td><td>Intentional absence of a value</td></tr>
+      <tr><td><code>undefined</code></td><td><code>undefined</code></td><td>Variable declared but not assigned</td></tr>
+      <tr><td><code>symbol</code></td><td><code>Symbol("id")</code></td><td>Unique identifier, rarely needed in early JS</td></tr>
+      <tr><td><code>object</code></td><td><code>{}</code>, <code>[]</code>, <code>function</code></td><td>Everything else — stored by reference</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Primitives vs. Objects: The Critical Difference</h3>
+
+  <p>Primitives are copied <strong>by value</strong>. Objects are copied <strong>by reference</strong>.</p>
+
+  <pre><code><span class="cmt">// PRIMITIVES — copied by value</span>
+<span class="kw">let</span> a = <span class="num">5</span>;
+<span class="kw">let</span> b = a;
+b = <span class="num">10</span>;
+<span class="fn">console</span>.log(a); <span class="cmt">// 5 — a is unchanged</span>
+
+<span class="cmt">// OBJECTS — copied by reference</span>
+<span class="kw">let</span> obj1 = { score: <span class="num">5</span> };
+<span class="kw">let</span> obj2 = obj1;
+obj2.score = <span class="num">10</span>;
+<span class="fn">console</span>.log(obj1.score); <span class="cmt">// 10 — both point to the SAME object</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Interview Trap</strong>
+    When you compare two objects with <code>===</code>, JS compares their <em>references</em>, not their contents.
+    <code>{} === {}</code> is <code>false</code>. Two separate empty objects are not the same object.
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. typeof — and Its Famous Bug</h2>
+
+  <p>Use <code>typeof</code> to check a variable's type at runtime.</p>
+
+  <pre><code><span class="fn">typeof</span> <span class="str">"hello"</span>     <span class="cmt">// "string"</span>
+<span class="fn">typeof</span> <span class="num">42</span>          <span class="cmt">// "number"</span>
+<span class="fn">typeof</span> <span class="kw">true</span>        <span class="cmt">// "boolean"</span>
+<span class="fn">typeof</span> <span class="kw">undefined</span>   <span class="cmt">// "undefined"</span>
+<span class="fn">typeof</span> <span class="fn">Symbol</span>()    <span class="cmt">// "symbol"</span>
+<span class="fn">typeof</span> {}          <span class="cmt">// "object"</span>
+<span class="fn">typeof</span> []          <span class="cmt">// "object" ← arrays are objects</span>
+<span class="fn">typeof</span> <span class="kw">function</span>(){} <span class="cmt">// "function" ← special case</span>
+<span class="fn">typeof</span> <span class="kw">null</span>        <span class="cmt">// "object" ← THE FAMOUS BUG</span></code></pre>
+
+  <div class="callout danger">
+    <strong>Known Language Bug</strong>
+    <code>typeof null === "object"</code> is a bug from 1995 that can never be fixed without breaking the web.
+    To check for null: use <code>value === null</code>, not <code>typeof</code>.
+  </div>
+
+  <p>To check if something is an array: use <code>Array.isArray(value)</code>.</p>
+
+  <!-- SECTION 4 -->
+  <h2>4. Hoisting — What JavaScript Does Before Running Your Code</h2>
+
+  <p>Before executing any code, the JavaScript engine <strong>hoists</strong> (moves to the top) declarations. The behavior differs for <code>var</code>, <code>let</code>/<code>const</code>, and functions.</p>
+
+  <h3>var Hoisting</h3>
+  <p>The <em>declaration</em> is hoisted and initialized to <code>undefined</code>. The <em>assignment</em> stays in place.</p>
+
+  <pre><code><span class="fn">console</span>.log(x); <span class="cmt">// undefined — NOT a ReferenceError</span>
+<span class="kw">var</span> x = <span class="num">5</span>;
+<span class="fn">console</span>.log(x); <span class="cmt">// 5</span>
+
+<span class="cmt">// JS sees it as:</span>
+<span class="kw">var</span> x;           <span class="cmt">// declaration hoisted</span>
+<span class="fn">console</span>.log(x); <span class="cmt">// undefined</span>
+x = <span class="num">5</span>;           <span class="cmt">// assignment stays here</span></code></pre>
+
+  <h3>let and const — The Temporal Dead Zone (TDZ)</h3>
+  <p><code>let</code> and <code>const</code> are also hoisted, but they are <strong>not initialized</strong>. Accessing them before the declaration throws a <code>ReferenceError</code>. The time between the start of the scope and the declaration line is called the <strong>Temporal Dead Zone</strong>.</p>
+
+  <pre><code><span class="fn">console</span>.log(y); <span class="cmt">// ❌ ReferenceError: Cannot access 'y' before initialization</span>
+<span class="kw">let</span> y = <span class="num">10</span>;
+
+<span class="cmt">// Same for const:</span>
+<span class="fn">console</span>.log(z); <span class="cmt">// ❌ ReferenceError</span>
+<span class="kw">const</span> z = <span class="num">20</span>;</code></pre>
+
+  <h3>Function Declaration Hoisting</h3>
+  <p>Function <em>declarations</em> are fully hoisted — both the name <em>and</em> the body. You can call them before they appear in the code.</p>
+
+  <pre><code>greet(); <span class="cmt">// ✅ "Hello!" — fully hoisted</span>
+
+<span class="kw">function</span> <span class="fn">greet</span>() {
+  <span class="fn">console</span>.log(<span class="str">"Hello!"</span>);
+}
+
+<span class="cmt">// But function EXPRESSIONS are NOT fully hoisted:</span>
+sayBye(); <span class="cmt">// ❌ TypeError: sayBye is not a function</span>
+<span class="kw">var</span> sayBye = <span class="kw">function</span>() { <span class="fn">console</span>.log(<span class="str">"Bye!"</span>); }
+<span class="cmt">// Only 'var sayBye' is hoisted (as undefined), not the function itself</span></code></pre>
+
+  <div class="callout tip">
+    <strong>Mental Model</strong>
+    Think of JavaScript execution in two phases:<br>
+    1. <strong>Creation phase</strong> — scan for declarations, set them up in memory<br>
+    2. <strong>Execution phase</strong> — run the code line by line<br>
+    Hoisting is just what happens in phase 1.
+  </div>
+
+  <!-- SECTION 5: TYPE COERCION -->
+  <h2>5. Type Coercion — JavaScript's Surprising Conversions</h2>
+
+  <p>JS will automatically convert types in certain operations. This is called <strong>implicit coercion</strong> and is a major source of bugs and interview questions.</p>
+
+  <pre><code><span class="cmt">// == uses coercion; === does not</span>
+<span class="num">0</span> == <span class="str">""</span>         <span class="cmt">// true  (both coerce to falsy)</span>
+<span class="num">0</span> === <span class="str">""</span>        <span class="cmt">// false (different types)</span>
+<span class="kw">null</span> == <span class="kw">undefined</span>  <span class="cmt">// true  (special rule)</span>
+<span class="kw">null</span> === <span class="kw">undefined</span> <span class="cmt">// false</span>
+<span class="str">"5"</span> + <span class="num">3</span>        <span class="cmt">// "53"  (+ with string = concatenation)</span>
+<span class="str">"5"</span> - <span class="num">3</span>        <span class="cmt">// 2     (- always converts to number)</span>
+<span class="kw">true</span> + <span class="kw">true</span>    <span class="cmt">// 2     (booleans coerce to numbers)</span></code></pre>
+
+  <div class="callout info">
+    <strong>The Rule</strong>
+    Always use <code>===</code> (strict equality) in production code. Use <code>==</code> only when you deliberately want type coercion — and always comment why.
+  </div>
+
+  <h3>Falsy and Truthy Values</h3>
+  <p>In boolean context, every value is either <em>truthy</em> or <em>falsy</em>. Only <strong>6 values are falsy</strong>:</p>
+
+  <pre><code><span class="cmt">// The 6 falsy values:</span>
+<span class="kw">false</span>
+<span class="num">0</span>          <span class="cmt">// also -0 and 0n (BigInt zero)</span>
+<span class="str">""</span>         <span class="cmt">// empty string</span>
+<span class="kw">null</span>
+<span class="kw">undefined</span>
+<span class="typ">NaN</span>
+
+<span class="cmt">// Everything else is truthy — including:</span>
+<span class="str">"0"</span>        <span class="cmt">// ← truthy! Non-empty string</span>
+[]         <span class="cmt">// ← truthy! Empty array</span>
+{}         <span class="cmt">// ← truthy! Empty object</span></code></pre>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">⚡ Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What does this log?</p>
+      <div class="question-code">console.log(x);
+var x = 5;
+console.log(x);</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> undefined, then 5</label>
+        <label class="option"><input type="radio" name="q1" value="b"> 5, then 5</label>
+        <label class="option"><input type="radio" name="q1" value="c"> ReferenceError, then 5</label>
+        <label class="option"><input type="radio" name="q1" value="d"> undefined, then undefined</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','a','var declaration is hoisted and initialized to <code>undefined</code>. The assignment (= 5) stays in place, so the first log sees undefined.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What does this log?</p>
+      <div class="question-code">console.log(y);
+let y = 10;</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> undefined</label>
+        <label class="option"><input type="radio" name="q2" value="b"> ReferenceError</label>
+        <label class="option"><input type="radio" name="q2" value="c"> null</label>
+        <label class="option"><input type="radio" name="q2" value="d"> 10</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','b','<code>let</code> is in the Temporal Dead Zone (TDZ) before its declaration. Accessing it throws a ReferenceError.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What is <code>typeof null</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> "null"</label>
+        <label class="option"><input type="radio" name="q3" value="b"> "undefined"</label>
+        <label class="option"><input type="radio" name="q3" value="c"> "object"</label>
+        <label class="option"><input type="radio" name="q3" value="d"> "boolean"</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','c','This is a famous JS bug from 1995. <code>typeof null === \"object\"</code> is incorrect but can never be fixed without breaking the web.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What does this log?</p>
+      <div class="question-code">let obj1 = { score: 5 };
+let obj2 = obj1;
+obj2.score = 99;
+console.log(obj1.score);</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> 5</label>
+        <label class="option"><input type="radio" name="q4" value="b"> 99</label>
+        <label class="option"><input type="radio" name="q4" value="c"> undefined</label>
+        <label class="option"><input type="radio" name="q4" value="d"> ReferenceError</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','b','Objects are copied by reference. obj1 and obj2 point to the same object in memory, so mutating one mutates both.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. What does this evaluate to?</p>
+      <div class="question-code">"5" + 3</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> 8</label>
+        <label class="option"><input type="radio" name="q5" value="b"> "53"</label>
+        <label class="option"><input type="radio" name="q5" value="c"> "8"</label>
+        <label class="option"><input type="radio" name="q5" value="d"> NaN</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','b','When + is used with a string, JS coerces the other operand to a string and concatenates. So 3 becomes \"3\" and the result is \"53\".')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. Which of these values is <strong>truthy</strong>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> 0</label>
+        <label class="option"><input type="radio" name="q6" value="b"> ""</label>
+        <label class="option"><input type="radio" name="q6" value="c"> []</label>
+        <label class="option"><input type="radio" name="q6" value="d"> null</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','c','[] is an empty array — but it is truthy. Only 6 values are falsy: false, 0, \"\", null, undefined, NaN. An empty array is NOT one of them.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <!-- WHAT'S NEXT -->
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Functions Deep Dive</strong> — declarations vs expressions, arrow functions, scope, and how functions interact with hoisting. This is where closures start to take shape.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent anything that was unclear, surprising, or that you want to go deeper on. Just type your question — the agent is here to help you understand, not just to give you lessons.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 01 — Variables, Types &amp; Hoisting</div>
+    <div class="nav-links">
+      <a href="./0002-functions-deep-dive.html">Next: Functions →</a>
+      <a href="../reference/">Reference Documents</a>
+      <a href="https://javascript.info/variables" target="_blank">MDN: Variables ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

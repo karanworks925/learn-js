@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 09 — Closures</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 09 of 30</div>
+    <h1>Closures</h1>
+    <p class="subtitle">The most important JavaScript concept — and the most asked about in interviews.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>📖 Primary Source for this lesson</strong>
+    Read this <em>after</em> the lesson:
+    <a href="https://javascript.info/closure" target="_blank">javascript.info — Closures</a>.
+    This is one of the most thorough explanations of closures on the internet. Re-read it until every section clicks.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. What is a Closure?</h2>
+
+  <p>A <strong>closure</strong> is a function that remembers the variables from its outer lexical environment even after that outer function has finished executing and returned.</p>
+
+  <p>Simpler: a closure is a function bundled together with the surrounding state (variables) it was created in.</p>
+
+  <p>Here is the classic example — a counter that persists its state between calls:</p>
+
+  <pre><code><span class="kw">function</span> <span class="fn">makeCounter</span>() {
+  <span class="kw">let</span> count = <span class="num">0</span>; <span class="cmt">// this variable lives in makeCounter's Lexical Environment</span>
+
+  <span class="kw">return</span> <span class="kw">function</span>() {
+    count++;           <span class="cmt">// this inner function closes over count</span>
+    <span class="kw">return</span> count;
+  };
+}
+
+<span class="kw">const</span> counter = <span class="fn">makeCounter</span>(); <span class="cmt">// makeCounter runs and RETURNS the inner function</span>
+                                  <span class="cmt">// makeCounter is done — but its Lexical Environment lives on</span>
+
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">counter</span>()); <span class="cmt">// 1</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">counter</span>()); <span class="cmt">// 2</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">counter</span>()); <span class="cmt">// 3</span>
+
+<span class="cmt">// Each counter is independent</span>
+<span class="kw">const</span> counter2 = <span class="fn">makeCounter</span>();
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">counter2</span>()); <span class="cmt">// 1 — fresh count, completely separate</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">counter</span>());  <span class="cmt">// 4 — the first counter keeps going</span></code></pre>
+
+  <div class="callout info">
+    <strong>The key insight</strong>
+    <code>count</code> is not inside the returned function. It is in the Lexical Environment of <code>makeCounter</code>. The returned function holds a live reference to that environment — so every time you call <code>counter()</code>, it reads and updates the same <code>count</code> variable.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. How Closures Work Under the Hood</h2>
+
+  <p>When a function is <em>created</em> (not called), JavaScript attaches a hidden internal slot called <code>[[Environment]]</code> to it. This slot holds a reference to the Lexical Environment that was active at the moment the function was created.</p>
+
+  <p>Step-by-step walkthrough of the counter example:</p>
+
+  <ol>
+    <li><code>makeCounter()</code> is called. A new Lexical Environment is created: <code>{ count: 0 }</code>. Its outer reference points to the global LE.</li>
+    <li>The inner function is created inside <code>makeCounter</code>. Its <code>[[Environment]]</code> is set to makeCounter's LE: <code>{ count: 0 }</code>.</li>
+    <li><code>makeCounter</code> returns the inner function and finishes executing.</li>
+    <li>Normally, makeCounter's LE would be garbage collected. But the returned inner function still references it — so it stays in memory.</li>
+    <li>When you call <code>counter()</code>, it runs inside its <code>[[Environment]]</code>. It finds <code>count</code> there, increments it, and returns it.</li>
+    <li>The LE now holds <code>{ count: 1 }</code>. It persists for the next call.</li>
+  </ol>
+
+  <pre><code><span class="cmt">// Memory model (simplified):</span>
+<span class="cmt">//</span>
+<span class="cmt">// counter function object</span>
+<span class="cmt">//   [[Environment]] ──► { count: 3 }  ──► global LE</span>
+<span class="cmt">//                         ▲</span>
+<span class="cmt">//                         This LE persists as long as counter exists</span></code></pre>
+
+  <!-- SECTION 3 -->
+  <h2>3. Practical Use 1: Data Encapsulation / Private State</h2>
+
+  <p>Closures let you create variables that are truly private — inaccessible from outside the function. This is how you write encapsulated modules in plain JavaScript without classes.</p>
+
+  <pre><code><span class="kw">function</span> <span class="fn">createBankAccount</span>(initialBalance) {
+  <span class="kw">let</span> balance = initialBalance; <span class="cmt">// PRIVATE — nothing outside can touch this directly</span>
+
+  <span class="kw">return</span> {
+    <span class="fn">deposit</span>(amount) {
+      <span class="kw">if</span> (amount > <span class="num">0</span>) balance += amount;
+      <span class="kw">return</span> balance;
+    },
+    <span class="fn">withdraw</span>(amount) {
+      <span class="kw">if</span> (amount > balance) <span class="kw">throw</span> <span class="kw">new</span> <span class="typ">Error</span>(<span class="str">"Insufficient funds"</span>);
+      balance -= amount;
+      <span class="kw">return</span> balance;
+    },
+    <span class="fn">getBalance</span>() {
+      <span class="kw">return</span> balance; <span class="cmt">// controlled read access</span>
+    }
+  };
+}
+
+<span class="kw">const</span> account = <span class="fn">createBankAccount</span>(<span class="num">100</span>);
+<span class="fn">console</span>.<span class="fn">log</span>(account.<span class="fn">deposit</span>(<span class="num">50</span>));   <span class="cmt">// 150</span>
+<span class="fn">console</span>.<span class="fn">log</span>(account.<span class="fn">withdraw</span>(<span class="num">30</span>)); <span class="cmt">// 120</span>
+<span class="fn">console</span>.<span class="fn">log</span>(account.balance);       <span class="cmt">// undefined — direct access is blocked</span></code></pre>
+
+  <!-- SECTION 4 -->
+  <h2>4. Practical Use 2: Factory Functions</h2>
+
+  <p>A factory function is a function that returns a customized function. The returned function closes over the factory's parameters, "remembering" its configuration forever.</p>
+
+  <pre><code><span class="cmt">// Multiplier factory</span>
+<span class="kw">const</span> <span class="fn">multiplier</span> = (n) => (x) => x * n;
+
+<span class="kw">const</span> double = <span class="fn">multiplier</span>(<span class="num">2</span>);   <span class="cmt">// double closes over n=2</span>
+<span class="kw">const</span> triple = <span class="fn">multiplier</span>(<span class="num">3</span>);   <span class="cmt">// triple closes over n=3</span>
+<span class="kw">const</span> times10 = <span class="fn">multiplier</span>(<span class="num">10</span>); <span class="cmt">// times10 closes over n=10</span>
+
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">double</span>(<span class="num">5</span>));   <span class="cmt">// 10</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">triple</span>(<span class="num">5</span>));   <span class="cmt">// 15</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">times10</span>(<span class="num">5</span>)); <span class="cmt">// 50</span>
+
+<span class="cmt">// Real-world example: URL builder</span>
+<span class="kw">const</span> <span class="fn">apiEndpoint</span> = (base) => (path) => `${base}${path}`;
+
+<span class="kw">const</span> devApi = <span class="fn">apiEndpoint</span>(<span class="str">"http://localhost:3000"</span>);
+<span class="kw">const</span> prodApi = <span class="fn">apiEndpoint</span>(<span class="str">"https://api.myapp.com"</span>);
+
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">devApi</span>(<span class="str">"/users"</span>));   <span class="cmt">// "http://localhost:3000/users"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">prodApi</span>(<span class="str">"/users"</span>));  <span class="cmt">// "https://api.myapp.com/users"</span></code></pre>
+
+  <!-- SECTION 5 -->
+  <h2>5. Practical Use 3: Event Handlers with Remembered State</h2>
+
+  <p>Closures are what make event handlers stateful — each handler can remember data from when it was created.</p>
+
+  <pre><code><span class="cmt">// A button that counts how many times it has been clicked</span>
+<span class="kw">function</span> <span class="fn">makeClickCounter</span>(buttonLabel) {
+  <span class="kw">let</span> clicks = <span class="num">0</span>;
+
+  <span class="kw">return</span> <span class="kw">function</span> <span class="fn">handleClick</span>() {
+    clicks++;
+    <span class="fn">console</span>.<span class="fn">log</span>(`${buttonLabel} clicked ${clicks} time(s)`);
+  };
+}
+
+<span class="kw">const</span> onSaveClick = <span class="fn">makeClickCounter</span>(<span class="str">"Save"</span>);
+<span class="kw">const</span> onDeleteClick = <span class="fn">makeClickCounter</span>(<span class="str">"Delete"</span>);
+
+<span class="cmt">// In a real app: button.addEventListener("click", onSaveClick);</span>
+<span class="fn">onSaveClick</span>();   <span class="cmt">// "Save clicked 1 time(s)"</span>
+<span class="fn">onSaveClick</span>();   <span class="cmt">// "Save clicked 2 time(s)"</span>
+<span class="fn">onDeleteClick</span>(); <span class="cmt">// "Delete clicked 1 time(s)" — independent count</span></code></pre>
+
+  <!-- SECTION 6 -->
+  <h2>6. The Classic <code>var</code>-in-Loop Bug (Interview Favorite)</h2>
+
+  <p>This is one of the most commonly asked JavaScript interview questions. Read it carefully.</p>
+
+  <pre><code><span class="cmt">// THE BUG</span>
+<span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < <span class="num">3</span>; i++) {
+  <span class="fn">setTimeout</span>(() => <span class="fn">console</span>.<span class="fn">log</span>(i), <span class="num">0</span>);
+}
+<span class="cmt">// Prints: 3, 3, 3 — NOT 0, 1, 2</span></code></pre>
+
+  <p><strong>Why?</strong> Because <code>var</code> is function-scoped, there is only ONE <code>i</code> variable shared by all three callbacks. By the time the setTimeout callbacks fire (after the loop finishes), <code>i</code> is already <code>3</code>. All three callbacks close over the same <code>i</code>.</p>
+
+  <h3>Fix 1: Use <code>let</code> (the modern solution)</h3>
+  <pre><code><span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < <span class="num">3</span>; i++) {
+  <span class="fn">setTimeout</span>(() => <span class="fn">console</span>.<span class="fn">log</span>(i), <span class="num">0</span>);
+}
+<span class="cmt">// Prints: 0, 1, 2 — correct!</span>
+<span class="cmt">// let creates a NEW binding for i in each iteration's block scope.</span>
+<span class="cmt">// Each callback closes over a DIFFERENT i.</span></code></pre>
+
+  <h3>Fix 2: IIFE (Immediately Invoked Function Expression)</h3>
+  <p>The historical fix before <code>let</code> existed. Creates a new scope per iteration by immediately invoking a function with the current value of <code>i</code>.</p>
+
+  <pre><code><span class="kw">for</span> (<span class="kw">var</span> i = <span class="num">0</span>; i < <span class="num">3</span>; i++) {
+  (<span class="kw">function</span>(capturedI) {
+    <span class="fn">setTimeout</span>(() => <span class="fn">console</span>.<span class="fn">log</span>(capturedI), <span class="num">0</span>);
+  })(i); <span class="cmt">// Immediately call, passing current i as argument</span>
+}
+<span class="cmt">// Prints: 0, 1, 2 — correct!</span>
+<span class="cmt">// Each IIFE invocation gets its own capturedI parameter (0, 1, 2).</span>
+<span class="cmt">// The callback closes over capturedI, not i.</span></code></pre>
+
+  <div class="callout tip">
+    <strong>In interviews</strong>
+    When asked about the loop bug, mention all three options: the bug (var, shared scope), Fix 1 (let, per-iteration block scope), and Fix 2 (IIFE, pre-let historical solution). Showing you know all three signals deep understanding.
+  </div>
+
+  <!-- SECTION 7 -->
+  <h2>7. Interview: How to Answer "What is a Closure?"</h2>
+
+  <p>This question appears in almost every JavaScript interview. Here is a model answer you should memorize and make your own:</p>
+
+  <div class="callout info">
+    <strong>Model answer</strong>
+    "A closure is a function that retains access to its outer lexical environment — the variables and parameters of the function it was defined inside — even after that outer function has returned. In JavaScript, every function creates a closure when it is defined. The inner function gets a hidden <code>[[Environment]]</code> reference that keeps the outer scope alive in memory as long as the inner function exists. This enables patterns like private state, factory functions, and memoization."
+  </div>
+
+  <p><strong>Common follow-up questions and how to handle them:</strong></p>
+
+  <table>
+    <thead>
+      <tr><th>Follow-up Question</th><th>Key Point in Your Answer</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>"Give me a real-world use case"</td><td>Private state (counter, bank account), factory functions (multiplier, API builders), event handlers, memoization, partial application</td></tr>
+      <tr><td>"Does a closure cause memory leaks?"</td><td>Yes, if you hold a closure that references large outer objects and never release it. The outer LE won't be GC'd. Solution: nullify references when done.</td></tr>
+      <tr><td>"What's the var-in-loop bug?"</td><td>All callbacks close over the same var. Fix: use let (new binding per iteration) or IIFE (capture value in new function scope).</td></tr>
+      <tr><td>"How is a closure different from a class?"</td><td>Both can encapsulate state. Closures are simpler, function-based, have no prototype chain overhead. Classes are more structured and better for multiple instances with shared methods.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">⚡ Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. These are real interview questions. Try to recall from memory.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What does a closure "close over"?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> The global scope only</label>
+        <label class="option"><input type="radio" name="q1" value="b"> Its own local variables only</label>
+        <label class="option"><input type="radio" name="q1" value="c"> Its outer lexical environment — the variables in scope where the function was defined</label>
+        <label class="option"><input type="radio" name="q1" value="d"> The object that called the function</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','c','A closure closes over its outer lexical environment — specifically, a reference to the Lexical Environment of the scope where the function was defined. This includes all outer variables, not just globals and not just locals.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. In the classic counter example, where is <code>count</code> stored between calls?</p>
+      <div class="question-code">function makeCounter() {
+  let count = 0;
+  return function() { return ++count; };
+}
+const counter = makeCounter();
+counter(); // 1
+counter(); // 2</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> In a global variable</label>
+        <label class="option"><input type="radio" name="q2" value="b"> In the Lexical Environment of makeCounter, kept alive by the closure</label>
+        <label class="option"><input type="radio" name="q2" value="c"> Inside the counter function itself</label>
+        <label class="option"><input type="radio" name="q2" value="d"> On the window object</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','b','count lives in makeCounter\'s Lexical Environment. After makeCounter returns, that LE is kept alive in memory because the returned inner function holds a reference to it via its [[Environment]] slot. Each call to counter() updates count in that persisted LE.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What does this print?</p>
+      <div class="question-code">for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 0);
+}</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> 0, 1, 2</label>
+        <label class="option"><input type="radio" name="q3" value="b"> 3, 3, 3</label>
+        <label class="option"><input type="radio" name="q3" value="c"> 0, 0, 0</label>
+        <label class="option"><input type="radio" name="q3" value="d"> undefined, undefined, undefined</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','b','var is function-scoped — there is ONE shared i for all three callbacks. The loop runs to completion (i becomes 3) before any setTimeout fires. All three callbacks then read the same i, which is 3.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. How do you fix the loop bug without changing <code>var</code> to <code>let</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> Use const instead of var</label>
+        <label class="option"><input type="radio" name="q4" value="b"> Wrap the setTimeout in an IIFE that captures the current value of i as its own parameter</label>
+        <label class="option"><input type="radio" name="q4" value="c"> Move the setTimeout outside the loop</label>
+        <label class="option"><input type="radio" name="q4" value="d"> Use a larger timeout value</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','b','Wrap the body in an IIFE: (function(capturedI) { setTimeout(() => console.log(capturedI), 0); })(i). Each IIFE invocation creates a new function scope with its own capturedI parameter holding the current value of i. The callback closes over capturedI, not the shared i.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. After the outer function returns, is its Lexical Environment garbage collected?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> Yes — always, immediately after the function returns</label>
+        <label class="option"><input type="radio" name="q5" value="b"> No — not if an inner function still holds a reference to it</label>
+        <label class="option"><input type="radio" name="q5" value="c"> It depends on whether you used var or let</label>
+        <label class="option"><input type="radio" name="q5" value="d"> Yes — after a 1-second GC delay</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','b','JavaScript uses reference-counting garbage collection. If an inner function still has an [[Environment]] reference to the outer LE, the LE cannot be collected. It stays in memory as long as the closure exists. This is the mechanism that makes closures work — and also a potential memory leak source.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What does <code>triple(4)</code> return?</p>
+      <div class="question-code">const double = (n) => (x) => x * n;
+const triple = double(3);</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> 8</label>
+        <label class="option"><input type="radio" name="q6" value="b"> 7</label>
+        <label class="option"><input type="radio" name="q6" value="c"> 12</label>
+        <label class="option"><input type="radio" name="q6" value="d"> undefined</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','c','double(3) returns the function (x) => x * 3 with n closed over as 3. That returned function is assigned to triple. Calling triple(4) executes (x) => x * 3 with x=4, giving 4 * 3 = 12.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>The <code>this</code> Keyword</strong> — the other critical interview topic. Unlike closures, <code>this</code> is determined at <em>call time</em>, not definition time. There are exactly 4 rules. We'll cover all of them with examples.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent anything. Closures can take a while to really internalize — that is normal. Great follow-up questions: "How would I use closures to implement memoization?" or "Can you show me a closure memory leak and how to fix it?" Just ask.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 09 — Closures</div>
+    <div class="nav-links">
+      <a href="./0008-scope-lexical-environment.html">← Prev: Scope</a>
+      <a href="./0010-this-keyword.html">Next: The this Keyword →</a>
+      <a href="https://javascript.info/closure" target="_blank">javascript.info: Closures ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

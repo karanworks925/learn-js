@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 10 — The this Keyword</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 10 of 30</div>
+    <h1>The <code>this</code> Keyword</h1>
+    <p class="subtitle"><code>this</code> is determined at call time — 4 rules, zero exceptions.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>📖 Primary Sources for this lesson</strong>
+    Read these <em>after</em> the lesson:
+    <a href="https://javascript.info/object-methods#this-in-methods" target="_blank">javascript.info — this in methods</a> and
+    <a href="https://javascript.info/bind" target="_blank">javascript.info — bind</a>.
+    Together they cover everything in this lesson with interactive examples.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. What is <code>this</code>?</h2>
+
+  <p><code>this</code> is a special keyword that refers to an object. <em>Which</em> object depends entirely on how the function is called — not where the function is defined. This is the most important thing to internalize about <code>this</code>.</p>
+
+  <p>This contrasts directly with closures. Recall: a closure's scope is set at <em>definition time</em>. But <code>this</code> is set at <em>call time</em>. There are exactly <strong>4 rules</strong> that determine the value of <code>this</code>. Learn the rules and you will never be confused by <code>this</code> again.</p>
+
+  <div class="callout info">
+    <strong>The core question</strong>
+    When you see <code>this</code> inside a function, ask: "How is this function being called?" The answer to that question tells you what <code>this</code> is. Not where the function is defined — how it is called.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. Rule 1 — Default Binding</h2>
+
+  <p>When a function is called as a plain standalone function (not as a method, not with <code>new</code>, not with <code>call/apply/bind</code>), the <strong>default binding</strong> applies.</p>
+
+  <ul>
+    <li>In <strong>non-strict mode</strong>: <code>this</code> = the global object (<code>window</code> in browsers, <code>global</code> in Node.js)</li>
+    <li>In <strong>strict mode</strong>: <code>this</code> = <code>undefined</code></li>
+  </ul>
+
+  <pre><code><span class="kw">function</span> <span class="fn">whoAmI</span>() {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="kw">this</span>);
+}
+
+<span class="cmt">// Non-strict mode</span>
+<span class="fn">whoAmI</span>(); <span class="cmt">// window (browser) or global (Node)</span>
+
+<span class="cmt">// Strict mode</span>
+<span class="str">"use strict"</span>;
+<span class="kw">function</span> <span class="fn">strictWhoAmI</span>() {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="kw">this</span>); <span class="cmt">// undefined</span>
+}
+<span class="fn">strictWhoAmI</span>();
+
+<span class="cmt">// The danger — accidentally writing to window:</span>
+<span class="kw">function</span> <span class="fn">dangerous</span>() {
+  <span class="kw">this</span>.name = <span class="str">"oops"</span>; <span class="cmt">// In non-strict mode: sets window.name!</span>
+}
+<span class="fn">dangerous</span>();
+<span class="fn">console</span>.<span class="fn">log</span>(window.name); <span class="cmt">// "oops" — global pollution</span></code></pre>
+
+  <!-- SECTION 3 -->
+  <h2>3. Rule 2 — Implicit Binding</h2>
+
+  <p>When a function is called as a <strong>method</strong> on an object (<code>obj.method()</code>), <code>this</code> is the object to the left of the dot at the call site. This is the most common binding.</p>
+
+  <pre><code><span class="kw">const</span> user = {
+  name: <span class="str">"Karan"</span>,
+  <span class="fn">greet</span>() {
+    <span class="fn">console</span>.<span class="fn">log</span>(`Hello, I'm ${<span class="kw">this</span>.name}`);
+  }
+};
+
+user.<span class="fn">greet</span>(); <span class="cmt">// "Hello, I'm Karan" — this = user (left of the dot)</span></code></pre>
+
+  <h3>Losing Implicit Binding — The Classic Bug</h3>
+  <p>Implicit binding is <em>fragile</em>. As soon as you detach the method from its object, the binding is lost.</p>
+
+  <pre><code><span class="kw">const</span> user = {
+  name: <span class="str">"Karan"</span>,
+  <span class="fn">greet</span>() {
+    <span class="fn">console</span>.<span class="fn">log</span>(`Hello, I'm ${<span class="kw">this</span>.name}`);
+  }
+};
+
+<span class="cmt">// Detaching the method — binding is lost</span>
+<span class="kw">const</span> detachedGreet = user.greet;
+<span class="fn">detachedGreet</span>(); <span class="cmt">// "Hello, I'm undefined" (or TypeError in strict mode)</span>
+                  <span class="cmt">// this = window/undefined — NOT user!</span>
+
+<span class="cmt">// This happens constantly with callbacks:</span>
+<span class="fn">setTimeout</span>(user.greet, <span class="num">1000</span>); <span class="cmt">// Also loses binding!</span>
+<span class="cmt">// setTimeout calls the function, not user.greet() — so this is not user</span></code></pre>
+
+  <div class="callout danger">
+    <strong>Most common this bug in production</strong>
+    Passing a method as a callback always loses implicit binding. This breaks React class component methods, event handlers, and timer callbacks. The fixes are Rule 3 (bind) and Rule 6 (arrow functions).
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. Rule 3 — Explicit Binding</h2>
+
+  <p>You can explicitly set <code>this</code> for any function call using three built-in methods: <code>call</code>, <code>apply</code>, and <code>bind</code>.</p>
+
+  <pre><code><span class="kw">function</span> <span class="fn">introduce</span>(greeting, punctuation) {
+  <span class="fn">console</span>.<span class="fn">log</span>(`${greeting}, I'm ${<span class="kw">this</span>.name}${punctuation}`);
+}
+
+<span class="kw">const</span> person = { name: <span class="str">"Karan"</span> };
+
+<span class="cmt">// call — invoke immediately, pass args one by one</span>
+<span class="fn">introduce</span>.<span class="fn">call</span>(person, <span class="str">"Hello"</span>, <span class="str">"!"</span>);
+<span class="cmt">// "Hello, I'm Karan!"</span>
+
+<span class="cmt">// apply — invoke immediately, pass args as an array</span>
+<span class="fn">introduce</span>.<span class="fn">apply</span>(person, [<span class="str">"Hi"</span>, <span class="str">"."</span>]);
+<span class="cmt">// "Hi, I'm Karan."</span>
+
+<span class="cmt">// bind — does NOT invoke. Returns a NEW function with this permanently locked to person</span>
+<span class="kw">const</span> boundIntroduce = <span class="fn">introduce</span>.<span class="fn">bind</span>(person);
+<span class="fn">boundIntroduce</span>(<span class="str">"Hey"</span>, <span class="str">"?"</span>);
+<span class="cmt">// "Hey, I'm Karan?"</span>
+
+<span class="cmt">// bind also supports partial application (pre-filling arguments)</span>
+<span class="kw">const</span> formalIntroduce = <span class="fn">introduce</span>.<span class="fn">bind</span>(person, <span class="str">"Good day"</span>);
+<span class="fn">formalIntroduce</span>(<span class="str">"."</span>);
+<span class="cmt">// "Good day, I'm Karan."</span></code></pre>
+
+  <table>
+    <thead>
+      <tr><th>Method</th><th>Invokes Immediately?</th><th>Args format</th><th>Returns</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>call(thisArg, a, b)</code></td><td>Yes</td><td>Individual args</td><td>Function's return value</td></tr>
+      <tr><td><code>apply(thisArg, [a, b])</code></td><td>Yes</td><td>Args as array</td><td>Function's return value</td></tr>
+      <tr><td><code>bind(thisArg, a, b)</code></td><td>No</td><td>Individual args (partial)</td><td>A new bound function</td></tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 5 -->
+  <h2>5. Rule 4 — <code>new</code> Binding</h2>
+
+  <p>When you call a function with the <code>new</code> keyword, JavaScript does something special behind the scenes — it creates a brand new empty object, sets <code>this</code> to that object inside the function, and returns it automatically (unless the function explicitly returns a different object).</p>
+
+  <pre><code><span class="kw">function</span> <span class="fn">Person</span>(name, age) {
+  <span class="cmt">// When called with new:</span>
+  <span class="cmt">// 1. A new empty object is created: {}</span>
+  <span class="cmt">// 2. this is set to that object</span>
+  <span class="kw">this</span>.name = name;
+  <span class="kw">this</span>.age = age;
+  <span class="cmt">// 3. The object is returned automatically</span>
+}
+
+<span class="kw">const</span> karan = <span class="kw">new</span> <span class="fn">Person</span>(<span class="str">"Karan"</span>, <span class="num">22</span>);
+<span class="fn">console</span>.<span class="fn">log</span>(karan.name); <span class="cmt">// "Karan"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(karan.age);  <span class="cmt">// 22</span>
+
+<span class="cmt">// Without new — this is the global object/undefined: BUG</span>
+<span class="kw">const</span> oops = <span class="fn">Person</span>(<span class="str">"Oops"</span>, <span class="num">0</span>); <span class="cmt">// this = window, returns undefined</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Convention: capitalize constructor functions</strong>
+    By convention, functions meant to be called with <code>new</code> start with an uppercase letter (<code>Person</code>, <code>Animal</code>). This is a visual warning: "call me with new". If you see a capitalized function called without <code>new</code>, that's a bug.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. Arrow Functions — No Own <code>this</code></h2>
+
+  <p>Arrow functions do not have their own <code>this</code>. Instead, they inherit <code>this</code> from the <strong>surrounding lexical scope</strong> — wherever the arrow function was written. This is the only exception to the "call time determines this" rule.</p>
+
+  <p>This makes arrow functions perfect as callbacks inside methods — they "capture" the outer <code>this</code> at definition time.</p>
+
+  <pre><code><span class="cmt">// THE BUG — regular function callback loses this</span>
+<span class="kw">const</span> timer = {
+  count: <span class="num">0</span>,
+  <span class="fn">start</span>() {
+    <span class="fn">setTimeout</span>(<span class="kw">function</span>() {
+      <span class="kw">this</span>.count++; <span class="cmt">// this = window (or undefined in strict) — NOT timer</span>
+      <span class="fn">console</span>.<span class="fn">log</span>(<span class="kw">this</span>.count); <span class="cmt">// NaN or error</span>
+    }, <span class="num">1000</span>);
+  }
+};
+
+<span class="cmt">// THE FIX — arrow function inherits this from start()'s lexical scope</span>
+<span class="kw">const</span> timer2 = {
+  count: <span class="num">0</span>,
+  <span class="fn">start</span>() {
+    <span class="cmt">// 'this' here is timer2 (implicit binding from timer2.start())</span>
+    <span class="fn">setTimeout</span>(() => {
+      <span class="kw">this</span>.count++; <span class="cmt">// ✅ arrow inherits this from start() — this is timer2</span>
+      <span class="fn">console</span>.<span class="fn">log</span>(<span class="kw">this</span>.count); <span class="cmt">// 1</span>
+    }, <span class="num">1000</span>);
+  }
+};
+
+timer2.<span class="fn">start</span>();</code></pre>
+
+  <div class="callout danger">
+    <strong>Never use arrow functions as object methods</strong>
+    Because arrow functions don't have their own <code>this</code>, using one as an object method means <code>this</code> won't be the object — it will be whatever <code>this</code> was in the scope where the object was defined (usually <code>window</code>).
+  </div>
+
+  <pre><code><span class="cmt">// WRONG — arrow as method: this is NOT the object</span>
+<span class="kw">const</span> bad = {
+  name: <span class="str">"Karan"</span>,
+  greet: () => {
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="kw">this</span>.name); <span class="cmt">// undefined — this is the outer scope (window/global)</span>
+  }
+};
+bad.<span class="fn">greet</span>(); <span class="cmt">// undefined</span>
+
+<span class="cmt">// CORRECT — regular function as method</span>
+<span class="kw">const</span> good = {
+  name: <span class="str">"Karan"</span>,
+  <span class="fn">greet</span>() {
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="kw">this</span>.name); <span class="cmt">// "Karan" — this is the object</span>
+  }
+};
+good.<span class="fn">greet</span>(); <span class="cmt">// "Karan"</span></code></pre>
+
+  <!-- SECTION 7 -->
+  <h2>7. Priority Order</h2>
+
+  <p>When multiple rules could apply, there is a clear priority order. Higher number = higher priority.</p>
+
+  <table>
+    <thead>
+      <tr><th>Priority</th><th>Rule</th><th>How to recognize it</th><th>What <code>this</code> is</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>4 (highest)</td><td><strong>new binding</strong></td><td><code>new Fn()</code></td><td>The newly created object</td></tr>
+      <tr><td>3</td><td><strong>Explicit binding</strong></td><td><code>fn.call(obj)</code>, <code>fn.apply(obj)</code>, <code>fn.bind(obj)()</code></td><td>The first argument to call/apply/bind</td></tr>
+      <tr><td>2</td><td><strong>Implicit binding</strong></td><td><code>obj.fn()</code></td><td>The object to the left of the dot</td></tr>
+      <tr><td>1 (lowest)</td><td><strong>Default binding</strong></td><td><code>fn()</code> — plain call</td><td><code>window</code> (non-strict) or <code>undefined</code> (strict)</td></tr>
+    </tbody>
+  </table>
+
+  <p>Arrow functions are not in the table because they do not participate in any of these rules — they always inherit <code>this</code> lexically and it cannot be overridden by any of the above rules (not even <code>call</code>, <code>apply</code>, or <code>bind</code>).</p>
+
+  <pre><code><span class="cmt">// Demonstrating priority — explicit beats implicit</span>
+<span class="kw">const</span> obj1 = { name: <span class="str">"obj1"</span>, <span class="fn">greet</span>() { <span class="kw">return</span> <span class="kw">this</span>.name; } };
+<span class="kw">const</span> obj2 = { name: <span class="str">"obj2"</span> };
+
+<span class="fn">console</span>.<span class="fn">log</span>(obj1.<span class="fn">greet</span>());               <span class="cmt">// "obj1" — implicit binding</span>
+<span class="fn">console</span>.<span class="fn">log</span>(obj1.greet.<span class="fn">call</span>(obj2));      <span class="cmt">// "obj2" — explicit beats implicit</span>
+
+<span class="cmt">// Arrow function cannot be rebound</span>
+<span class="kw">const</span> arrowFn = () => <span class="kw">this</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(arrowFn.<span class="fn">call</span>({ name: <span class="str">"force"</span> })); <span class="cmt">// Still the outer this — call is ignored</span></code></pre>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">⚡ Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. These are real interview questions. Try to recall from memory.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What is <code>this</code> inside <code>fn()</code> when called as <code>obj.fn()</code>?</p>
+      <div class="question-code">const obj = {
+  name: "Karan",
+  fn: function() { console.log(this); }
+};
+obj.fn();</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> window</label>
+        <label class="option"><input type="radio" name="q1" value="b"> undefined</label>
+        <label class="option"><input type="radio" name="q1" value="c"> obj — the object to the left of the dot</label>
+        <label class="option"><input type="radio" name="q1" value="d"> fn itself</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','c','This is implicit binding — Rule 2. When a function is called as a method (obj.fn()), this is the object to the left of the dot at the call site. Here that is obj.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What is <code>this</code> when the method is detached and called standalone in strict mode?</p>
+      <div class="question-code">"use strict";
+const obj = { name: "Karan", fn: function() { return this; } };
+const fn = obj.fn;
+fn(); // What is this?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> obj</label>
+        <label class="option"><input type="radio" name="q2" value="b"> window</label>
+        <label class="option"><input type="radio" name="q2" value="c"> undefined</label>
+        <label class="option"><input type="radio" name="q2" value="d"> null</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','When you store a method in a variable and call it as a plain function (fn()), implicit binding is lost. Default binding applies. In strict mode, default binding sets this to undefined.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What does <code>fn.bind(obj)</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> The result of calling fn() with this set to obj</label>
+        <label class="option"><input type="radio" name="q3" value="b"> A new function permanently bound to obj as this</label>
+        <label class="option"><input type="radio" name="q3" value="c"> obj with fn added as a method</label>
+        <label class="option"><input type="radio" name="q3" value="d"> undefined</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','b','bind() does NOT call the function. It returns a new function where this is permanently set to obj. This new function can be called later, passed as a callback, etc. The binding cannot be overridden.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What happens to <code>this.count</code> here?</p>
+      <div class="question-code">const obj = {
+  count: 0,
+  start() {
+    setTimeout(function() {
+      this.count++;
+    }, 0);
+  }
+};
+obj.start();</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> obj.count becomes 1</label>
+        <label class="option"><input type="radio" name="q4" value="b"> obj.count stays 0 — this inside the regular function is not obj</label>
+        <label class="option"><input type="radio" name="q4" value="c"> ReferenceError</label>
+        <label class="option"><input type="radio" name="q4" value="d"> obj.count becomes undefined</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','b','The function passed to setTimeout is called by the browser/timer as a plain function, not as obj.start(). Default binding applies — this is window (or undefined in strict). window.count is NaN, so obj.count remains 0. The this.count++ runs on window, not obj.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. What is the fix for the bug in Q4?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> Change setTimeout to setInterval</label>
+        <label class="option"><input type="radio" name="q5" value="b"> Wrap the function call: obj.start.call(obj)</label>
+        <label class="option"><input type="radio" name="q5" value="c"> Replace the regular function callback with an arrow function: setTimeout(() => { this.count++; }, 0)</label>
+        <label class="option"><input type="radio" name="q5" value="d"> Move count to a global variable</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','Arrow functions have no own this — they inherit it lexically from the surrounding scope. Inside start(), this is obj (implicit binding). An arrow function passed to setTimeout inherits that this, so this.count++ correctly increments obj.count.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What is the priority order of <code>this</code> binding rules from highest to lowest?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> Default → Implicit → Explicit → new</label>
+        <label class="option"><input type="radio" name="q6" value="b"> new → Explicit (call/apply/bind) → Implicit (method call) → Default</label>
+        <label class="option"><input type="radio" name="q6" value="c"> Implicit → new → Explicit → Default</label>
+        <label class="option"><input type="radio" name="q6" value="d"> Arrow → new → Explicit → Implicit → Default</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','b','The priority order is: new (highest) → explicit binding with call/apply/bind → implicit binding as a method call → default binding as a plain function call (lowest). Arrow functions sit outside this ranking — they always use lexical this and cannot be overridden by any rule.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Prototypes &amp; Inheritance</strong> — now that you know how <code>this</code> works with <code>new</code>, you're ready to understand what JavaScript actually puts on those newly created objects and how the prototype chain enables inheritance.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent anything. Great follow-up questions: "How does React handle this binding in class components vs. hooks?" or "Can you show me a real production bug caused by losing this binding?" or "What's the difference between call and apply in practice?" Just ask.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 10 — The this Keyword</div>
+    <div class="nav-links">
+      <a href="./0009-closures.html">← Prev: Closures</a>
+      <a href="./0011-prototypes-inheritance.html">Next: Prototypes →</a>
+      <a href="https://javascript.info/object-methods#this-in-methods" target="_blank">javascript.info: this ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

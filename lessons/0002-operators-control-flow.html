@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 02 — Operators &amp; Control Flow</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 02 of 30</div>
+    <h1>Operators &amp; Control Flow</h1>
+    <p class="subtitle">The decision-making machinery of every JavaScript program.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Sources for this lesson</strong>
+    Read these after the lesson to reinforce what you learned:
+    <a href="https://javascript.info/operators" target="_blank">javascript.info — Operators</a> &amp;
+    <a href="https://javascript.info/ifelse" target="_blank">javascript.info — if/else</a>.
+    Pay special attention to the sections on type coercion and short-circuit evaluation.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. Comparison Operators</h2>
+
+  <p>JavaScript has two ways to check equality. Getting this wrong is one of the most common sources of bugs in real codebases.</p>
+
+  <table>
+    <thead>
+      <tr><th>Operator</th><th>Name</th><th>Type coercion?</th><th>Example</th><th>Result</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>==</code></td><td>Loose equality</td><td>Yes</td><td><code>5 == "5"</code></td><td><code>true</code></td></tr>
+      <tr><td><code>===</code></td><td>Strict equality</td><td>No</td><td><code>5 === "5"</code></td><td><code>false</code></td></tr>
+      <tr><td><code>!=</code></td><td>Loose inequality</td><td>Yes</td><td><code>5 != "5"</code></td><td><code>false</code></td></tr>
+      <tr><td><code>!==</code></td><td>Strict inequality</td><td>No</td><td><code>5 !== "5"</code></td><td><code>true</code></td></tr>
+      <tr><td><code>&lt;</code>, <code>&gt;</code>, <code>&lt;=</code>, <code>&gt;=</code></td><td>Relational</td><td>Yes</td><td><code>"10" &gt; 9</code></td><td><code>true</code></td></tr>
+    </tbody>
+  </table>
+
+  <p>When <code>==</code> compares different types, it converts them to numbers first — then compares. This leads to deeply surprising results:</p>
+
+  <pre><code><span class="cmt">// The == traps that trip up developers</span>
+<span class="num">0</span> == <span class="str">""</span>          <span class="cmt">// true  — both convert to 0</span>
+<span class="num">0</span> == <span class="str">"0"</span>         <span class="cmt">// true  — "0" converts to 0</span>
+<span class="str">""</span> == <span class="str">"0"</span>        <span class="cmt">// false — string to string, not equal</span>
+<span class="kw">null</span> == <span class="kw">undefined</span>  <span class="cmt">// true  — special case, only these two are == to each other</span>
+<span class="kw">null</span> == <span class="num">0</span>         <span class="cmt">// false — null only equals null or undefined via ==</span>
+<span class="kw">false</span> == <span class="str">"0"</span>     <span class="cmt">// true  — both convert to 0</span>
+
+<span class="cmt">// === never coerces — always compare type AND value</span>
+<span class="num">5</span> === <span class="str">"5"</span>         <span class="cmt">// false — different types</span>
+<span class="kw">null</span> === <span class="kw">undefined</span> <span class="cmt">// false — different types</span></code></pre>
+
+  <div class="callout danger">
+    <strong>Interview Trap</strong>
+    <code>null == undefined</code> is <code>true</code> with loose equality — this is a special rule in the spec. But <code>null == 0</code> is <code>false</code>. <code>null</code> only loosely equals <code>null</code> and <code>undefined</code>, nothing else.
+  </div>
+
+  <p>String comparisons use Unicode code points, which can surprise you with numbers-as-strings:</p>
+
+  <pre><code><span class="cmt">// String comparison: lexicographic (character by character)</span>
+<span class="str">"apple"</span> &lt; <span class="str">"banana"</span>   <span class="cmt">// true  — 'a' < 'b'</span>
+<span class="str">"Z"</span> &lt; <span class="str">"a"</span>            <span class="cmt">// true  — uppercase letters come before lowercase in Unicode</span>
+
+<span class="cmt">// Comparing a string to a number: the string is coerced to number</span>
+<span class="str">"10"</span> &gt; <span class="num">9</span>            <span class="cmt">// true  — "10" becomes 10</span>
+<span class="str">"10"</span> &gt; <span class="str">"9"</span>          <span class="cmt">// false — "1" < "9" (string comparison, not numeric!)</span></code></pre>
+
+  <!-- SECTION 2 -->
+  <h2>2. Logical Operators</h2>
+
+  <p>Logical operators in JavaScript do not just return <code>true</code> or <code>false</code>. They return one of the <em>actual operand values</em>. This is crucial to understand for real-world code.</p>
+
+  <h3>Short-Circuit Evaluation</h3>
+  <p>JS evaluates the left side first. If the result is already determined, it stops and returns that value — it never looks at the right side.</p>
+
+  <pre><code><span class="cmt">// && (AND): returns the FIRST FALSY value, or the LAST value if all are truthy</span>
+<span class="kw">true</span> &amp;&amp; <span class="str">"hello"</span>       <span class="cmt">// "hello"   — left is truthy, so returns right</span>
+<span class="kw">false</span> &amp;&amp; <span class="str">"hello"</span>      <span class="cmt">// false     — left is falsy, short-circuits immediately</span>
+<span class="num">0</span> &amp;&amp; <span class="fn">doSomething</span>()   <span class="cmt">// 0         — doSomething() is NEVER called</span>
+<span class="str">"user"</span> &amp;&amp; <span class="str">"logged in"</span> <span class="cmt">// "logged in" — both truthy, returns last</span>
+
+<span class="cmt">// || (OR): returns the FIRST TRUTHY value, or the LAST value if all are falsy</span>
+<span class="str">"hello"</span> || <span class="str">"default"</span> <span class="cmt">// "hello"   — left is truthy, short-circuits</span>
+<span class="str">""</span> || <span class="str">"default"</span>      <span class="cmt">// "default" — left is falsy, evaluates right</span>
+<span class="num">0</span> || <span class="num">42</span>              <span class="cmt">// 42        — 0 is falsy, returns 42</span>
+<span class="kw">null</span> || <span class="kw">undefined</span>    <span class="cmt">// undefined — both falsy, returns the last one</span></code></pre>
+
+  <pre><code><span class="cmt">// Practical uses of short-circuit evaluation</span>
+<span class="kw">const</span> user = <span class="fn">getUser</span>() || { name: <span class="str">"Guest"</span> }; <span class="cmt">// default if null/falsy</span>
+
+<span class="cmt">// Guard: only call save() if form is valid</span>
+isValid &amp;&amp; <span class="fn">save</span>();
+
+<span class="cmt">// Logical assignment operators (ES2021)</span>
+<span class="kw">let</span> count = <span class="num">0</span>;
+count ||= <span class="num">10</span>;    <span class="cmt">// count = count || 10 → count is now 10 (was falsy)</span>
+
+<span class="kw">let</span> name = <span class="str">"Karan"</span>;
+name &amp;&amp;= name.<span class="fn">toUpperCase</span>(); <span class="cmt">// Only assigns if name is truthy → "KARAN"</span>
+
+<span class="kw">let</span> config = <span class="kw">null</span>;
+config ??= { debug: <span class="kw">false</span> }; <span class="cmt">// Only assigns if config is null or undefined</span></code></pre>
+
+  <div class="callout info">
+    <strong>Key Insight</strong>
+    <code>||=</code> and <code>&&=</code> short-circuit too — the right side only runs when needed. This matters if the right side has side effects (like calling a function or making a request).
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. The Nullish Coalescing Operator <code>??</code></h2>
+
+  <p><code>??</code> (introduced in ES2020) solves a real problem: <code>||</code> treats <code>0</code>, <code>""</code>, and <code>false</code> as falsy, which means it replaces them with defaults even when those values are intentional.</p>
+
+  <pre><code><span class="cmt">// Problem with || for defaults</span>
+<span class="kw">const</span> volume = <span class="num">0</span>;
+<span class="kw">const</span> level = volume || <span class="num">50</span>; <span class="cmt">// 50 — WRONG! 0 is a valid volume setting</span>
+
+<span class="cmt">// Solution: ?? only triggers on null or undefined</span>
+<span class="kw">const</span> level2 = volume ?? <span class="num">50</span>; <span class="cmt">// 0  — CORRECT! 0 is not null/undefined</span>
+
+<span class="cmt">// More examples</span>
+<span class="kw">null</span> ?? <span class="str">"default"</span>      <span class="cmt">// "default"  — null triggers ??</span>
+<span class="kw">undefined</span> ?? <span class="str">"default"</span> <span class="cmt">// "default"  — undefined triggers ??</span>
+<span class="num">0</span> ?? <span class="str">"default"</span>         <span class="cmt">// 0          — 0 does NOT trigger ??</span>
+<span class="str">""</span> ?? <span class="str">"default"</span>        <span class="cmt">// ""         — empty string does NOT trigger ??</span>
+<span class="kw">false</span> ?? <span class="str">"default"</span>    <span class="cmt">// false      — false does NOT trigger ??</span></code></pre>
+
+  <h3>Optional Chaining <code>?.</code></h3>
+  <p>Access properties deep in an object without throwing if something in the chain is <code>null</code> or <code>undefined</code>.</p>
+
+  <pre><code><span class="kw">const</span> user = { profile: { address: <span class="kw">null</span> } };
+
+<span class="cmt">// Without optional chaining — throws TypeError</span>
+<span class="fn">console</span>.log(user.profile.address.city); <span class="cmt">// ❌ TypeError: Cannot read properties of null</span>
+
+<span class="cmt">// With optional chaining — safely returns undefined</span>
+<span class="fn">console</span>.log(user?.profile?.address?.city); <span class="cmt">// undefined — no error</span>
+
+<span class="cmt">// Works with methods too</span>
+user?.profile?.<span class="fn">getAvatar</span>(); <span class="cmt">// undefined if getAvatar doesn't exist</span>
+
+<span class="cmt">// Works with arrays</span>
+<span class="kw">const</span> arr = <span class="kw">null</span>;
+arr?.[<span class="num">0</span>]; <span class="cmt">// undefined — doesn't throw</span>
+
+<span class="cmt">// Combine ?? and ?. for clean defaults</span>
+<span class="kw">const</span> city = user?.profile?.address?.city ?? <span class="str">"Unknown City"</span>;</code></pre>
+
+  <div class="callout tip">
+    <strong>Pro Pattern</strong>
+    Combining <code>?.</code> and <code>??</code> is extremely common in modern JS. It replaces what used to take 5 lines of null checks.
+    <code>const city = user?.address?.city ?? "Unknown";</code>
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. Ternary Operator</h2>
+
+  <p>The ternary is a compact <code>if/else</code> for expressions — useful when you need a value based on a condition.</p>
+
+  <pre><code><span class="cmt">// Basic ternary</span>
+<span class="kw">const</span> age = <span class="num">20</span>;
+<span class="kw">const</span> status = age &gt;= <span class="num">18</span> ? <span class="str">"adult"</span> : <span class="str">"minor"</span>;
+<span class="fn">console</span>.log(status); <span class="cmt">// "adult"</span>
+
+<span class="cmt">// Useful inline in JSX / template literals</span>
+<span class="kw">const</span> label = isLoggedIn ? <span class="str">"Log Out"</span> : <span class="str">"Log In"</span>;
+
+<span class="cmt">// Nested ternaries — readable only when kept to 2 levels max</span>
+<span class="kw">const</span> score = <span class="num">72</span>;
+<span class="kw">const</span> grade = score &gt;= <span class="num">90</span> ? <span class="str">"A"</span>
+             : score &gt;= <span class="num">80</span> ? <span class="str">"B"</span>
+             : score &gt;= <span class="num">70</span> ? <span class="str">"C"</span>
+             : <span class="str">"F"</span>;
+<span class="cmt">// grade is "C"</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Warning</strong>
+    Deeply nested ternaries become unreadable fast. If you need more than two levels, switch to <code>if/else if</code> or a lookup object. Code is read more often than it is written.
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2>5. if / else if / else</h2>
+
+  <p>The workhorse of control flow. Simple to use — but knowing when to switch to another pattern is the mark of an experienced developer.</p>
+
+  <pre><code><span class="cmt">// Basic if/else</span>
+<span class="kw">const</span> hour = <span class="kw">new</span> <span class="typ">Date</span>().<span class="fn">getHours</span>();
+
+<span class="kw">if</span> (hour &lt; <span class="num">12</span>) {
+  <span class="fn">console</span>.log(<span class="str">"Good morning"</span>);
+} <span class="kw">else if</span> (hour &lt; <span class="num">17</span>) {
+  <span class="fn">console</span>.log(<span class="str">"Good afternoon"</span>);
+} <span class="kw">else</span> {
+  <span class="fn">console</span>.log(<span class="str">"Good evening"</span>);
+}
+
+<span class="cmt">// Truthy/falsy checks are common</span>
+<span class="kw">const</span> username = <span class="fn">getUsername</span>();
+<span class="kw">if</span> (username) {          <span class="cmt">// truthy check — catches null, undefined, ""</span>
+  <span class="fn">greet</span>(username);
+} <span class="kw">else</span> {
+  <span class="fn">showLoginPrompt</span>();
+}
+
+<span class="cmt">// Early return pattern — flattens nesting (preferred in real code)</span>
+<span class="kw">function</span> <span class="fn">processPayment</span>(amount) {
+  <span class="kw">if</span> (amount &lt;= <span class="num">0</span>) <span class="kw">return</span> <span class="str">"Invalid amount"</span>;
+  <span class="kw">if</span> (!<span class="fn">isAuthenticated</span>()) <span class="kw">return</span> <span class="str">"Not logged in"</span>;
+  <span class="kw">if</span> (!<span class="fn">hasFunds</span>(amount)) <span class="kw">return</span> <span class="str">"Insufficient funds"</span>;
+
+  <span class="cmt">// Happy path — no deep nesting</span>
+  <span class="kw">return</span> <span class="fn">charge</span>(amount);
+}</code></pre>
+
+  <div class="callout tip">
+    <strong>Senior Dev Pattern</strong>
+    The early return pattern (also called "guard clauses") is preferred over deeply nested if/else. Handle edge cases first and return early. The main logic stays at the left margin.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. switch / case</h2>
+
+  <p><code>switch</code> shines when you're comparing one value against many possible fixed values. It uses <code>===</code> (strict equality) internally — no type coercion.</p>
+
+  <pre><code><span class="kw">const</span> day = <span class="str">"Monday"</span>;
+
+<span class="kw">switch</span> (day) {
+  <span class="kw">case</span> <span class="str">"Monday"</span>:
+  <span class="kw">case</span> <span class="str">"Tuesday"</span>:
+  <span class="kw">case</span> <span class="str">"Wednesday"</span>:
+  <span class="kw">case</span> <span class="str">"Thursday"</span>:
+  <span class="kw">case</span> <span class="str">"Friday"</span>:
+    <span class="fn">console</span>.log(<span class="str">"Weekday"</span>); <span class="cmt">// ← all 5 cases fall through to here</span>
+    <span class="kw">break</span>;                  <span class="cmt">// ← STOP. Without this, execution continues!</span>
+  <span class="kw">case</span> <span class="str">"Saturday"</span>:
+  <span class="kw">case</span> <span class="str">"Sunday"</span>:
+    <span class="fn">console</span>.log(<span class="str">"Weekend"</span>);
+    <span class="kw">break</span>;
+  <span class="kw">default</span>:                  <span class="cmt">// ← runs if no case matched</span>
+    <span class="fn">console</span>.log(<span class="str">"Unknown day"</span>);
+}</code></pre>
+
+  <h3>The Fall-Through Trap</h3>
+
+  <pre><code><span class="cmt">// What happens WITHOUT break — fall-through</span>
+<span class="kw">const</span> x = <span class="num">1</span>;
+<span class="kw">switch</span> (x) {
+  <span class="kw">case</span> <span class="num">1</span>:
+    <span class="fn">console</span>.log(<span class="str">"one"</span>);   <span class="cmt">// ← this runs</span>
+  <span class="kw">case</span> <span class="num">2</span>:
+    <span class="fn">console</span>.log(<span class="str">"two"</span>);   <span class="cmt">// ← this ALSO runs (no break above!)</span>
+  <span class="kw">case</span> <span class="num">3</span>:
+    <span class="fn">console</span>.log(<span class="str">"three"</span>); <span class="cmt">// ← this ALSO runs</span>
+}
+<span class="cmt">// Output: "one", "two", "three"</span>
+
+<span class="cmt">// Intentional fall-through (grouped cases) is fine and readable</span>
+<span class="cmt">// Accidental fall-through (forgetting break) is a very common bug</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Warning</strong>
+    Always add <code>break</code> at the end of each case unless you intentionally want fall-through. If you do want fall-through, add a comment: <code>// intentional fall-through</code>.
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>When to use</th><th>if/else if</th><th>switch</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Range conditions (<code>&lt;</code>, <code>&gt;=</code>)</td><td>Yes</td><td>No</td></tr>
+      <tr><td>Many exact value matches</td><td>Gets verbose</td><td>Yes — cleaner</td></tr>
+      <tr><td>Different types per case</td><td>Yes</td><td>No (single value compared)</td></tr>
+      <tr><td>Complex boolean logic</td><td>Yes</td><td>No</td></tr>
+    </tbody>
+  </table>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">⚡ Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What does this expression evaluate to?</p>
+      <div class="question-code">0 || "hello"</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> 0</label>
+        <label class="option"><input type="radio" name="q1" value="b"> "hello"</label>
+        <label class="option"><input type="radio" name="q1" value="c"> true</label>
+        <label class="option"><input type="radio" name="q1" value="d"> false</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','|| returns the first TRUTHY value, or the last value if all are falsy. 0 is falsy, so JS moves to the right side and returns &quot;hello&quot;, which is truthy.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What does this expression evaluate to?</p>
+      <div class="question-code">0 ?? "hello"</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> "hello"</label>
+        <label class="option"><input type="radio" name="q2" value="b"> true</label>
+        <label class="option"><input type="radio" name="q2" value="c"> 0</label>
+        <label class="option"><input type="radio" name="q2" value="d"> null</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','?? (nullish coalescing) ONLY triggers when the left side is null or undefined. 0 is neither — it is a valid falsy number — so ?? returns 0 unchanged. This is the key difference from ||.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What does this evaluate to?</p>
+      <div class="question-code">null?.user?.name</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> null</label>
+        <label class="option"><input type="radio" name="q3" value="b"> TypeError</label>
+        <label class="option"><input type="radio" name="q3" value="c"> ""</label>
+        <label class="option"><input type="radio" name="q3" value="d"> undefined</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','d','Optional chaining (?.) short-circuits as soon as it encounters null or undefined. null?.user stops immediately and returns undefined — it never tries to access .name. No error is thrown.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What does this expression evaluate to?</p>
+      <div class="question-code">"" && "hello"</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> "hello"</label>
+        <label class="option"><input type="radio" name="q4" value="b"> true</label>
+        <label class="option"><input type="radio" name="q4" value="c"> false</label>
+        <label class="option"><input type="radio" name="q4" value="d"> ""</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','d','&& returns the FIRST FALSY value, or the last value if all are truthy. An empty string &quot;&quot; is falsy, so && short-circuits immediately and returns &quot;&quot; without ever looking at &quot;hello&quot;.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. In a switch statement, what happens if you omit <code>break</code> at the end of a case?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> A SyntaxError is thrown</label>
+        <label class="option"><input type="radio" name="q5" value="b"> Only that case runs, then the switch exits normally</label>
+        <label class="option"><input type="radio" name="q5" value="c"> Execution falls through and runs the next case's code too</label>
+        <label class="option"><input type="radio" name="q5" value="d"> The default case runs instead</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','Without break, execution falls through to the next case and runs its code regardless of whether that case matches. This continues until a break is found or the switch ends. It is a common and subtle bug.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What does <code>5 == "5"</code> evaluate to?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> false — different types</label>
+        <label class="option"><input type="radio" name="q6" value="b"> true — loose equality coerces "5" to the number 5</label>
+        <label class="option"><input type="radio" name="q6" value="c"> true — both are the same string</label>
+        <label class="option"><input type="radio" name="q6" value="d"> TypeError</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','b','Loose equality (==) coerces types before comparing. The string &quot;5&quot; is converted to the number 5, then 5 === 5, which is true. This is why you should always use === in production code.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Functions</strong> — declarations vs expressions vs arrow functions, hoisting differences, parameters, rest args, and why functions are first-class citizens in JavaScript.</p>
+
+  <div class="teacher-note">
+    Questions? Ask your teacher agent anything unclear. Just type your question.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 02 — Operators &amp; Control Flow</div>
+    <div class="nav-links">
+      <a href="./0001-variables-types-hoisting.html">← Prev: Variables, Types &amp; Hoisting</a>
+      <a href="./0003-functions.html">Next: Functions →</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

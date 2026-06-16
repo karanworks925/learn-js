@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 26 — Proxy, Reflect &amp; Meta-programming</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 26 of 30</div>
+    <h1>Proxy, Reflect &amp; Meta-programming</h1>
+    <p class="subtitle">Intercept and redefine fundamental JavaScript operations — this is how frameworks are built.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read this after the lesson to solidify what you learn:
+    <a href="https://javascript.info/proxy" target="_blank">javascript.info — Proxy and Reflect</a>.
+    This is the definitive deep-dive into JavaScript's meta-programming APIs.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. What is Meta-programming?</h2>
+
+  <p>Meta-programming is writing code that <em>operates on other code</em> — inspecting it, modifying its behavior, or intercepting how it works at runtime. In JavaScript, the primary tools for this are:</p>
+
+  <ul>
+    <li><strong>Proxy</strong> — wrap any object and intercept fundamental operations on it</li>
+    <li><strong>Reflect</strong> — a set of methods that mirror Proxy traps, for use inside those traps</li>
+    <li><strong>Symbols</strong> — unique keys that let you add behavior hooks to objects (like <code>Symbol.iterator</code>)</li>
+    <li><strong>Property descriptors</strong> — control how individual properties behave</li>
+  </ul>
+
+  <p>This is not niche knowledge. Vue 3's entire reactivity system, many ORMs, validation libraries, and testing tools are built directly on these APIs. Understanding them puts you in the same mental space as framework authors.</p>
+
+  <div class="callout info">
+    <strong>Why This Matters for Interviews</strong>
+    Senior-level interviews frequently ask "how would you implement X" — and the answer is often Proxy. Questions like "how does Vue's reactivity work?" or "how would you build a validation layer?" both lead here.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. Property Descriptors</h2>
+
+  <p>Every property on a JavaScript object has a hidden <strong>descriptor</strong> — an object that defines how that property behaves. You've been working with properties your whole JS career without seeing these, but they've always been there.</p>
+
+  <pre><code><span class="kw">const</span> user = { name: <span class="str">"Karan"</span> };
+
+<span class="cmt">// Look at the descriptor for 'name':</span>
+<span class="fn">Object</span>.getOwnPropertyDescriptor(user, <span class="str">"name"</span>);
+<span class="cmt">// {</span>
+<span class="cmt">//   value: "Karan",</span>
+<span class="cmt">//   writable: true,</span>
+<span class="cmt">//   enumerable: true,</span>
+<span class="cmt">//   configurable: true</span>
+<span class="cmt">// }</span>
+
+<span class="cmt">// Define a non-writable property:</span>
+<span class="fn">Object</span>.<span class="fn">defineProperty</span>(user, <span class="str">"id"</span>, {
+  value: <span class="num">42</span>,
+  writable: <span class="kw">false</span>,
+  enumerable: <span class="kw">true</span>,
+  configurable: <span class="kw">false</span>
+});
+
+user.id = <span class="num">99</span>;         <span class="cmt">// silently fails (throws in strict mode)</span>
+<span class="fn">console</span>.log(user.id); <span class="cmt">// 42 — unchanged</span></code></pre>
+
+  <table>
+    <thead>
+      <tr><th>Descriptor Key</th><th>What It Controls</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>value</code></td><td>The property's value</td></tr>
+      <tr><td><code>writable</code></td><td>Whether assignment (<code>=</code>) can change the value</td></tr>
+      <tr><td><code>enumerable</code></td><td>Whether it appears in <code>for...in</code> and <code>Object.keys()</code></td></tr>
+      <tr><td><code>configurable</code></td><td>Whether the descriptor itself can be changed or the property deleted</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout tip">
+    <strong>Getter / Setter Descriptors</strong>
+    Instead of <code>value</code> + <code>writable</code>, you can use <code>get</code> + <code>set</code> functions. This is how computed properties work in classes. The two forms are mutually exclusive.
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. Object.freeze, Object.seal, Object.preventExtensions</h2>
+
+  <p>These three methods apply constraints to an entire object at once, using property descriptors under the hood.</p>
+
+  <table>
+    <thead>
+      <tr><th>Method</th><th>Add new props?</th><th>Delete props?</th><th>Write existing?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>Object.freeze(obj)</code></td><td>No</td><td>No</td><td>No</td></tr>
+      <tr><td><code>Object.seal(obj)</code></td><td>No</td><td>No</td><td>Yes</td></tr>
+      <tr><td><code>Object.preventExtensions(obj)</code></td><td>No</td><td>Yes</td><td>Yes</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code><span class="kw">const</span> config = <span class="fn">Object</span>.<span class="fn">freeze</span>({
+  apiUrl: <span class="str">"https://api.example.com"</span>,
+  timeout: <span class="num">5000</span>
+});
+
+config.timeout = <span class="num">9999</span>;       <span class="cmt">// silently ignored</span>
+config.newProp = <span class="str">"hello"</span>;    <span class="cmt">// silently ignored</span>
+<span class="kw">delete</span> config.apiUrl;        <span class="cmt">// silently ignored</span>
+
+<span class="fn">console</span>.log(config.timeout); <span class="cmt">// 5000 — frozen</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Freeze is Shallow</strong>
+    <code>Object.freeze()</code> only freezes the top level. Nested objects are NOT frozen — they can still be mutated. For deep freezing, you need a recursive implementation.
+  </div>
+
+  <pre><code><span class="kw">function</span> <span class="fn">deepFreeze</span>(obj) {
+  <span class="fn">Object</span>.<span class="fn">getOwnPropertyNames</span>(obj).<span class="fn">forEach</span>(name => {
+    <span class="kw">const</span> val = obj[name];
+    <span class="kw">if</span> (<span class="kw">typeof</span> val === <span class="str">"object"</span> && val !== <span class="kw">null</span>) {
+      <span class="fn">deepFreeze</span>(val);
+    }
+  });
+  <span class="kw">return</span> <span class="fn">Object</span>.<span class="fn">freeze</span>(obj);
+}</code></pre>
+
+  <!-- SECTION 4 -->
+  <h2>4. The Proxy Object</h2>
+
+  <p><code>new Proxy(target, handler)</code> creates a wrapper around <code>target</code>. The <code>handler</code> is an object containing <strong>traps</strong> — functions that intercept fundamental operations before they reach the target.</p>
+
+  <pre><code><span class="kw">const</span> target = { name: <span class="str">"Karan"</span>, age: <span class="num">25</span> };
+
+<span class="kw">const</span> handler = {
+  <span class="fn">get</span>(target, prop) {
+    <span class="fn">console</span>.log(<span class="str">`Reading: ${prop}`</span>);
+    <span class="kw">return</span> <span class="typ">Reflect</span>.<span class="fn">get</span>(target, prop);
+  },
+  <span class="fn">set</span>(target, prop, value) {
+    <span class="fn">console</span>.log(<span class="str">`Writing: ${prop} = ${value}`</span>);
+    <span class="kw">return</span> <span class="typ">Reflect</span>.<span class="fn">set</span>(target, prop, value);
+  }
+};
+
+<span class="kw">const</span> proxy = <span class="kw">new</span> <span class="typ">Proxy</span>(target, handler);
+
+proxy.name;       <span class="cmt">// logs "Reading: name", returns "Karan"</span>
+proxy.age = <span class="num">26</span>;  <span class="cmt">// logs "Writing: age = 26"</span></code></pre>
+
+  <h3>Common Proxy Traps</h3>
+
+  <table>
+    <thead>
+      <tr><th>Trap</th><th>Intercepts</th><th>Signature</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>get</code></td><td>Property read: <code>obj.x</code></td><td><code>get(target, prop, receiver)</code></td></tr>
+      <tr><td><code>set</code></td><td>Property write: <code>obj.x = v</code></td><td><code>set(target, prop, value, receiver)</code></td></tr>
+      <tr><td><code>has</code></td><td><code>in</code> operator: <code>'x' in obj</code></td><td><code>has(target, prop)</code></td></tr>
+      <tr><td><code>deleteProperty</code></td><td><code>delete obj.x</code></td><td><code>deleteProperty(target, prop)</code></td></tr>
+      <tr><td><code>apply</code></td><td>Function call: <code>fn()</code></td><td><code>apply(target, thisArg, args)</code></td></tr>
+      <tr><td><code>construct</code></td><td><code>new Fn()</code></td><td><code>construct(target, args)</code></td></tr>
+      <tr><td><code>ownKeys</code></td><td><code>Object.keys()</code>, <code>for...in</code></td><td><code>ownKeys(target)</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Validation Proxy — Practical Example</h3>
+
+  <pre><code><span class="kw">function</span> <span class="fn">createUser</span>(data) {
+  <span class="kw">return</span> <span class="kw">new</span> <span class="typ">Proxy</span>(data, {
+    <span class="fn">set</span>(target, prop, value) {
+      <span class="kw">if</span> (prop === <span class="str">"age"</span>) {
+        <span class="kw">if</span> (<span class="kw">typeof</span> value !== <span class="str">"number"</span> || value < <span class="num">0</span> || value > <span class="num">150</span>) {
+          <span class="kw">throw</span> <span class="kw">new</span> <span class="typ">TypeError</span>(<span class="str">`Invalid age: ${value}`</span>);
+        }
+      }
+      <span class="kw">if</span> (prop === <span class="str">"name"</span> && <span class="kw">typeof</span> value !== <span class="str">"string"</span>) {
+        <span class="kw">throw</span> <span class="kw">new</span> <span class="typ">TypeError</span>(<span class="str">"Name must be a string"</span>);
+      }
+      <span class="kw">return</span> <span class="typ">Reflect</span>.<span class="fn">set</span>(target, prop, value);
+    }
+  });
+}
+
+<span class="kw">const</span> user = <span class="fn">createUser</span>({ name: <span class="str">"Karan"</span>, age: <span class="num">25</span> });
+user.age = <span class="num">26</span>;        <span class="cmt">// fine</span>
+user.age = <span class="str">"old"</span>;     <span class="cmt">// TypeError: Invalid age: old</span>
+user.age = <span class="num">-5</span>;        <span class="cmt">// TypeError: Invalid age: -5</span></code></pre>
+
+  <!-- SECTION 5 -->
+  <h2>5. The Reflect API</h2>
+
+  <p>The <code>Reflect</code> object is a collection of static methods that mirror every Proxy trap, one-to-one. Its purpose is to give you a clean, reliable way to perform the <em>default</em> operation inside a trap.</p>
+
+  <pre><code><span class="cmt">// Instead of doing this inside a get trap:</span>
+<span class="fn">get</span>(target, prop) {
+  <span class="kw">return</span> target[prop];  <span class="cmt">// risky — loses receiver context</span>
+}
+
+<span class="cmt">// Do this:</span>
+<span class="fn">get</span>(target, prop, receiver) {
+  <span class="kw">return</span> <span class="typ">Reflect</span>.<span class="fn">get</span>(target, prop, receiver);  <span class="cmt">// correct</span>
+}</code></pre>
+
+  <div class="callout info">
+    <strong>Why Reflect over Direct Access?</strong>
+    Reflect methods properly forward the <code>receiver</code> (the <code>this</code> value for getters/setters), return boolean success values instead of throwing, and maintain consistency with the internal JavaScript specification operations. Always use Reflect inside Proxy traps.
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Reflect Method</th><th>Equivalent To</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>Reflect.get(target, prop, receiver)</code></td><td><code>target[prop]</code></td></tr>
+      <tr><td><code>Reflect.set(target, prop, value, receiver)</code></td><td><code>target[prop] = value</code></td></tr>
+      <tr><td><code>Reflect.has(target, prop)</code></td><td><code>prop in target</code></td></tr>
+      <tr><td><code>Reflect.deleteProperty(target, prop)</code></td><td><code>delete target[prop]</code></td></tr>
+      <tr><td><code>Reflect.ownKeys(target)</code></td><td><code>Object.getOwnPropertyNames() + Symbols</code></td></tr>
+      <tr><td><code>Reflect.apply(target, thisArg, args)</code></td><td><code>target.apply(thisArg, args)</code></td></tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 6 -->
+  <h2>6. Real-world Proxy Use Cases</h2>
+
+  <h3>Reactive Data (How Vue 3 Works)</h3>
+
+  <pre><code><span class="kw">function</span> <span class="fn">reactive</span>(obj) {
+  <span class="kw">const</span> subscribers = <span class="kw">new</span> <span class="typ">Map</span>();
+
+  <span class="kw">return</span> <span class="kw">new</span> <span class="typ">Proxy</span>(obj, {
+    <span class="fn">get</span>(target, prop, receiver) {
+      <span class="cmt">// Track: something is reading this property</span>
+      <span class="kw">return</span> <span class="typ">Reflect</span>.<span class="fn">get</span>(target, prop, receiver);
+    },
+    <span class="fn">set</span>(target, prop, value, receiver) {
+      <span class="kw">const</span> result = <span class="typ">Reflect</span>.<span class="fn">set</span>(target, prop, value, receiver);
+      <span class="cmt">// Notify: trigger UI re-render for this property</span>
+      <span class="fn">console</span>.log(<span class="str">`[reactive] ${prop} changed to ${value} — re-rendering`</span>);
+      <span class="kw">return</span> result;
+    }
+  });
+}
+
+<span class="kw">const</span> state = <span class="fn">reactive</span>({ count: <span class="num">0</span> });
+state.count++;  <span class="cmt">// logs: [reactive] count changed to 1 — re-rendering</span></code></pre>
+
+  <h3>Default Values for Missing Properties</h3>
+
+  <pre><code><span class="kw">const</span> withDefaults = <span class="kw">new</span> <span class="typ">Proxy</span>({}, {
+  <span class="fn">get</span>(target, prop) {
+    <span class="kw">return</span> prop <span class="kw">in</span> target ? target[prop] : <span class="str">"(not set)"</span>;
+  }
+});
+
+withDefaults.name = <span class="str">"Karan"</span>;
+<span class="fn">console</span>.log(withDefaults.name);   <span class="cmt">// "Karan"</span>
+<span class="fn">console</span>.log(withDefaults.email);  <span class="cmt">// "(not set)" — no error!</span></code></pre>
+
+  <h3>Access Logging / Auditing</h3>
+
+  <pre><code><span class="kw">function</span> <span class="fn">auditProxy</span>(obj, label) {
+  <span class="kw">return</span> <span class="kw">new</span> <span class="typ">Proxy</span>(obj, {
+    <span class="fn">get</span>(target, prop, receiver) {
+      <span class="fn">console</span>.log(<span class="str">`[AUDIT] ${label}.${prop} read`</span>);
+      <span class="kw">return</span> <span class="typ">Reflect</span>.<span class="fn">get</span>(target, prop, receiver);
+    },
+    <span class="fn">set</span>(target, prop, value, receiver) {
+      <span class="fn">console</span>.log(<span class="str">`[AUDIT] ${label}.${prop} set to ${JSON.stringify(value)}`</span>);
+      <span class="kw">return</span> <span class="typ">Reflect</span>.<span class="fn">set</span>(target, prop, value, receiver);
+    }
+  });
+}
+
+<span class="kw">const</span> sensitiveData = <span class="fn">auditProxy</span>({ token: <span class="str">"abc123"</span> }, <span class="str">"credentials"</span>);
+sensitiveData.token;  <span class="cmt">// [AUDIT] credentials.token read</span></code></pre>
+
+  <!-- SECTION 7 -->
+  <h2>7. Revocable Proxies</h2>
+
+  <p>A normal Proxy lives as long as the target object. A <strong>revocable Proxy</strong> can be explicitly disabled — after which any operation on it throws a <code>TypeError</code>.</p>
+
+  <pre><code><span class="kw">const</span> { proxy, revoke } = <span class="typ">Proxy</span>.<span class="fn">revocable</span>(
+  { secret: <span class="str">"classified"</span> },
+  {
+    <span class="fn">get</span>(target, prop) {
+      <span class="kw">return</span> <span class="typ">Reflect</span>.<span class="fn">get</span>(target, prop);
+    }
+  }
+);
+
+<span class="fn">console</span>.log(proxy.secret); <span class="cmt">// "classified"</span>
+
+<span class="fn">revoke</span>(); <span class="cmt">// kill the proxy</span>
+
+<span class="fn">console</span>.log(proxy.secret); <span class="cmt">// TypeError: Cannot perform 'get' on a proxy that has been revoked</span></code></pre>
+
+  <div class="callout tip">
+    <strong>Use Case: Temporary Access</strong>
+    Revocable proxies are perfect for granting temporary access to an API or resource. When the session ends, call <code>revoke()</code> — the caller's reference is now permanently disabled even if they held onto it.
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What is a Proxy in JavaScript?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> A way to make HTTP requests from the browser</label>
+        <label class="option"><input type="radio" name="q1" value="b"> An object that wraps another object and intercepts fundamental operations via handler traps</label>
+        <label class="option"><input type="radio" name="q1" value="c"> A method to clone objects deeply</label>
+        <label class="option"><input type="radio" name="q1" value="d"> A design pattern for asynchronous code</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','A Proxy wraps a target object and lets you define handler traps that intercept operations like get, set, delete, and has before they reach the target.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. Which Proxy trap intercepts property reads?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> The <code>read</code> trap</label>
+        <label class="option"><input type="radio" name="q2" value="b"> The <code>access</code> trap</label>
+        <label class="option"><input type="radio" name="q2" value="c"> The <code>get</code> trap — <code>get(target, prop, receiver)</code></label>
+        <label class="option"><input type="radio" name="q2" value="d"> The <code>fetch</code> trap</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','The get trap fires whenever a property is read (obj.x or obj[key]). It receives the target, the property name, and the receiver (the proxy itself).')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What is the difference between <code>Object.freeze()</code> and <code>Object.seal()</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> They are identical — both prevent all changes</label>
+        <label class="option"><input type="radio" name="q3" value="b"> freeze prevents add/delete/write; seal prevents add/delete but allows writing existing properties</label>
+        <label class="option"><input type="radio" name="q3" value="c"> seal prevents add/delete/write; freeze only prevents adding new properties</label>
+        <label class="option"><input type="radio" name="q3" value="d"> freeze deep-clones the object; seal only makes it read-only</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','b','freeze is the strictest: no additions, no deletions, no writes. seal prevents structure changes (add/delete) but still allows you to update existing property values.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. Why use <code>Reflect.set(target, prop, value)</code> inside a Proxy trap instead of <code>target[prop] = value</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> They are equivalent — it is purely a style preference</label>
+        <label class="option"><input type="radio" name="q4" value="b"> Reflect is faster at runtime</label>
+        <label class="option"><input type="radio" name="q4" value="c"> Reflect correctly handles edge cases like this binding and returns a boolean success indicator — it is designed for use inside traps</label>
+        <label class="option"><input type="radio" name="q4" value="d"> Reflect prevents infinite recursion in all cases</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','c','Reflect methods forward the receiver argument correctly (important for inherited setters), return true/false instead of throwing on failure, and match the JS spec operations 1:1 with Proxy traps.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. How does Vue 3's reactivity system detect when you modify data?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> It uses <code>setInterval</code> to poll for changes every 16ms</label>
+        <label class="option"><input type="radio" name="q5" value="b"> It uses Object.defineProperty getters and setters (like Vue 2)</label>
+        <label class="option"><input type="radio" name="q5" value="c"> It uses Proxy traps (specifically the <code>set</code> trap) to intercept mutations and trigger UI updates</label>
+        <label class="option"><input type="radio" name="q5" value="d"> It uses a MutationObserver on the data object</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','Vue 3 replaced Vue 2\'s Object.defineProperty approach with Proxy, which is more powerful — it can detect new property additions and array index mutations, which defineProperty could not.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What does <code>Object.defineProperty(obj, 'x', { writable: false })</code> do?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> Deletes the property x from obj</label>
+        <label class="option"><input type="radio" name="q6" value="b"> Makes x non-enumerable so it won't appear in loops</label>
+        <label class="option"><input type="radio" name="q6" value="c"> Makes the property x read-only — subsequent assignments silently fail (or throw in strict mode)</label>
+        <label class="option"><input type="radio" name="q6" value="d"> Makes x a getter that always returns undefined</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','c','Setting writable: false means assignment to that property has no effect in sloppy mode, and throws a TypeError in strict mode. The value is frozen in place.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Memory Management &amp; Performance</strong> — garbage collection, memory leaks, WeakMap/WeakRef, debounce, throttle, and requestAnimationFrame. We move from "my code works" to "my code doesn't slow down or crash in production."</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent anything that was unclear. Good follow-up questions: "Show me how to build a deep reactive system with Proxy" or "How does the has trap interact with the in operator?"
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 26 — Proxy, Reflect &amp; Meta-programming</div>
+    <div class="nav-links">
+      <a href="./0025-design-patterns.html">← Prev: Design Patterns</a>
+      <a href="./0027-memory-management-performance.html">Next: Memory Management →</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '&#10003; Correct! ' : '&#10007; Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

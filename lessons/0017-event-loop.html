@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 17 — The Event Loop</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+
+    /* Step trace boxes */
+    .trace-step {
+      display: flex;
+      gap: 1rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      align-items: flex-start;
+    }
+    .trace-step .step-num {
+      flex-shrink: 0;
+      width: 1.8rem;
+      height: 1.8rem;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    .trace-step .step-body { padding-top: 0.2rem; }
+    .trace-step .step-body strong { color: var(--accent); font-family: var(--serif); }
+    .step-output { display: inline-block; background: #f1f5f9; padding: 0.1em 0.4em; border-radius: 3px; color: var(--green); font-weight: bold; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 17 of 30</div>
+    <h1>The Event Loop</h1>
+    <p class="subtitle">JavaScript is single-threaded — the event loop is how it handles concurrency anyway.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Sources for this lesson</strong>
+    Read after the lesson:
+    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Event_loop" target="_blank">MDN — The Event Loop</a>.
+    Then watch: <a href="https://www.youtube.com/watch?v=8aGhZQkoFbQ" target="_blank">Philip Roberts — "What the heck is the event loop anyway?" (JSConf EU)</a>. It is the single best 26-minute investment you can make to understand this topic.
+  </div>
+
+  <div class="callout info">
+    <strong>Why This Lesson Matters</strong>
+    The event loop is the most commonly misunderstood concept in JavaScript. It comes up in almost every senior developer interview. More importantly, getting it wrong causes real bugs: race conditions, UI freezes, and promises resolving in unexpected orders. Take this lesson slowly.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. JavaScript is Single-Threaded</h2>
+
+  <p>JavaScript runs on a <strong>single thread</strong>. That means there is exactly one call stack, and exactly one thing executes at any moment. There is no parallel execution on the main JavaScript thread.</p>
+
+  <p>This sounds like it should make async work impossible. How can you wait for a network request if you can only do one thing at a time? The answer is the event loop — but first, we need to understand the call stack.</p>
+
+  <div class="callout warn">
+    <strong>Common Misconception</strong>
+    JavaScript itself is not asynchronous. The language is synchronous and single-threaded. Async behavior comes from the environment (browser or Node.js) providing APIs that run outside the JS engine and notify JS when they're done.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. The Call Stack</h2>
+
+  <p>The call stack is a <strong>LIFO (Last In, First Out)</strong> data structure that tracks which function is currently executing. Every time a function is called, a new <em>frame</em> is pushed onto the stack. When the function returns, its frame is popped off.</p>
+
+  <h3>Walking Through 3 Nested Function Calls</h3>
+
+  <pre><code><span class="kw">function</span> <span class="fn">multiply</span>(a, b) {
+  <span class="kw">return</span> a * b;            <span class="cmt">// step 3: runs, returns 6, frame popped</span>
+}
+
+<span class="kw">function</span> <span class="fn">square</span>(n) {
+  <span class="kw">return</span> <span class="fn">multiply</span>(n, n);  <span class="cmt">// step 2: calls multiply → pushes multiply frame</span>
+}
+
+<span class="kw">function</span> <span class="fn">main</span>() {
+  <span class="kw">const</span> result = <span class="fn">square</span>(<span class="num">3</span>); <span class="cmt">// step 1: calls square → pushes square frame</span>
+  <span class="fn">console</span>.log(result);      <span class="cmt">// step 4: square done, logs 9</span>
+}
+
+<span class="fn">main</span>();</code></pre>
+
+  <p>Here is the exact sequence of stack operations:</p>
+  <ol>
+    <li><code>main()</code> is called → <strong>push</strong> <code>main</code> frame. Stack: [main]</li>
+    <li><code>square(3)</code> is called inside main → <strong>push</strong> <code>square</code>. Stack: [main, square]</li>
+    <li><code>multiply(3, 3)</code> is called inside square → <strong>push</strong> <code>multiply</code>. Stack: [main, square, multiply]</li>
+    <li><code>multiply</code> returns 9 → <strong>pop</strong> multiply. Stack: [main, square]</li>
+    <li><code>square</code> returns 9 → <strong>pop</strong> square. Stack: [main]</li>
+    <li><code>console.log(9)</code> executes. Stack briefly: [main, console.log] then pops.</li>
+    <li><code>main</code> returns → <strong>pop</strong> main. Stack: [] (empty)</li>
+  </ol>
+
+  <div class="callout danger">
+    <strong>Stack Overflow</strong>
+    If a function calls itself infinitely (infinite recursion) with no base case, the stack grows until the browser throws a "Maximum call stack size exceeded" (RangeError). The stack has a finite size — typically a few thousand frames.
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. Web APIs — What Runs Outside the JS Engine</h2>
+
+  <p>The browser (and Node.js) provides <strong>host APIs</strong> that run in separate threads or processes, completely outside the JavaScript engine. These include:</p>
+
+  <table>
+    <thead>
+      <tr><th>API</th><th>What it does</th><th>Provided by</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>setTimeout</code> / <code>setInterval</code></td><td>Runs a timer</td><td>Browser &amp; Node.js</td></tr>
+      <tr><td><code>fetch</code></td><td>Makes HTTP requests</td><td>Browser &amp; Node.js</td></tr>
+      <tr><td>DOM event listeners</td><td>Waits for user interaction</td><td>Browser</td></tr>
+      <tr><td><code>fs.readFile</code></td><td>Reads files from disk</td><td>Node.js</td></tr>
+      <tr><td><code>MutationObserver</code></td><td>Watches for DOM changes</td><td>Browser</td></tr>
+    </tbody>
+  </table>
+
+  <p>When you call <code>setTimeout(fn, 1000)</code>, JavaScript hands the timer off to the Web API environment and continues executing other code immediately. After 1000ms, the Web API says "I'm done" and places <code>fn</code> into the callback queue.</p>
+
+  <div class="callout info">
+    <strong>The Key Mental Model</strong>
+    Think of Web APIs as a separate "waiting room." JavaScript gives them a task and a callback, then walks away. When the task finishes, the Web API puts the callback into a queue. The event loop then decides when JavaScript picks it up.
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. The Callback Queue (Macrotask Queue)</h2>
+
+  <p>The <strong>callback queue</strong> (also called the <em>macrotask queue</em> or <em>task queue</em>) holds callbacks that are ready to run. Callbacks arrive here from:</p>
+
+  <ul>
+    <li><code>setTimeout</code> and <code>setInterval</code> (after the timer expires)</li>
+    <li>DOM events (after a click, keypress, etc.)</li>
+    <li><code>fetch</code> completion callbacks (via XMLHttpRequest)</li>
+    <li>I/O callbacks in Node.js</li>
+  </ul>
+
+  <p>The critical rule: <strong>callbacks in the macrotask queue are only executed when the call stack is completely empty.</strong> If JavaScript is currently running synchronous code, no macrotask callback can interrupt it.</p>
+
+  <pre><code><span class="fn">console</span>.log(<span class="str">"start"</span>);
+
+<span class="fn">setTimeout</span>(() => {
+  <span class="fn">console</span>.log(<span class="str">"timeout"</span>); <span class="cmt">// goes to callback queue</span>
+}, <span class="num">0</span>);
+
+<span class="cmt">// Even though timeout is 0ms, this runs first:</span>
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; <span class="num">1000000</span>; i++) {} <span class="cmt">// blocks the stack</span>
+
+<span class="fn">console</span>.log(<span class="str">"end"</span>);
+<span class="cmt">// Output: "start", "end", "timeout"</span>
+<span class="cmt">// The timeout callback waits for the stack to empty</span></code></pre>
+
+  <!-- SECTION 5 -->
+  <h2>5. The Microtask Queue</h2>
+
+  <p>The <strong>microtask queue</strong> is a separate, higher-priority queue. Microtasks come from:</p>
+
+  <ul>
+    <li>Promise <code>.then()</code>, <code>.catch()</code>, and <code>.finally()</code> callbacks</li>
+    <li><code>queueMicrotask(fn)</code></li>
+    <li><code>MutationObserver</code> callbacks</li>
+    <li><code>await</code> continuations (under the hood, these are Promises)</li>
+  </ul>
+
+  <p>The microtask queue has a crucial priority rule: <strong>after every macrotask (including the initial script), ALL pending microtasks are drained completely before the next macrotask runs.</strong></p>
+
+  <pre><code><span class="fn">console</span>.log(<span class="str">"A"</span>);                              <span class="cmt">// sync</span>
+
+<span class="fn">setTimeout</span>(() => <span class="fn">console</span>.log(<span class="str">"B"</span>), <span class="num">0</span>);        <span class="cmt">// macrotask queue</span>
+
+<span class="typ">Promise</span>.<span class="fn">resolve</span>().<span class="fn">then</span>(() => <span class="fn">console</span>.log(<span class="str">"C"</span>)); <span class="cmt">// microtask queue</span>
+<span class="typ">Promise</span>.<span class="fn">resolve</span>().<span class="fn">then</span>(() => <span class="fn">console</span>.log(<span class="str">"D"</span>)); <span class="cmt">// microtask queue</span>
+
+<span class="fn">console</span>.log(<span class="str">"E"</span>);                              <span class="cmt">// sync</span>
+
+<span class="cmt">// Output: A, E, C, D, B</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Infinite Microtask Loop is Dangerous</strong>
+    If a microtask keeps adding more microtasks, the macrotask queue is NEVER processed. The browser tab freezes. This is equivalent to an infinite loop for async code. Always be careful about recursively scheduling microtasks.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. The Event Loop Algorithm</h2>
+
+  <p>The event loop is a continuous algorithm running in the JavaScript environment. Here is its exact behavior, step by step:</p>
+
+  <ol>
+    <li><strong>Execute</strong> the current synchronous script (this is the first "macrotask")</li>
+    <li><strong>Drain all microtasks</strong> — run every task in the microtask queue until it is empty. If a microtask adds more microtasks, run those too.</li>
+    <li><strong>Render</strong> (browser only) — the browser may update the screen here, between macrotasks</li>
+    <li><strong>Pick ONE macrotask</strong> from the callback queue and execute it</li>
+    <li><strong>Go back to step 2</strong> — drain all microtasks again</li>
+    <li>Repeat forever</li>
+  </ol>
+
+  <div class="callout info">
+    <strong>Visual Mental Model</strong>
+    Picture three boxes:<br>
+    — <strong>Call Stack</strong>: what is running right now<br>
+    — <strong>Microtask Queue</strong>: VIP waiting room — gets in next, always<br>
+    — <strong>Macrotask Queue</strong>: regular waiting room — gets in only after the VIP room is empty<br><br>
+    The event loop is the bouncer: it checks the stack (is it empty?), then clears the VIP room entirely, then lets one person from the regular room in, then repeats.
+  </div>
+
+  <h3>Why <code>setTimeout(fn, 0)</code> is Not Immediate</h3>
+  <p>A timeout of 0 milliseconds does not mean "run now." It means "run after the current call stack is empty AND all pending microtasks have run." The minimum delay before a macrotask runs is always the time it takes for the current synchronous code and all microtasks to complete — which could be many milliseconds if there is heavy work happening.</p>
+
+  <!-- SECTION 7 -->
+  <h2>7. The Classic Interview Question — Output Prediction</h2>
+
+  <p>This exact question (or a variation) appears in nearly every senior JavaScript interview. Work through it yourself first, then read the step-by-step explanation.</p>
+
+  <pre><code><span class="fn">console</span>.log(<span class="str">"1"</span>);
+
+<span class="fn">setTimeout</span>(() => <span class="fn">console</span>.log(<span class="str">"2"</span>), <span class="num">0</span>);
+
+<span class="typ">Promise</span>.<span class="fn">resolve</span>().<span class="fn">then</span>(() => <span class="fn">console</span>.log(<span class="str">"3"</span>));
+
+<span class="fn">console</span>.log(<span class="str">"4"</span>);</code></pre>
+
+  <p><strong>The answer is: <code>1, 4, 3, 2</code></strong></p>
+
+  <p>Here is the precise step-by-step trace:</p>
+
+  <div class="trace-step">
+    <div class="step-num">1</div>
+    <div class="step-body"><strong>Line 1 — sync:</strong> <code>console.log("1")</code> executes immediately on the call stack. Output: <span class="step-output">"1"</span></div>
+  </div>
+
+  <div class="trace-step">
+    <div class="step-num">2</div>
+    <div class="step-body"><strong>Line 3 — setTimeout:</strong> JavaScript hands the timer to the Web API. The callback <code>() => console.log("2")</code> is registered. Since the delay is 0ms, the Web API immediately places it in the <strong>macrotask queue</strong>. The call stack does NOT wait.</div>
+  </div>
+
+  <div class="trace-step">
+    <div class="step-num">3</div>
+    <div class="step-body"><strong>Line 5 — Promise.resolve().then():</strong> <code>Promise.resolve()</code> creates an already-resolved Promise. The <code>.then()</code> callback <code>() => console.log("3")</code> is immediately scheduled in the <strong>microtask queue</strong>. It does not run yet.</div>
+  </div>
+
+  <div class="trace-step">
+    <div class="step-num">4</div>
+    <div class="step-body"><strong>Line 7 — sync:</strong> <code>console.log("4")</code> executes immediately. Output: <span class="step-output">"4"</span></div>
+  </div>
+
+  <div class="trace-step">
+    <div class="step-num">5</div>
+    <div class="step-body"><strong>Script ends — call stack is now empty.</strong> The event loop kicks in. First: drain the microtask queue. The Promise callback runs: <code>console.log("3")</code>. Output: <span class="step-output">"3"</span>. Microtask queue is now empty.</div>
+  </div>
+
+  <div class="trace-step">
+    <div class="step-num">6</div>
+    <div class="step-body"><strong>Macrotask queue — pick one.</strong> The setTimeout callback runs: <code>console.log("2")</code>. Output: <span class="step-output">"2"</span></div>
+  </div>
+
+  <p style="margin-top: 1rem;"><strong>Final output order: 1 → 4 → 3 → 2</strong></p>
+
+  <div class="callout tip">
+    <strong>The Pattern to Memorize</strong>
+    Synchronous code always runs first. Then microtasks (Promises) run in full. Then one macrotask (setTimeout). Then microtasks again. Repeat. The order is always: <strong>sync → microtasks → one macrotask → microtasks → one macrotask → ...</strong>
+  </div>
+
+  <h3>A Harder Variation</h3>
+
+  <pre><code><span class="fn">console</span>.log(<span class="str">"start"</span>);
+
+<span class="fn">setTimeout</span>(() => {
+  <span class="fn">console</span>.log(<span class="str">"timeout"</span>);
+  <span class="typ">Promise</span>.<span class="fn">resolve</span>().<span class="fn">then</span>(() => <span class="fn">console</span>.log(<span class="str">"promise inside timeout"</span>));
+}, <span class="num">0</span>);
+
+<span class="typ">Promise</span>.<span class="fn">resolve</span>().<span class="fn">then</span>(() => {
+  <span class="fn">console</span>.log(<span class="str">"promise 1"</span>);
+}).<span class="fn">then</span>(() => {
+  <span class="fn">console</span>.log(<span class="str">"promise 2"</span>);
+});
+
+<span class="fn">console</span>.log(<span class="str">"end"</span>);
+
+<span class="cmt">// Output:
+// "start"
+// "end"
+// "promise 1"
+// "promise 2"
+// "timeout"
+// "promise inside timeout"</span></code></pre>
+
+  <p>Notice: "promise inside timeout" logs <em>after</em> "timeout" but <em>before</em> any other macrotask would run. Why? Because after the "timeout" macrotask runs, all microtasks are drained again — and "promise inside timeout" is now in the microtask queue.</p>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What is the correct output order of this code?</p>
+      <div class="question-code">console.log(1);
+setTimeout(() => console.log(2), 0);
+Promise.resolve().then(() => console.log(3));
+console.log(4);</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> 1, 2, 3, 4</label>
+        <label class="option"><input type="radio" name="q1" value="b"> 1, 4, 2, 3</label>
+        <label class="option"><input type="radio" name="q1" value="c"> 1, 4, 3, 2</label>
+        <label class="option"><input type="radio" name="q1" value="d"> 1, 3, 4, 2</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','c','Sync code runs first (1, 4). Then the microtask queue drains before any macrotask: the Promise .then fires (3). Finally the setTimeout macrotask runs (2). Order: 1, 4, 3, 2.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. Which has higher priority — the microtask queue or the callback (macrotask) queue?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> The macrotask queue — setTimeout fires before Promises</label>
+        <label class="option"><input type="radio" name="q2" value="b"> They have equal priority — it depends on which was scheduled first</label>
+        <label class="option"><input type="radio" name="q2" value="c"> The microtask queue — Promises run before setTimeout callbacks</label>
+        <label class="option"><input type="radio" name="q2" value="d"> Neither — the call stack decides</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','The microtask queue always has higher priority. After every macrotask (including the initial script), ALL pending microtasks are drained before the event loop picks the next macrotask.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. When does the event loop pick up a callback from the macrotask queue?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> Immediately when the timer expires, even if code is running</label>
+        <label class="option"><input type="radio" name="q3" value="b"> Only when the call stack is completely empty AND the microtask queue is also empty</label>
+        <label class="option"><input type="radio" name="q3" value="c"> Only when the call stack is empty (microtasks don't matter)</label>
+        <label class="option"><input type="radio" name="q3" value="d"> At regular 16ms intervals (once per frame)</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','b','The event loop picks a macrotask only when the call stack is completely empty AND after draining all pending microtasks. Both conditions must be true.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. Where does <code>setTimeout(() => {}, 1000)</code> actually run its timer — in the call stack?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> Yes — the JS engine counts the milliseconds internally</label>
+        <label class="option"><input type="radio" name="q4" value="b"> In the Web API environment (browser or Node.js), outside the JS engine</label>
+        <label class="option"><input type="radio" name="q4" value="c"> In a hidden background thread inside V8</label>
+        <label class="option"><input type="radio" name="q4" value="d"> In the microtask queue</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','b','The timer runs in the Web API environment (C++ in the browser, libuv in Node.js) — completely outside the JavaScript engine. JS hands off the callback and continues executing. Only after the timer expires does the callback get queued.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. Which of these fills the <em>microtask</em> queue?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> setTimeout and setInterval callbacks</label>
+        <label class="option"><input type="radio" name="q5" value="b"> DOM click event handlers</label>
+        <label class="option"><input type="radio" name="q5" value="c"> Promise .then/.catch callbacks and queueMicrotask()</label>
+        <label class="option"><input type="radio" name="q5" value="d"> fetch() response handlers</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','Promise .then/.catch/.finally callbacks, queueMicrotask(), and MutationObserver callbacks go into the microtask queue. setTimeout, setInterval, DOM events, and fetch responses go into the macrotask queue.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What happens if a microtask schedules another microtask (e.g., a .then() returns a new resolved Promise)?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> The new microtask is deferred to the next macrotask cycle</label>
+        <label class="option"><input type="radio" name="q6" value="b"> It also runs before any macrotask — microtasks are drained completely (including newly added ones) before the next macrotask</label>
+        <label class="option"><input type="radio" name="q6" value="c"> It goes into the macrotask queue instead</label>
+        <label class="option"><input type="radio" name="q6" value="d"> It causes a RangeError: maximum queue size exceeded</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','b','The microtask queue is drained completely before any macrotask runs — including any new microtasks added during that drain. If microtasks keep adding microtasks infinitely, macrotasks never run and the page freezes.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Callbacks &amp; Promises</strong> — now that you understand the event loop, you will understand exactly <em>why</em> Promises were invented and how they work at every level. The event loop is the foundation; Promises are built on top of it.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent anything that was unclear. The most common sticking point here is understanding why Promise callbacks run before setTimeout even at 0ms delay. If that still feels fuzzy, ask — we will work through more examples.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 17 — The Event Loop</div>
+    <div class="nav-links">
+      <a href="./0016-modules.html">← Prev: Modules</a>
+      <a href="./0018-callbacks-promises.html">Next: Callbacks &amp; Promises →</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '&#10003; Correct! ' : '&#10007; Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 25 — Iterators, Generators &amp; Symbols</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 25 of 30</div>
+    <h1>Iterators, Generators &amp; Symbols</h1>
+    <p class="subtitle">Custom iteration, lazy evaluation, and JavaScript's hidden metaprogramming hooks.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Sources for this lesson</strong>
+    Read these <em>after</em> the lesson:
+    <a href="https://javascript.info/generators" target="_blank">javascript.info — Generators</a> and
+    <a href="https://javascript.info/symbol" target="_blank">javascript.info — Symbol</a>.
+    These are dense topics — reading both articles after the lesson will solidify what you learn here significantly.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. Symbols — Guaranteed Unique Keys</h2>
+
+  <p>A <strong>Symbol</strong> is a primitive value introduced in ES6. Its defining property: <strong>every Symbol is unique</strong>, even if created with the same description.</p>
+
+<pre><code><span class="cmt">// Creating symbols</span>
+<span class="kw">const</span> s1 = <span class="fn">Symbol</span>(<span class="str">'id'</span>);
+<span class="kw">const</span> s2 = <span class="fn">Symbol</span>(<span class="str">'id'</span>);
+
+<span class="fn">console</span>.log(s1 === s2); <span class="cmt">// false — ALWAYS. Symbols are unique.</span>
+<span class="fn">console</span>.log(<span class="kw">typeof</span> s1); <span class="cmt">// 'symbol'</span>
+<span class="fn">console</span>.log(s1.<span class="fn">toString</span>()); <span class="cmt">// 'Symbol(id)' — the description</span>
+
+<span class="cmt">// Use case: unique property key that can't accidentally collide</span>
+<span class="kw">const</span> ID = <span class="fn">Symbol</span>(<span class="str">'id'</span>);
+<span class="kw">const</span> user = {
+  name: <span class="str">'Karan'</span>,
+  [ID]: <span class="num">42</span>   <span class="cmt">// computed property key using a symbol</span>
+};
+
+<span class="fn">console</span>.log(user[ID]);   <span class="cmt">// 42 — accessed only via the symbol</span>
+<span class="fn">console</span>.log(user.id);    <span class="cmt">// undefined — string 'id' ≠ Symbol('id')</span>
+
+<span class="cmt">// Symbol properties are hidden from normal enumeration</span>
+<span class="fn">console</span>.log(<span class="typ">Object</span>.<span class="fn">keys</span>(user));  <span class="cmt">// ['name'] — no ID symbol</span>
+<span class="fn">JSON</span>.<span class="fn">stringify</span>(user);              <span class="cmt">// '{"name":"Karan"}' — symbol dropped</span></code></pre>
+
+  <h3>Well-Known Symbols — JavaScript's Metaprogramming Hooks</h3>
+
+  <p>JavaScript itself uses special built-in symbols called <strong>well-known symbols</strong> to define how objects behave with language features. You override them to customize that behavior.</p>
+
+  <table>
+    <thead>
+      <tr><th>Well-Known Symbol</th><th>What it customizes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>Symbol.iterator</code></td><td>Makes an object work with <code>for...of</code>, spread, destructuring</td></tr>
+      <tr><td><code>Symbol.toPrimitive</code></td><td>Controls type coercion (how an object converts to number/string)</td></tr>
+      <tr><td><code>Symbol.hasInstance</code></td><td>Controls what <code>instanceof</code> returns for your class</td></tr>
+      <tr><td><code>Symbol.toStringTag</code></td><td>Changes the tag shown in <code>Object.prototype.toString</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <strong>Why a symbol and not a string?</strong>
+    If the iterable protocol used a string like <code>"iterator"</code>, any object property named <code>"iterator"</code> would accidentally become an iterable. Using a symbol guarantees that these hooks never collide with regular object properties — they exist in a separate namespace.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. The Iterable Protocol</h2>
+
+  <p>An object is <strong>iterable</strong> if it implements the iterable protocol: it must have a method at <code>[Symbol.iterator]</code> that returns an <strong>iterator</strong>.</p>
+
+  <p>The following are iterable by default because JavaScript has built-in <code>[Symbol.iterator]</code> implementations on them:</p>
+  <ul>
+    <li>Arrays</li>
+    <li>Strings</li>
+    <li>Maps and Sets</li>
+    <li>Generator objects</li>
+    <li><code>NodeList</code> (DOM collections)</li>
+    <li>Function <code>arguments</code> object</li>
+  </ul>
+
+  <p>This is why <code>for...of</code>, spread (<code>[...x]</code>), and destructuring (<code>const [a, b] = x</code>) all work on arrays and strings but <strong>not</strong> on plain objects — plain objects have no <code>[Symbol.iterator]</code> method.</p>
+
+<pre><code><span class="cmt">// These all rely on the iterable protocol:</span>
+<span class="kw">const</span> arr = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>];
+
+<span class="kw">for</span> (<span class="kw">const</span> n <span class="kw">of</span> arr) { <span class="fn">console</span>.log(n); } <span class="cmt">// uses Symbol.iterator</span>
+
+<span class="kw">const</span> copy = [...arr];   <span class="cmt">// spread uses Symbol.iterator</span>
+<span class="kw">const</span> [a, b] = arr;     <span class="cmt">// destructuring uses Symbol.iterator</span>
+
+<span class="cmt">// Plain object is NOT iterable — this throws:</span>
+<span class="kw">const</span> obj = { x: <span class="num">1</span>, y: <span class="num">2</span> };
+<span class="kw">for</span> (<span class="kw">const</span> v <span class="kw">of</span> obj) {} <span class="cmt">// ❌ TypeError: obj is not iterable</span>
+
+<span class="cmt">// Manually accessing the iterator:</span>
+<span class="kw">const</span> iter = arr[<span class="typ">Symbol</span>.iterator]();
+<span class="fn">console</span>.log(<span class="kw">typeof</span> iter.<span class="fn">next</span>); <span class="cmt">// 'function'</span></code></pre>
+
+  <!-- SECTION 3 -->
+  <h2>3. The Iterator Protocol</h2>
+
+  <p>An <strong>iterator</strong> is any object with a <code>next()</code> method. Each call to <code>next()</code> returns an object with exactly two properties:</p>
+
+  <ul>
+    <li><code>value</code> — the current value</li>
+    <li><code>done</code> — <code>true</code> if iteration is finished, <code>false</code> otherwise</li>
+  </ul>
+
+<pre><code><span class="cmt">// Manually using an array's iterator</span>
+<span class="kw">const</span> arr = [<span class="str">'a'</span>, <span class="str">'b'</span>, <span class="str">'c'</span>];
+<span class="kw">const</span> iter = arr[<span class="typ">Symbol</span>.iterator]();
+
+<span class="fn">console</span>.log(iter.<span class="fn">next</span>()); <span class="cmt">// { value: 'a', done: false }</span>
+<span class="fn">console</span>.log(iter.<span class="fn">next</span>()); <span class="cmt">// { value: 'b', done: false }</span>
+<span class="fn">console</span>.log(iter.<span class="fn">next</span>()); <span class="cmt">// { value: 'c', done: false }</span>
+<span class="fn">console</span>.log(iter.<span class="fn">next</span>()); <span class="cmt">// { value: undefined, done: true }</span>
+
+<span class="cmt">// for...of is just sugar for this loop:</span>
+<span class="kw">let</span> result;
+<span class="kw">while</span> (!(result = iter.<span class="fn">next</span>()).done) {
+  <span class="fn">console</span>.log(result.value);
+}</code></pre>
+
+  <!-- SECTION 4 -->
+  <h2>4. Making a Custom Iterable</h2>
+
+  <p>You can make any object iterable by adding a <code>[Symbol.iterator]</code> method. That method must return an object with a <code>next()</code> method that follows the iterator protocol.</p>
+
+<pre><code><span class="cmt">// A range object that iterates from 'from' to 'to' inclusive</span>
+<span class="kw">const</span> range = {
+  from: <span class="num">1</span>,
+  to: <span class="num">5</span>,
+
+  [<span class="typ">Symbol</span>.iterator]() {
+    <span class="cmt">// 'this' is the range object</span>
+    <span class="kw">let</span> current = <span class="kw">this</span>.from;
+    <span class="kw">const</span> last = <span class="kw">this</span>.to;
+
+    <span class="cmt">// Return the iterator object</span>
+    <span class="kw">return</span> {
+      <span class="fn">next</span>() {
+        <span class="kw">if</span> (current &lt;= last) {
+          <span class="kw">return</span> { value: current++, done: <span class="kw">false</span> };
+        }
+        <span class="kw">return</span> { value: <span class="kw">undefined</span>, done: <span class="kw">true</span> };
+      }
+    };
+  }
+};
+
+<span class="cmt">// Now it works with ALL iteration features</span>
+<span class="kw">for</span> (<span class="kw">const</span> n <span class="kw">of</span> range) {
+  <span class="fn">console</span>.log(n); <span class="cmt">// 1, 2, 3, 4, 5</span>
+}
+
+<span class="fn">console</span>.log([...range]); <span class="cmt">// [1, 2, 3, 4, 5]</span>
+<span class="kw">const</span> [first, second] = range; <span class="cmt">// first=1, second=2</span></code></pre>
+
+  <div class="callout tip">
+    <strong>The analogy</strong>
+    Think of an iterable as a <em>book</em> — it knows there are pages to read. The iterator is a <em>bookmark</em> — it tracks your current position. You can create multiple bookmarks (iterators) from one book (iterable), each at different places.
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2>5. Generator Functions</h2>
+
+  <p>Generators are a special kind of function that can <strong>pause execution</strong> and <strong>yield values one at a time</strong>. They are the most elegant way to write custom iterators.</p>
+
+  <p>Three things that make generators different:</p>
+  <ol>
+    <li>Declared with <code>function*</code> (note the asterisk)</li>
+    <li>Use <code>yield</code> to produce a value and pause</li>
+    <li>Calling a generator function does NOT run the body — it returns a <strong>generator object</strong> that is both iterable AND an iterator</li>
+  </ol>
+
+<pre><code><span class="cmt">// A simple generator</span>
+<span class="kw">function</span>* <span class="fn">threeValues</span>() {
+  <span class="fn">console</span>.log(<span class="str">'start'</span>);
+  <span class="kw">yield</span> <span class="num">1</span>;           <span class="cmt">// pauses here, returns { value: 1, done: false }</span>
+  <span class="fn">console</span>.log(<span class="str">'middle'</span>);
+  <span class="kw">yield</span> <span class="num">2</span>;           <span class="cmt">// pauses here, returns { value: 2, done: false }</span>
+  <span class="fn">console</span>.log(<span class="str">'end'</span>);
+  <span class="kw">yield</span> <span class="num">3</span>;           <span class="cmt">// pauses here, returns { value: 3, done: false }</span>
+  <span class="cmt">// implicit return → { value: undefined, done: true }</span>
+}
+
+<span class="cmt">// Calling the generator creates a generator object — body does NOT run yet</span>
+<span class="kw">const</span> gen = <span class="fn">threeValues</span>();
+
+<span class="fn">console</span>.log(gen.<span class="fn">next</span>()); <span class="cmt">// logs "start", returns { value: 1, done: false }</span>
+<span class="fn">console</span>.log(gen.<span class="fn">next</span>()); <span class="cmt">// logs "middle", returns { value: 2, done: false }</span>
+<span class="fn">console</span>.log(gen.<span class="fn">next</span>()); <span class="cmt">// logs "end", returns { value: 3, done: false }</span>
+<span class="fn">console</span>.log(gen.<span class="fn">next</span>()); <span class="cmt">// returns { value: undefined, done: true }</span>
+
+<span class="cmt">// Generators are iterable — use for...of directly</span>
+<span class="kw">for</span> (<span class="kw">const</span> v <span class="kw">of</span> <span class="fn">threeValues</span>()) {
+  <span class="fn">console</span>.log(v); <span class="cmt">// 1, 2, 3</span>
+}</code></pre>
+
+  <div class="callout info">
+    <strong>The pause-and-resume mental model</strong>
+    Imagine the generator function is a conversation. <code>yield</code> is you saying "here's a value — I'll wait for you to ask for the next one." <code>.next()</code> is the caller saying "okay, continue." The generator remembers exactly where it was — its local variables, its position in the code — and picks up right from that point.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. Practical Generators — Lazy Evaluation</h2>
+
+  <p>The most powerful use of generators: producing values <strong>on demand</strong> instead of computing them all upfront. This is called <strong>lazy evaluation</strong>.</p>
+
+<pre><code><span class="cmt">// Infinite sequence — computing this all at once is impossible</span>
+<span class="kw">function</span>* <span class="fn">integers</span>() {
+  <span class="kw">let</span> i = <span class="num">0</span>;
+  <span class="kw">while</span> (<span class="kw">true</span>) { <span class="cmt">// infinite loop — fine! we only pull what we need</span>
+    <span class="kw">yield</span> i++;
+  }
+}
+
+<span class="cmt">// Take just the first 5 values from an infinite sequence</span>
+<span class="kw">function</span> <span class="fn">take</span>(n, iterable) {
+  <span class="kw">const</span> result = [];
+  <span class="kw">for</span> (<span class="kw">const</span> value <span class="kw">of</span> iterable) {
+    result.<span class="fn">push</span>(value);
+    <span class="kw">if</span> (result.length === n) <span class="kw">break</span>;
+  }
+  <span class="kw">return</span> result;
+}
+
+<span class="fn">console</span>.log(<span class="fn">take</span>(<span class="num">5</span>, <span class="fn">integers</span>())); <span class="cmt">// [0, 1, 2, 3, 4]</span>
+
+<span class="cmt">// Rewriting the range example from Section 4 — much simpler with a generator</span>
+<span class="kw">function</span>* <span class="fn">range</span>(from, to) {
+  <span class="kw">for</span> (<span class="kw">let</span> i = from; i &lt;= to; i++) {
+    <span class="kw">yield</span> i;
+  }
+}
+
+<span class="fn">console</span>.log([...<span class="fn">range</span>(<span class="num">1</span>, <span class="num">5</span>)]); <span class="cmt">// [1, 2, 3, 4, 5]</span>
+
+<span class="cmt">// Paginatation: yield one page at a time</span>
+<span class="kw">async</span> <span class="kw">function</span>* <span class="fn">fetchPages</span>(baseUrl) {
+  <span class="kw">let</span> page = <span class="num">1</span>;
+  <span class="kw">while</span> (<span class="kw">true</span>) {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`${baseUrl}?page=${page}`</span>);
+    <span class="kw">const</span> data = <span class="kw">await</span> res.<span class="fn">json</span>();
+    <span class="kw">if</span> (data.length === <span class="num">0</span>) <span class="kw">return</span>; <span class="cmt">// no more pages</span>
+    <span class="kw">yield</span> data; <span class="cmt">// yield this page's results</span>
+    page++;
+  }
+}
+
+<span class="cmt">// Consume pages with for-await-of</span>
+<span class="kw">for</span> <span class="kw">await</span> (<span class="kw">const</span> page <span class="kw">of</span> <span class="fn">fetchPages</span>(<span class="str">'/api/items'</span>)) {
+  <span class="fn">console</span>.log(<span class="str">'Processing page:'</span>, page);
+}</code></pre>
+
+  <!-- SECTION 7 -->
+  <h2>7. Generator Use Cases &amp; Summary</h2>
+
+  <p>Generators shine in situations that involve <strong>sequences of values produced over time</strong>:</p>
+
+  <table>
+    <thead>
+      <tr><th>Use Case</th><th>Why a Generator Fits</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Paginated API requests</td><td>Yield one page at a time, stop when done — caller drives the pace</td></tr>
+      <tr><td>Infinite sequences (IDs, timestamps)</td><td>Generate values lazily — never compute more than needed</td></tr>
+      <tr><td>State machines</td><td>Each <code>yield</code> represents a state; <code>.next()</code> drives transitions</td></tr>
+      <tr><td>Custom iterables</td><td>Much cleaner than manually implementing the protocol</td></tr>
+      <tr><td>Async iteration (<code>for await...of</code>)</td><td>Process async streams item by item without loading all into memory</td></tr>
+    </tbody>
+  </table>
+
+<pre><code><span class="cmt">// Summary: the chain of concepts</span>
+
+<span class="cmt">// 1. Symbol — unique, non-string key</span>
+<span class="kw">const</span> key = <span class="fn">Symbol</span>(<span class="str">'myKey'</span>);
+
+<span class="cmt">// 2. Symbol.iterator — well-known symbol that enables iteration</span>
+<span class="cmt">// 3. Iterable — has [Symbol.iterator]() → iterator</span>
+<span class="cmt">// 4. Iterator — has .next() → { value, done }</span>
+<span class="cmt">// 5. Generator — sugar that implements 3 + 4 automatically</span>
+
+<span class="kw">function</span>* <span class="fn">colors</span>() {
+  <span class="kw">yield</span> <span class="str">'red'</span>;
+  <span class="kw">yield</span> <span class="str">'green'</span>;
+  <span class="kw">yield</span> <span class="str">'blue'</span>;
+}
+
+<span class="cmt">// The generator object IS an iterator (has .next())</span>
+<span class="cmt">// AND an iterable (has [Symbol.iterator] that returns itself)</span>
+<span class="kw">const</span> gen = <span class="fn">colors</span>();
+<span class="fn">console</span>.log(gen[<span class="typ">Symbol</span>.iterator]() === gen); <span class="cmt">// true</span></code></pre>
+
+  <div class="callout tip">
+    <strong>Interview insight</strong>
+    When asked about generators in interviews, the key insight to communicate is <strong>lazy evaluation</strong>: "Values are produced on demand, which means you can represent infinite sequences and save memory by never computing values you don't actually use." Then mention async generators and pagination as a real-world application.
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Senior-level material. Recall from memory — don't scroll back up.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What does this evaluate to?</p>
+      <div class="question-code">Symbol('id') === Symbol('id')</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> <code>true</code> — same description means same symbol</label>
+        <label class="option"><input type="radio" name="q1" value="b"> <code>false</code> — every Symbol() call creates a unique value, even with the same description</label>
+        <label class="option"><input type="radio" name="q1" value="c"> A TypeError — Symbols cannot be compared with ===</label>
+        <label class="option"><input type="radio" name="q1" value="d"> <code>undefined</code></label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','false. The whole point of Symbol is guaranteed uniqueness. The string description \'id\' is just a label for debugging — it plays no role in identity. Every call to Symbol() produces a brand new, never-before-seen value.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What makes an object "iterable" in JavaScript?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> Having a <code>.length</code> property</label>
+        <label class="option"><input type="radio" name="q2" value="b"> Being an instance of Array or Set</label>
+        <label class="option"><input type="radio" name="q2" value="c"> Having a <code>[Symbol.iterator]()</code> method that returns an iterator</label>
+        <label class="option"><input type="radio" name="q2" value="d"> Having a <code>.forEach()</code> method</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','The iterable protocol requires exactly one thing: a [Symbol.iterator]() method that returns an iterator. This is why for...of, spread, and destructuring work on arrays, strings, Maps, Sets, and any custom object that implements this method.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What does <code>iterator.next()</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> The next value directly</label>
+        <label class="option"><input type="radio" name="q3" value="b"> A Promise</label>
+        <label class="option"><input type="radio" name="q3" value="c"> An object with <code>{ value: any, done: boolean }</code></label>
+        <label class="option"><input type="radio" name="q3" value="d"> <code>true</code> or <code>false</code> depending on whether there are more values</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','c','The iterator protocol requires next() to return an object with exactly two properties: value (the current value) and done (false if more values remain, true when the sequence is exhausted). When done is true, value is typically undefined.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What does the <code>yield</code> keyword do in a generator?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> Returns a value and terminates the generator function</label>
+        <label class="option"><input type="radio" name="q4" value="b"> Pauses the generator function and produces the yielded value — execution resumes on the next <code>.next()</code> call</label>
+        <label class="option"><input type="radio" name="q4" value="c"> Throws a value to the generator's <code>catch</code> handler</label>
+        <label class="option"><input type="radio" name="q4" value="d"> Skips to the next iteration in a <code>for</code> loop</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','b','yield is the pause button. When the generator hits a yield, it packages the value into { value: yielded, done: false } and suspends — freezing its local state, variables, and position in the code. The next .next() call thaws it and runs until the next yield or a return.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. How do you make a <code>for...of</code> loop work on a custom plain object?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> Add a <code>.length</code> property and integer keys</label>
+        <label class="option"><input type="radio" name="q5" value="b"> Extend the object from <code>Array</code></label>
+        <label class="option"><input type="radio" name="q5" value="c"> Add a <code>[Symbol.iterator]()</code> method that returns an iterator with a <code>next()</code> method</label>
+        <label class="option"><input type="radio" name="q5" value="d"> Add a <code>.forEach()</code> method</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','for...of calls [Symbol.iterator]() to get an iterator, then calls .next() repeatedly until done is true. Implement [Symbol.iterator]() on your object — returning an object with a next() method — and for...of, spread, and destructuring all work automatically.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What is "lazy evaluation" in the context of generators?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> Running the generator function asynchronously in the background</label>
+        <label class="option"><input type="radio" name="q6" value="b"> Delaying the creation of a generator until it is first used</label>
+        <label class="option"><input type="radio" name="q6" value="c"> Values are computed only when requested — useful for infinite sequences you only consume partially</label>
+        <label class="option"><input type="radio" name="q6" value="d"> Caching computed values so they are only calculated once</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','c','Lazy evaluation means: don\'t compute the value until someone asks for it. A generator for an infinite sequence (like all integers) never blows up memory because it only produces one value per .next() call. You can create an infinite generator and safely take(5) from it — the other 999,999,995 values are never computed.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>You've completed Lesson 25. The next lessons cover <strong>Error Handling &amp; Debugging</strong>, <strong>Testing (unit, integration)</strong>, <strong>Performance Optimization</strong>, and <strong>TypeScript fundamentals</strong> — all senior-dev essentials. Keep going.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Generators are one of those topics where the "aha" moment comes from writing one yourself. Ask your teacher agent to give you a challenge: "Build a generator that yields Fibonacci numbers lazily." Working through it yourself is worth more than reading about it ten more times.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 25 — Iterators, Generators &amp; Symbols</div>
+    <div class="nav-links">
+      <a href="./0024-design-patterns.html">← Previous: Design Patterns</a>
+      <a href="./0026-error-handling-debugging.html">Next: Error Handling &amp; Debugging →</a>
+      <a href="https://javascript.info/generators" target="_blank">javascript.info: Generators ↗</a>
+      <a href="https://javascript.info/symbol" target="_blank">javascript.info: Symbol ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

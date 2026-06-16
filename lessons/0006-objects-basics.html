@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 06 — Objects: Basics</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 06 of 30</div>
+    <h1>Objects: Basics</h1>
+    <p class="subtitle">Objects are the backbone of JavaScript — almost everything is one.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>📖 Primary Source for this lesson</strong>
+    Read this <em>after</em> the lesson to solidify what you learn:
+    <a href="https://javascript.info/object" target="_blank">javascript.info — Objects</a>.
+    The most thorough free resource on this topic — includes visual diagrams and exercises.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. Creating Objects</h2>
+
+  <p>An object is a collection of <strong>key-value pairs</strong>. Keys are always strings (or Symbols); values can be anything — numbers, strings, functions, other objects, arrays, even <code>undefined</code>.</p>
+
+  <p>The most common way to create an object is the <strong>object literal</strong> syntax using curly braces <code>{}</code>.</p>
+
+  <pre><code><span class="cmt">// Object literal — the bread and butter of JS development</span>
+<span class="kw">const</span> user = {
+  name: <span class="str">"Karan"</span>,
+  age: <span class="num">22</span>,
+  isAdmin: <span class="kw">false</span>,
+  address: {               <span class="cmt">// nested object</span>
+    city: <span class="str">"Mumbai"</span>,
+    zip: <span class="str">"400001"</span>
+  },
+  <span class="fn">greet</span>() {              <span class="cmt">// method (function as a value)</span>
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"Hello!"</span>);
+  }
+};
+
+<span class="cmt">// Empty object — perfectly valid, add properties later</span>
+<span class="kw">const</span> config = {};</code></pre>
+
+  <p>There are two <strong>property types</strong>:</p>
+  <ul>
+    <li><strong>Data properties</strong> — hold a value (name, age, address above)</li>
+    <li><strong>Method properties</strong> — hold a function (greet above)</li>
+  </ul>
+
+  <div class="callout info">
+    <strong>Key naming rules</strong>
+    Keys can be any valid identifier (<code>name</code>, <code>firstName</code>) or any string including spaces and reserved words (<code>"first name"</code>, <code>"class"</code>). Numeric keys are automatically converted to strings.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. Accessing Properties</h2>
+
+  <p>There are two ways to read a property's value.</p>
+
+  <h3>Dot Notation</h3>
+  <p>The clean, preferred syntax. Use it whenever the key is a valid identifier you know at write time.</p>
+
+  <pre><code><span class="kw">const</span> user = { name: <span class="str">"Karan"</span>, age: <span class="num">22</span> };
+
+<span class="fn">console</span>.<span class="fn">log</span>(user.name);   <span class="cmt">// "Karan"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(user.age);    <span class="cmt">// 22</span>
+<span class="fn">console</span>.<span class="fn">log</span>(user.email);  <span class="cmt">// undefined — missing keys return undefined, no error</span></code></pre>
+
+  <h3>Bracket Notation</h3>
+  <p>Required in three situations: when the key is stored in a variable, when the key contains spaces or special characters, or when the key is a reserved word.</p>
+
+  <pre><code><span class="kw">const</span> user = { name: <span class="str">"Karan"</span>, <span class="str">"first name"</span>: <span class="str">"Karan"</span>, class: <span class="str">"A"</span> };
+
+<span class="cmt">// Key with a space — dot notation would fail here</span>
+<span class="fn">console</span>.<span class="fn">log</span>(user[<span class="str">"first name"</span>]);  <span class="cmt">// "Karan"</span>
+
+<span class="cmt">// Dynamic key stored in a variable — this is the big one</span>
+<span class="kw">const</span> field = <span class="str">"name"</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(user[field]);          <span class="cmt">// "Karan" — evaluates field first</span>
+<span class="fn">console</span>.<span class="fn">log</span>(user.field);           <span class="cmt">// undefined — looks for key literally "field"</span>
+
+<span class="cmt">// Reserved word key</span>
+<span class="fn">console</span>.<span class="fn">log</span>(user[<span class="str">"class"</span>]);       <span class="cmt">// "A"</span></code></pre>
+
+  <h3>Optional Chaining: <code>?.</code></h3>
+  <p>Safely access nested properties without throwing if an intermediate value is <code>null</code> or <code>undefined</code>.</p>
+
+  <pre><code><span class="kw">const</span> user = { address: { city: <span class="str">"Mumbai"</span> } };
+<span class="kw">const</span> guest = {};
+
+<span class="fn">console</span>.<span class="fn">log</span>(user.address.city);     <span class="cmt">// "Mumbai"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(guest.address?.city);   <span class="cmt">// undefined — no error thrown</span>
+<span class="cmt">// Without ?.: guest.address.city throws TypeError: Cannot read properties of undefined</span></code></pre>
+
+  <!-- SECTION 3 -->
+  <h2>3. Adding, Updating &amp; Deleting</h2>
+
+  <pre><code><span class="kw">const</span> user = { name: <span class="str">"Karan"</span>, age: <span class="num">22</span> };
+
+<span class="cmt">// Adding a new property</span>
+user.email = <span class="str">"karan@example.com"</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(user.email);   <span class="cmt">// "karan@example.com"</span>
+
+<span class="cmt">// Updating an existing property</span>
+user.age = <span class="num">23</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(user.age);    <span class="cmt">// 23</span>
+
+<span class="cmt">// Deleting a property</span>
+<span class="kw">delete</span> user.email;
+<span class="fn">console</span>.<span class="fn">log</span>(user.email);   <span class="cmt">// undefined</span></code></pre>
+
+  <h3>Checking if a Property Exists</h3>
+  <p>Two approaches — and they behave differently. This is an interview question.</p>
+
+  <pre><code><span class="kw">const</span> obj = { age: <span class="kw">undefined</span> };  <span class="cmt">// key exists, but value is undefined</span>
+
+<span class="cmt">// Approach 1: obj.key !== undefined — UNRELIABLE</span>
+<span class="fn">console</span>.<span class="fn">log</span>(obj.age !== <span class="kw">undefined</span>);      <span class="cmt">// false — thinks key is missing!</span>
+
+<span class="cmt">// Approach 2: "key" in obj — CORRECT (checks for key existence)</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"age"</span> <span class="kw">in</span> obj);              <span class="cmt">// true — key exists</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"name"</span> <span class="kw">in</span> obj);             <span class="cmt">// false — key doesn't exist</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Interview Gotcha</strong>
+    <code>"key" in obj</code> also checks the object's <em>prototype chain</em> (inherited properties). To check only own properties, use <code>Object.hasOwn(obj, "key")</code> (modern) or <code>obj.hasOwnProperty("key")</code>.
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. ES6 Object Enhancements</h2>
+
+  <p>Modern JavaScript introduced cleaner shorthand syntax. You'll see all of these in real codebases constantly.</p>
+
+  <h3>Property Shorthand</h3>
+  <pre><code><span class="kw">const</span> name = <span class="str">"Karan"</span>;
+<span class="kw">const</span> age = <span class="num">22</span>;
+
+<span class="cmt">// Old way — repetitive</span>
+<span class="kw">const</span> user1 = { name: name, age: age };
+
+<span class="cmt">// ES6 shorthand — when variable name equals key name</span>
+<span class="kw">const</span> user2 = { name, age };  <span class="cmt">// identical to user1</span></code></pre>
+
+  <h3>Computed Property Names</h3>
+  <pre><code><span class="kw">const</span> field = <span class="str">"score"</span>;
+<span class="kw">const</span> prefix = <span class="str">"user"</span>;
+
+<span class="kw">const</span> obj = {
+  [field]: <span class="num">100</span>,               <span class="cmt">// key is the VALUE of field: "score"</span>
+  [`${prefix}_id`]: <span class="num">42</span>       <span class="cmt">// key is "user_id"</span>
+};
+<span class="fn">console</span>.<span class="fn">log</span>(obj.score);     <span class="cmt">// 100</span>
+<span class="fn">console</span>.<span class="fn">log</span>(obj.user_id);   <span class="cmt">// 42</span></code></pre>
+
+  <h3>Method Shorthand</h3>
+  <pre><code><span class="cmt">// Old way</span>
+<span class="kw">const</span> obj1 = {
+  greet: <span class="kw">function</span>() { <span class="kw">return</span> <span class="str">"Hello"</span>; }
+};
+
+<span class="cmt">// ES6 method shorthand — cleaner, also affects how super works</span>
+<span class="kw">const</span> obj2 = {
+  <span class="fn">greet</span>() { <span class="kw">return</span> <span class="str">"Hello"</span>; }
+};</code></pre>
+
+  <!-- SECTION 5 -->
+  <h2>5. Iterating Over Objects</h2>
+
+  <p>You cannot use <code>forEach</code> directly on an object — it's for arrays. Use these static <code>Object</code> methods to convert the object into something iterable first.</p>
+
+  <pre><code><span class="kw">const</span> scores = { alice: <span class="num">95</span>, bob: <span class="num">88</span>, carol: <span class="num">72</span> };
+
+<span class="cmt">// Object.keys — array of keys</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="typ">Object</span>.<span class="fn">keys</span>(scores));
+<span class="cmt">// ["alice", "bob", "carol"]</span>
+
+<span class="cmt">// Object.values — array of values</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="typ">Object</span>.<span class="fn">values</span>(scores));
+<span class="cmt">// [95, 88, 72]</span>
+
+<span class="cmt">// Object.entries — array of [key, value] pairs</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="typ">Object</span>.<span class="fn">entries</span>(scores));
+<span class="cmt">// [["alice", 95], ["bob", 88], ["carol", 72]]</span>
+
+<span class="cmt">// Combine with for...of and destructuring — very common pattern</span>
+<span class="kw">for</span> (<span class="kw">const</span> [name, score] <span class="kw">of</span> <span class="typ">Object</span>.<span class="fn">entries</span>(scores)) {
+  <span class="fn">console</span>.<span class="fn">log</span>(`${name}: ${score}`);
+}
+<span class="cmt">// alice: 95</span>
+<span class="cmt">// bob: 88</span>
+<span class="cmt">// carol: 72</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Avoid for...in for plain objects</strong>
+    <code>for (const key in obj)</code> also iterates over <em>inherited</em> prototype properties, which is almost never what you want. Stick to <code>Object.keys()</code>, <code>Object.values()</code>, and <code>Object.entries()</code> for predictable behavior.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. Copying &amp; Merging Objects</h2>
+
+  <p>This is subtle territory. The most important concept: all standard copy methods create <strong>shallow copies</strong> — nested objects are still shared by reference.</p>
+
+  <h3>Shallow Copy</h3>
+  <pre><code><span class="kw">const</span> original = { name: <span class="str">"Karan"</span>, scores: [<span class="num">90</span>, <span class="num">85</span>] };
+
+<span class="cmt">// Spread — the modern approach</span>
+<span class="kw">const</span> copy1 = { ...original };
+
+<span class="cmt">// Object.assign — older, same result</span>
+<span class="kw">const</span> copy2 = <span class="typ">Object</span>.<span class="fn">assign</span>({}, original);
+
+copy1.name = <span class="str">"Someone"</span>;       <span class="cmt">// ✅ doesn't affect original (primitive)</span>
+copy1.scores.<span class="fn">push</span>(<span class="num">70</span>);       <span class="cmt">// ❌ MUTATES original.scores too! (shared reference)</span>
+<span class="fn">console</span>.<span class="fn">log</span>(original.scores); <span class="cmt">// [90, 85, 70] — surprised?</span></code></pre>
+
+  <h3>Deep Copy</h3>
+  <pre><code><span class="kw">const</span> original = { name: <span class="str">"Karan"</span>, scores: [<span class="num">90</span>, <span class="num">85</span>] };
+
+<span class="cmt">// structuredClone — modern, handles dates, maps, sets, cycles</span>
+<span class="kw">const</span> deepCopy = <span class="fn">structuredClone</span>(original);
+deepCopy.scores.<span class="fn">push</span>(<span class="num">70</span>);
+<span class="fn">console</span>.<span class="fn">log</span>(original.scores);  <span class="cmt">// [90, 85] — untouched</span>
+
+<span class="cmt">// JSON round-trip — old approach, has limitations</span>
+<span class="kw">const</span> deepCopy2 = <span class="typ">JSON</span>.<span class="fn">parse</span>(<span class="typ">JSON</span>.<span class="fn">stringify</span>(original));
+<span class="cmt">// ❌ Loses: functions, undefined values, Date objects (→ strings), Maps, Sets, circular refs</span></code></pre>
+
+  <h3>Merging Objects</h3>
+  <pre><code><span class="kw">const</span> defaults = { theme: <span class="str">"light"</span>, lang: <span class="str">"en"</span>, fontSize: <span class="num">16</span> };
+<span class="kw">const</span> userPrefs = { theme: <span class="str">"dark"</span>, fontSize: <span class="num">18</span> };
+
+<span class="cmt">// Later spread wins — userPrefs overrides conflicting keys in defaults</span>
+<span class="kw">const</span> config = { ...defaults, ...userPrefs };
+<span class="fn">console</span>.<span class="fn">log</span>(config);
+<span class="cmt">// { theme: "dark", lang: "en", fontSize: 18 }</span></code></pre>
+
+  <!-- SECTION 7 -->
+  <h2>7. <code>this</code> in Object Methods</h2>
+
+  <p>When a function is stored as a property (a "method") and called on the object, the keyword <code>this</code> inside it refers to the object the method was called on.</p>
+
+  <pre><code><span class="kw">const</span> user = {
+  name: <span class="str">"Karan"</span>,
+  age: <span class="num">22</span>,
+  <span class="fn">describe</span>() {
+    <span class="cmt">// 'this' is the object to the left of the dot at call time</span>
+    <span class="kw">return</span> `${<span class="kw">this</span>.name} is ${<span class="kw">this</span>.age} years old`;
+  }
+};
+
+<span class="fn">console</span>.<span class="fn">log</span>(user.<span class="fn">describe</span>()); <span class="cmt">// "Karan is 22 years old"</span></code></pre>
+
+  <div class="callout tip">
+    <strong>Preview: Lesson 10</strong>
+    The full story of <code>this</code> — its 4 binding rules, how it breaks, and how to fix it with <code>bind()</code> and arrow functions — is covered in Lesson 10. For now, just know that <code>this</code> in a method refers to the object.
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">⚡ Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. How do you reliably check if an object has a property <code>"age"</code> (including when the value might be <code>undefined</code>)?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> obj.age !== undefined</label>
+        <label class="option"><input type="radio" name="q1" value="b"> "age" in obj</label>
+        <label class="option"><input type="radio" name="q1" value="c"> obj.hasOwnProperty !== undefined</label>
+        <label class="option"><input type="radio" name="q1" value="d"> typeof obj.age</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','&quot;age&quot; in obj checks for the key\'s existence, even if its value is undefined. obj.age !== undefined would incorrectly return false when the key exists but holds the value undefined.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What does <code>Object.keys(obj)</code> return after this code runs?</p>
+      <div class="question-code">const obj = { a: 1 };
+obj.b = 2;
+delete obj.a;</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> ["a", "b"]</label>
+        <label class="option"><input type="radio" name="q2" value="b"> ["a"]</label>
+        <label class="option"><input type="radio" name="q2" value="c"> ["b"]</label>
+        <label class="option"><input type="radio" name="q2" value="d"> []</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','We start with {a:1}, add b (→ {a:1, b:2}), then delete a (→ {b:2}). Object.keys returns only existing keys: [&quot;b&quot;].')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What does bracket notation <code>obj["key"]</code> allow that dot notation <code>obj.key</code> cannot?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> Access properties faster</label>
+        <label class="option"><input type="radio" name="q3" value="b"> Access properties with dynamic/variable key names or keys with special characters</label>
+        <label class="option"><input type="radio" name="q3" value="c"> Access private properties</label>
+        <label class="option"><input type="radio" name="q3" value="d"> Access nested objects</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','b','Bracket notation evaluates the expression inside the brackets. This lets you use variables as keys (obj[field]) and access keys that would be invalid identifiers like &quot;first name&quot; or &quot;class&quot;.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What is the value of <code>obj.x</code> after this runs?</p>
+      <div class="question-code">const x = 5;
+const obj = { x };</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> undefined</label>
+        <label class="option"><input type="radio" name="q4" value="b"> "x"</label>
+        <label class="option"><input type="radio" name="q4" value="c"> 5</label>
+        <label class="option"><input type="radio" name="q4" value="d"> SyntaxError</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','c','{ x } is ES6 property shorthand for { x: x }. Since x = 5, obj becomes { x: 5 }. So obj.x is 5.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. Both <code>obj1</code> and <code>obj2</code> have a <code>"name"</code> key. What does merging them with <code>{ ...obj1, ...obj2 }</code> produce?</p>
+      <div class="question-code">const obj1 = { name: "Alice", role: "admin" };
+const obj2 = { name: "Bob", age: 30 };</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> { name: "Alice", role: "admin", age: 30 }</label>
+        <label class="option"><input type="radio" name="q5" value="b"> { name: "Bob", role: "admin", age: 30 }</label>
+        <label class="option"><input type="radio" name="q5" value="c"> TypeError — duplicate key</label>
+        <label class="option"><input type="radio" name="q5" value="d"> { name: ["Alice", "Bob"], role: "admin", age: 30 }</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','b','Spread is applied left-to-right. obj2 is spread after obj1, so obj2\'s &quot;name&quot; (Bob) overwrites obj1\'s &quot;name&quot; (Alice). Later spreads always win on conflicting keys.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What does <code>Object.entries({ a: 1, b: 2 })</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> ["a", "b"]</label>
+        <label class="option"><input type="radio" name="q6" value="b"> [1, 2]</label>
+        <label class="option"><input type="radio" name="q6" value="c"> [["a", 1], ["b", 2]]</label>
+        <label class="option"><input type="radio" name="q6" value="d"> { a: 1, b: 2 }</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','c','Object.entries returns an array of [key, value] sub-arrays — one per property. This is what lets you destructure with for (const [key, val] of Object.entries(obj)).')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Strings &amp; Template Literals</strong> — every string method you'll need in a real job, plus the power of template literals and tagged templates.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent anything that was unclear, surprising, or that you want to go deeper on. Concepts like <code>structuredClone</code> vs spread, or why <code>in</code> beats <code>!== undefined</code> are great things to explore further. Just ask.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 06 — Objects: Basics</div>
+    <div class="nav-links">
+      <a href="./0005-arrays-array-methods.html">← Prev: Arrays</a>
+      <a href="./0007-strings-template-literals.html">Next: Strings →</a>
+      <a href="https://javascript.info/object" target="_blank">javascript.info: Objects ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 12 — Destructuring, Spread &amp; Rest</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 12 of 30</div>
+    <h1>Destructuring, Spread &amp; Rest</h1>
+    <p class="subtitle">ES6's most expressive syntax — write half the code, say twice as much.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read this <em>after</em> the lesson:
+    <a href="https://javascript.info/destructuring-assignment" target="_blank">javascript.info — Destructuring Assignment</a>.
+    The section on nested destructuring and function parameter destructuring is especially worth re-reading.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. Array Destructuring</h2>
+
+  <p>Destructuring lets you <em>unpack</em> values from arrays or properties from objects into distinct variables — in a single, readable statement. Instead of writing <code>arr[0]</code>, <code>arr[1]</code>, you declare exactly what you need.</p>
+
+  <pre><code><span class="cmt">// Basic array destructuring</span>
+<span class="kw">const</span> [a, b, c] = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>];
+<span class="fn">console</span>.log(a, b, c); <span class="cmt">// 1 2 3</span>
+
+<span class="cmt">// Skipping elements with a hole (empty comma)</span>
+<span class="kw">const</span> [first, , third] = [<span class="num">10</span>, <span class="num">20</span>, <span class="num">30</span>];
+<span class="fn">console</span>.log(first, third); <span class="cmt">// 10 30</span>
+
+<span class="cmt">// Default values — used when the value is undefined</span>
+<span class="kw">const</span> [x = <span class="num">1</span>, y = <span class="num">2</span>] = [<span class="num">10</span>];
+<span class="fn">console</span>.log(x, y); <span class="cmt">// 10 2  ← y uses its default</span>
+
+<span class="cmt">// Rest in array destructuring</span>
+<span class="kw">const</span> [head, ...tail] = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>];
+<span class="fn">console</span>.log(head); <span class="cmt">// 1</span>
+<span class="fn">console</span>.log(tail); <span class="cmt">// [2, 3, 4]</span>
+
+<span class="cmt">// Swap two variables without a temp variable</span>
+<span class="kw">let</span> p = <span class="num">5</span>, q = <span class="num">10</span>;
+[p, q] = [q, p];
+<span class="fn">console</span>.log(p, q); <span class="cmt">// 10 5</span></code></pre>
+
+  <div class="callout tip">
+    <strong>Variable swap</strong>
+    The swap trick <code>[a, b] = [b, a]</code> is a one-liner that used to require a temporary variable. It's idiomatic modern JS — you'll see it in real codebases.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. Object Destructuring</h2>
+
+  <p>Object destructuring extracts properties by <em>name</em>, not by position. The variable names must match the property keys — unless you rename them.</p>
+
+  <pre><code><span class="kw">const</span> user = { name: <span class="str">"Karan"</span>, age: <span class="num">24</span>, city: <span class="str">"Delhi"</span> };
+
+<span class="cmt">// Basic — variable names must match property keys</span>
+<span class="kw">const</span> { name, age } = user;
+<span class="fn">console</span>.log(name, age); <span class="cmt">// Karan 24</span>
+
+<span class="cmt">// Renaming: { key: newVariableName }</span>
+<span class="kw">const</span> { name: fullName, age: years } = user;
+<span class="fn">console</span>.log(fullName, years); <span class="cmt">// Karan 24</span>
+
+<span class="cmt">// Default values — used when the property is undefined</span>
+<span class="kw">const</span> { role = <span class="str">"guest"</span> } = user;
+<span class="fn">console</span>.log(role); <span class="cmt">// "guest" — user has no role property</span>
+
+<span class="cmt">// Nested destructuring</span>
+<span class="kw">const</span> profile = {
+  username: <span class="str">"karan99"</span>,
+  address: { city: <span class="str">"Delhi"</span>, country: <span class="str">"India"</span> },
+};
+<span class="kw">const</span> { address: { city, country } } = profile;
+<span class="fn">console</span>.log(city, country); <span class="cmt">// Delhi India</span>
+
+<span class="cmt">// Rest in object — collect remaining properties</span>
+<span class="kw">const</span> { name: n, ...rest } = user;
+<span class="fn">console</span>.log(n);    <span class="cmt">// Karan</span>
+<span class="fn">console</span>.log(rest); <span class="cmt">// { age: 24, city: "Delhi" }</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Renaming syntax is backwards to what you might expect</strong>
+    <code>const { name: fullName } = user</code> means "get the property called <code>name</code>, and put it in a variable called <code>fullName</code>." The colon reads as "rename to", not "the value is".
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. Function Parameter Destructuring</h2>
+
+  <p>You can destructure directly in the function parameter list. This is extremely common when functions receive an options/config object — it documents exactly what properties the function needs.</p>
+
+  <pre><code><span class="cmt">// Without destructuring — must write user.name, user.age everywhere</span>
+<span class="kw">function</span> <span class="fn">greetOld</span>(user) {
+  <span class="kw">return</span> <span class="str">`Hi </span><span class="num">${user.name}</span><span class="str">, you are </span><span class="num">${user.age}</span><span class="str">`</span>;
+}
+
+<span class="cmt">// With destructuring — clean, self-documenting</span>
+<span class="kw">function</span> <span class="fn">greet</span>({ name, age = <span class="num">0</span> }) {
+  <span class="kw">return</span> <span class="str">`Hi </span><span class="num">${name}</span><span class="str">, you are </span><span class="num">${age}</span><span class="str">`</span>;
+}
+
+<span class="fn">greet</span>({ name: <span class="str">"Karan"</span>, age: <span class="num">24</span> }); <span class="cmt">// "Hi Karan, you are 24"</span>
+<span class="fn">greet</span>({ name: <span class="str">"Alice"</span> });         <span class="cmt">// "Hi Alice, you are 0" — default kicks in</span>
+
+<span class="cmt">// Array parameter destructuring</span>
+<span class="kw">function</span> <span class="fn">sum</span>([a, b]) {
+  <span class="kw">return</span> a + b;
+}
+<span class="fn">sum</span>([<span class="num">3</span>, <span class="num">7</span>]); <span class="cmt">// 10</span>
+
+<span class="cmt">// Real-world: event handler destructuring</span>
+document.<span class="fn">addEventListener</span>(<span class="str">"click"</span>, ({ target, clientX, clientY }) => {
+  <span class="fn">console</span>.log(target, clientX, clientY);
+});</code></pre>
+
+  <!-- SECTION 4 -->
+  <h2>4. Spread Operator with Arrays</h2>
+
+  <p>The spread operator <code>...</code> expands an iterable (like an array) into individual elements. In array contexts it lets you copy, merge, and insert arrays without mutation.</p>
+
+  <pre><code><span class="kw">const</span> arr = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>];
+
+<span class="cmt">// Shallow copy</span>
+<span class="kw">const</span> copy = [...arr];
+copy.<span class="fn">push</span>(<span class="num">4</span>);
+<span class="fn">console</span>.log(arr);  <span class="cmt">// [1, 2, 3] — original unchanged</span>
+<span class="fn">console</span>.log(copy); <span class="cmt">// [1, 2, 3, 4]</span>
+
+<span class="cmt">// Merge two arrays</span>
+<span class="kw">const</span> a = [<span class="num">1</span>, <span class="num">2</span>];
+<span class="kw">const</span> b = [<span class="num">3</span>, <span class="num">4</span>];
+<span class="kw">const</span> merged = [...a, ...b]; <span class="cmt">// [1, 2, 3, 4]</span>
+
+<span class="cmt">// Insert at a specific position</span>
+<span class="kw">const</span> withZero = [<span class="num">0</span>, ...arr, <span class="num">100</span>]; <span class="cmt">// [0, 1, 2, 3, 100]</span>
+
+<span class="cmt">// Spread as function arguments</span>
+<span class="kw">const</span> nums = [<span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">5</span>];
+<span class="fn">Math</span>.<span class="fn">max</span>(...nums); <span class="cmt">// 5 — same as Math.max(3, 1, 4, 1, 5)</span>
+
+<span class="cmt">// Convert a string or NodeList to an array</span>
+<span class="kw">const</span> chars = [...</span><span class="str">"hello"</span>]; <span class="cmt">// ["h","e","l","l","o"]</span></code></pre>
+
+  <!-- SECTION 5 -->
+  <h2>5. Spread Operator with Objects</h2>
+
+  <p>Spread also works on objects (ES2018+). It copies own enumerable properties — but only one level deep (shallow copy).</p>
+
+  <pre><code><span class="kw">const</span> defaults = { theme: <span class="str">"light"</span>, lang: <span class="str">"en"</span>, fontSize: <span class="num">14</span> };
+<span class="kw">const</span> userSettings = { theme: <span class="str">"dark"</span>, fontSize: <span class="num">16</span> };
+
+<span class="cmt">// Shallow copy of an object</span>
+<span class="kw">const</span> clone = { ...defaults };
+
+<span class="cmt">// Merge — later properties win on conflict</span>
+<span class="kw">const</span> merged = { ...defaults, ...userSettings };
+<span class="cmt">// { theme: "dark", lang: "en", fontSize: 16 }</span>
+<span class="cmt">// theme and fontSize come from userSettings; lang from defaults</span>
+
+<span class="cmt">// The "defaults override" pattern used in every real app</span>
+<span class="kw">function</span> <span class="fn">createConfig</span>(overrides = {}) {
+  <span class="kw">return</span> { ...defaults, ...overrides };
+}
+<span class="fn">createConfig</span>({ theme: <span class="str">"dark"</span> });
+<span class="cmt">// { theme: "dark", lang: "en", fontSize: 14 }</span>
+
+<span class="cmt">// Update a single property without mutating the original (React pattern)</span>
+<span class="kw">const</span> user = { name: <span class="str">"Karan"</span>, age: <span class="num">24</span> };
+<span class="kw">const</span> updatedUser = { ...user, age: <span class="num">25</span> };
+<span class="cmt">// { name: "Karan", age: 25 } — user is untouched</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Shallow copy warning</strong>
+    Both array and object spread are <em>shallow</em>. If a property holds a nested object, only the reference is copied — not the nested object itself. Mutating nested data will still affect the original.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. Rest Parameters</h2>
+
+  <p>Rest collects the remaining arguments into a real array. It looks like spread (same <code>...</code> syntax) but it works in the <em>opposite direction</em>: instead of expanding, it gathers.</p>
+
+  <pre><code><span class="cmt">// Rest must be the LAST parameter</span>
+<span class="kw">function</span> <span class="fn">sum</span>(...numbers) {
+  <span class="kw">return</span> numbers.<span class="fn">reduce</span>((acc, n) => acc + n, <span class="num">0</span>);
+}
+
+<span class="fn">sum</span>(<span class="num">1</span>, <span class="num">2</span>);          <span class="cmt">// 3</span>
+<span class="fn">sum</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>);    <span class="cmt">// 10</span>
+<span class="fn">sum</span>(<span class="num">10</span>);            <span class="cmt">// 10</span>
+
+<span class="cmt">// Mix named params with rest</span>
+<span class="kw">function</span> <span class="fn">log</span>(level, ...messages) {
+  <span class="fn">console</span>.log(<span class="str">`[</span><span class="num">${level}</span><span class="str">]`</span>, ...messages);
+}
+<span class="fn">log</span>(<span class="str">"ERROR"</span>, <span class="str">"something"</span>, <span class="str">"went wrong"</span>);
+<span class="cmt">// [ERROR] something went wrong</span></code></pre>
+
+  <h3>Rest vs the <code>arguments</code> object</h3>
+  <table>
+    <thead>
+      <tr><th>Feature</th><th>Rest parameters</th><th>arguments object</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Is a real Array</td><td>Yes — all array methods work</td><td>No — array-like, not Array</td></tr>
+      <tr><td>Works in arrow functions</td><td>Yes</td><td>No — arrow functions have no <code>arguments</code></td></tr>
+      <tr><td>Partial collection</td><td>Yes — collects only the rest</td><td>No — always all arguments</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout danger">
+    <strong>arguments is legacy</strong>
+    Avoid <code>arguments</code> in new code. Use rest parameters instead. Arrow functions don't even have an <code>arguments</code> object — using it there will reach into the enclosing non-arrow function, which is always surprising.
+  </div>
+
+  <!-- SECTION 7 -->
+  <h2>7. Common Real-World Patterns</h2>
+
+  <pre><code><span class="cmt">// 1. Extract from an API response</span>
+<span class="kw">const</span> response = {
+  status: <span class="num">200</span>,
+  data: { userId: <span class="num">42</span>, name: <span class="str">"Karan"</span>, token: <span class="str">"abc123"</span> },
+};
+<span class="kw">const</span> { data: { userId, name } } = response;
+<span class="cmt">// userId = 42, name = "Karan" — token is ignored</span>
+
+<span class="cmt">// 2. Function with optional config + defaults</span>
+<span class="kw">function</span> <span class="fn">fetchUser</span>({ id, cache = <span class="kw">true</span>, timeout = <span class="num">5000</span> } = {}) {
+  <span class="fn">console</span>.log(<span class="str">`fetching </span><span class="num">${id}</span><span class="str">, cache: </span><span class="num">${cache}</span><span class="str">, timeout: </span><span class="num">${timeout}</span><span class="str">`</span>);
+}
+<span class="fn">fetchUser</span>({ id: <span class="num">1</span> });              <span class="cmt">// uses cache=true, timeout=5000</span>
+<span class="fn">fetchUser</span>({ id: <span class="num">2</span>, cache: <span class="kw">false</span> }); <span class="cmt">// overrides cache</span>
+<span class="fn">fetchUser</span>();                       <span class="cmt">// = {} prevents crash if called with nothing</span>
+
+<span class="cmt">// 3. Clone and update state (immutable update pattern)</span>
+<span class="kw">const</span> state = { count: <span class="num">0</span>, user: <span class="str">"Karan"</span>, loading: <span class="kw">false</span> };
+<span class="kw">const</span> nextState = { ...state, count: state.count + <span class="num">1</span>, loading: <span class="kw">true</span> };
+<span class="cmt">// { count: 1, user: "Karan", loading: true }</span></code></pre>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What are <code>a</code> and <code>b</code> after this?</p>
+      <div class="question-code">const [a, , b] = [1, 2, 3];</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> a is 1, b is 2</label>
+        <label class="option"><input type="radio" name="q1" value="b"> a is 1, b is 3</label>
+        <label class="option"><input type="radio" name="q1" value="c"> a is 2, b is 3</label>
+        <label class="option"><input type="radio" name="q1" value="d"> SyntaxError</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','The double comma ,, skips the second element (2). So a gets 1 and b gets 3.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What does <code>newName</code> equal?</p>
+      <div class="question-code">const { x: newName } = { x: 42 };</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> undefined</label>
+        <label class="option"><input type="radio" name="q2" value="b"> "x"</label>
+        <label class="option"><input type="radio" name="q2" value="c"> 42</label>
+        <label class="option"><input type="radio" name="q2" value="d"> { x: 42 }</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','Object destructuring with rename: { x: newName } means &quot;get the property x and put it in a variable called newName&quot;. newName equals 42.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What does <code>a</code> equal?</p>
+      <div class="question-code">const { a = 10 } = {};</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> undefined</label>
+        <label class="option"><input type="radio" name="q3" value="b"> null</label>
+        <label class="option"><input type="radio" name="q3" value="c"> 0</label>
+        <label class="option"><input type="radio" name="q3" value="d"> 10</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','d','The source object has no property a, so a is undefined in the source. The default value 10 is used whenever the extracted value would be undefined.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What is <code>rest</code>?</p>
+      <div class="question-code">const [first, ...rest] = [1, 2, 3, 4];</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> [1, 2, 3, 4]</label>
+        <label class="option"><input type="radio" name="q4" value="b"> [2, 3, 4]</label>
+        <label class="option"><input type="radio" name="q4" value="c"> 4</label>
+        <label class="option"><input type="radio" name="q4" value="d"> [1, 2, 3]</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','b','first gets 1. The rest operator collects all remaining elements into a new array: [2, 3, 4].')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. What does this return?</p>
+      <div class="question-code">Math.max(...[3, 1, 4, 1, 5])</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> [5]</label>
+        <label class="option"><input type="radio" name="q5" value="b"> NaN</label>
+        <label class="option"><input type="radio" name="q5" value="c"> 5</label>
+        <label class="option"><input type="radio" name="q5" value="d"> [3, 1, 4, 1, 5]</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','Spread expands the array into individual arguments: Math.max(3, 1, 4, 1, 5). The maximum is 5.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What is <code>r</code>?</p>
+      <div class="question-code">const r = { ...{a: 1}, ...{a: 2, b: 3} };</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> { a: 1, b: 3 }</label>
+        <label class="option"><input type="radio" name="q6" value="b"> { a: 2, b: 3 }</label>
+        <label class="option"><input type="radio" name="q6" value="c"> { a: 1, a: 2, b: 3 }</label>
+        <label class="option"><input type="radio" name="q6" value="d"> { a: [1, 2], b: 3 }</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','b','When spreading objects, later properties overwrite earlier ones of the same name. The second spread provides a: 2, which overwrites a: 1 from the first spread. Result: { a: 2, b: 3 }.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Prototypes &amp; the Prototype Chain</strong> — JavaScript's inheritance model, what <code>[[Prototype]]</code> actually is, and how every object lookup works under the hood.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent about anything that tripped you up. Common sticking points: the renaming syntax, shallow vs deep copies with spread, and the difference between rest (in parameters/destructuring) and spread (in expressions).
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 12 — Destructuring, Spread &amp; Rest</div>
+    <div class="nav-links">
+      <a href="./0011-higher-order-functions.html">← Previous: Higher-Order Functions</a>
+      <a href="./0013-prototypes-chain.html">Next: Prototypes &amp; the Chain →</a>
+      <a href="https://javascript.info/destructuring-assignment" target="_blank">javascript.info: Destructuring ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

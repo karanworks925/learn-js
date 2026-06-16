@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 23 — Functional Programming</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 23 of 30</div>
+    <h1>Functional Programming</h1>
+    <p class="subtitle">Write code that's predictable, testable, and composable — the functional way.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read this <em>after</em> the lesson:
+    <a href="https://eloquentjavascript.net/05_higher_order.html" target="_blank">Eloquent JavaScript — Higher-Order Functions (Chapter 5)</a>.
+    It's one of the best introductions to functional thinking in JavaScript.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. What Is Functional Programming?</h2>
+
+  <p>Functional Programming (FP) is a programming paradigm built around the idea of composing <strong>pure functions</strong> and avoiding <strong>shared mutable state</strong>. It's not about using <code>.map()</code> and <code>.filter()</code> — those are just tools. FP is a way of thinking about your program.</p>
+
+  <table>
+    <thead>
+      <tr><th>Paradigm</th><th>Core idea</th><th>JS example</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Imperative</td><td>Tell the computer HOW to do it, step by step</td><td><code>for</code> loops, mutation in place</td></tr>
+      <tr><td>Object-Oriented</td><td>Group state and behavior into objects</td><td>Classes, <code>this</code>, encapsulation</td></tr>
+      <tr><td>Functional</td><td>Transform data through pure functions</td><td><code>.map()</code>, composition, immutability</td></tr>
+    </tbody>
+  </table>
+
+  <p>JavaScript is <strong>multi-paradigm</strong> — you can mix all three. But FP shines for data transformation pipelines, and it's the mental model behind React's design.</p>
+
+  <p><strong>Key FP principles:</strong></p>
+  <ul>
+    <li>Pure functions</li>
+    <li>Immutability — don't mutate data, create new copies</li>
+    <li>Function composition — build complex behavior from simple pieces</li>
+    <li>Declarative style — describe WHAT you want, not HOW to get it</li>
+  </ul>
+
+  <!-- SECTION 2 -->
+  <h2>2. Pure Functions</h2>
+
+  <p>A function is <strong>pure</strong> if it satisfies two conditions:</p>
+  <ol>
+    <li><strong>Deterministic</strong> — same inputs always produce the same output</li>
+    <li><strong>No side effects</strong> — it doesn't modify anything outside its own scope</li>
+  </ol>
+
+<pre><code><span class="cmt">// PURE — same input, same output, no external changes</span>
+<span class="kw">function</span> <span class="fn">add</span>(a, b) {
+  <span class="kw">return</span> a + b;
+}
+<span class="fn">add</span>(<span class="num">2</span>, <span class="num">3</span>); <span class="cmt">// always 5, every time, forever</span>
+
+<span class="cmt">// IMPURE — result changes based on external state</span>
+<span class="kw">let</span> tax = <span class="num">0.2</span>;
+<span class="kw">function</span> <span class="fn">priceWithTax</span>(price) {
+  <span class="kw">return</span> price * (<span class="num">1</span> + tax); <span class="cmt">// depends on external `tax` variable</span>
+}
+
+<span class="cmt">// IMPURE — mutates its argument</span>
+<span class="kw">function</span> <span class="fn">addItem</span>(cart, item) {
+  cart.<span class="fn">push</span>(item); <span class="cmt">// mutates the original array!</span>
+  <span class="kw">return</span> cart;
+}
+
+<span class="cmt">// PURE version — returns a new array</span>
+<span class="kw">function</span> <span class="fn">addItem</span>(cart, item) {
+  <span class="kw">return</span> [...cart, item]; <span class="cmt">// original cart untouched</span>
+}
+
+<span class="cmt">// These are always impure (by definition):</span>
+<span class="fn">Math</span>.random()  <span class="cmt">// different every call</span>
+<span class="fn">Date</span>.now()     <span class="cmt">// different every call</span></code></pre>
+
+  <div class="callout tip">
+    <strong>Why pure functions are amazing for your career</strong>
+    Pure functions are trivial to unit test — call the function with an input, assert on the output. No mocks, no setup, no cleanup. Senior engineers prize testable code. If you write pure functions, you write testable code almost for free.
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. Side Effects — Necessary But Dangerous</h2>
+
+  <p>A <strong>side effect</strong> is anything a function does beyond computing a return value:</p>
+  <ul>
+    <li>Modifying a variable outside its scope</li>
+    <li>Writing to the DOM</li>
+    <li>Making a network request</li>
+    <li>Writing to localStorage, a database, or a file</li>
+    <li>Logging to the console</li>
+    <li>Mutating a function's arguments</li>
+  </ul>
+
+  <p>Side effects are <strong>unavoidable</strong> — every useful program eventually has to interact with the outside world. The FP approach is to <em>isolate</em> them: keep the core of your program as pure functions, and push side effects to the outer edges.</p>
+
+<pre><code><span class="cmt">// The pattern: pure core, impure shell</span>
+
+<span class="cmt">// PURE core — all the logic, no side effects</span>
+<span class="kw">function</span> <span class="fn">filterActiveUsers</span>(users) {
+  <span class="kw">return</span> users.<span class="fn">filter</span>(u =&gt; u.active);
+}
+<span class="kw">function</span> <span class="fn">formatUser</span>(user) {
+  <span class="kw">return</span> <span class="str">`${user.name} (${user.email})`</span>;
+}
+
+<span class="cmt">// IMPURE shell — side effects happen here, at the boundary</span>
+<span class="kw">async</span> <span class="kw">function</span> <span class="fn">displayActiveUsers</span>() {
+  <span class="kw">const</span> users = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/users'</span>).<span class="fn">then</span>(r =&gt; r.<span class="fn">json</span>()); <span class="cmt">// I/O</span>
+  <span class="kw">const</span> active = <span class="fn">filterActiveUsers</span>(users);      <span class="cmt">// pure</span>
+  <span class="kw">const</span> formatted = active.<span class="fn">map</span>(<span class="fn">formatUser</span>);      <span class="cmt">// pure</span>
+  <span class="fn">document</span>.querySelector(<span class="str">'#list'</span>).textContent = formatted.<span class="fn">join</span>(<span class="str">'\n'</span>); <span class="cmt">// DOM</span>
+}</code></pre>
+
+  <!-- SECTION 4 -->
+  <h2>4. Immutability</h2>
+
+  <p>Immutability means: <strong>never change data in place</strong> — create a new copy with the modification instead. This makes bugs far easier to track because you always know exactly what changed and when.</p>
+
+<pre><code><span class="cmt">// MUTABLE approach — mutates the original</span>
+<span class="kw">const</span> user = { name: <span class="str">'Karan'</span>, score: <span class="num">10</span> };
+user.score = <span class="num">20</span>; <span class="cmt">// original changed — who changed it? when?</span>
+
+<span class="cmt">// IMMUTABLE approach — create a new object</span>
+<span class="kw">const</span> updatedUser = { ...user, score: <span class="num">20</span> }; <span class="cmt">// spread copies properties</span>
+<span class="cmt">// user is still { name: 'Karan', score: 10 }</span>
+<span class="cmt">// updatedUser is { name: 'Karan', score: 20 }</span>
+
+<span class="cmt">// Arrays — immutable equivalents of mutating methods</span>
+<span class="kw">const</span> items = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>];
+
+<span class="cmt">// Instead of push → spread</span>
+<span class="kw">const</span> withFour = [...items, <span class="num">4</span>]; <span class="cmt">// [1, 2, 3, 4]</span>
+
+<span class="cmt">// Instead of splice (remove index 1) → filter</span>
+<span class="kw">const</span> withoutTwo = items.<span class="fn">filter</span>((_, i) =&gt; i !== <span class="num">1</span>); <span class="cmt">// [1, 3]</span>
+
+<span class="cmt">// Instead of sort in place → slice first to copy</span>
+<span class="kw">const</span> sorted = [...items].<span class="fn">sort</span>(); <span class="cmt">// items is untouched</span>
+
+<span class="cmt">// Object.freeze — shallow immutability enforcement</span>
+<span class="kw">const</span> config = <span class="typ">Object</span>.<span class="fn">freeze</span>({ apiUrl: <span class="str">'https://api.example.com'</span> });
+config.apiUrl = <span class="str">'hacked'</span>; <span class="cmt">// silently fails in sloppy mode, throws in strict</span>
+<span class="fn">console</span>.log(config.apiUrl); <span class="cmt">// still 'https://api.example.com'</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Object.freeze is shallow</strong>
+    <code>Object.freeze(obj)</code> only prevents modifications to the top-level properties. Nested objects are still mutable. For deep immutability, use a library like Immer, or structure your data to avoid nesting mutations.
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2>5. Function Composition</h2>
+
+  <p>Composition means combining small, focused functions into larger ones. The output of one function becomes the input of the next. This keeps every function small, named, and testable.</p>
+
+<pre><code><span class="cmt">// Three focused functions</span>
+<span class="kw">const</span> <span class="fn">sanitize</span> = str =&gt; str.<span class="fn">trim</span>().<span class="fn">toLowerCase</span>();
+<span class="kw">const</span> <span class="fn">normalize</span> = str =&gt; str.<span class="fn">replace</span>(<span class="str">/\s+/g</span>, <span class="str">'-'</span>);
+<span class="kw">const</span> <span class="fn">format</span> = str =&gt; <span class="str">`slug: ${str}`</span>;
+
+<span class="cmt">// Manual composition — right to left, hard to read</span>
+<span class="kw">const</span> result = <span class="fn">format</span>(<span class="fn">normalize</span>(<span class="fn">sanitize</span>(<span class="str">'  Hello World  '</span>)));
+<span class="cmt">// → 'slug: hello-world'</span>
+
+<span class="cmt">// compose — creates a right-to-left pipeline</span>
+<span class="kw">const</span> <span class="fn">compose</span> = (...fns) =&gt; x =&gt; fns.<span class="fn">reduceRight</span>((v, f) =&gt; <span class="fn">f</span>(v), x);
+<span class="kw">const</span> makeSlug = <span class="fn">compose</span>(<span class="fn">format</span>, <span class="fn">normalize</span>, <span class="fn">sanitize</span>);
+<span class="fn">makeSlug</span>(<span class="str">'  Hello World  '</span>); <span class="cmt">// → 'slug: hello-world'</span>
+
+<span class="cmt">// pipe — left-to-right (easier to read)</span>
+<span class="kw">const</span> <span class="fn">pipe</span> = (...fns) =&gt; x =&gt; fns.<span class="fn">reduce</span>((v, f) =&gt; <span class="fn">f</span>(v), x);
+<span class="kw">const</span> makeSlug2 = <span class="fn">pipe</span>(<span class="fn">sanitize</span>, <span class="fn">normalize</span>, <span class="fn">format</span>);
+<span class="fn">makeSlug2</span>(<span class="str">'  Hello World  '</span>); <span class="cmt">// → 'slug: hello-world'</span>
+<span class="cmt">// pipe reads in the order the transforms happen — most natural</span></code></pre>
+
+  <div class="callout info">
+    <strong>pipe vs compose</strong>
+    Both do composition. <code>pipe</code> applies functions left-to-right (read order = execution order), <code>compose</code> applies right-to-left (mathematical notation). <code>pipe</code> is usually easier to read and reason about. Pick one and be consistent.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. Currying</h2>
+
+  <p>Currying transforms a function that takes multiple arguments into a chain of single-argument functions. <code>f(a, b)</code> becomes <code>f(a)(b)</code>.</p>
+
+  <p>This enables <strong>partial application</strong> — lock in some arguments now, supply the rest later. The result is a specialized, reusable function.</p>
+
+<pre><code><span class="cmt">// Normal function</span>
+<span class="kw">function</span> <span class="fn">multiply</span>(a, b) {
+  <span class="kw">return</span> a * b;
+}
+
+<span class="cmt">// Curried version</span>
+<span class="kw">const</span> <span class="fn">multiply</span> = a =&gt; b =&gt; a * b;
+
+<span class="cmt">// Partial application — lock in the first argument</span>
+<span class="kw">const</span> double = <span class="fn">multiply</span>(<span class="num">2</span>);   <span class="cmt">// returns b => 2 * b</span>
+<span class="kw">const</span> triple = <span class="fn">multiply</span>(<span class="num">3</span>);   <span class="cmt">// returns b => 3 * b</span>
+
+<span class="fn">double</span>(<span class="num">5</span>);  <span class="cmt">// 10</span>
+<span class="fn">triple</span>(<span class="num">5</span>); <span class="cmt">// 15</span>
+
+<span class="cmt">// Practical: curried event handler</span>
+<span class="kw">const</span> <span class="fn">handleInput</span> = fieldName =&gt; event =&gt; {
+  <span class="fn">console</span>.log(<span class="str">`${fieldName}:`</span>, event.target.value);
+};
+
+<span class="fn">document</span>.querySelector(<span class="str">'#email'</span>)
+  .<span class="fn">addEventListener</span>(<span class="str">'input'</span>, <span class="fn">handleInput</span>(<span class="str">'email'</span>));
+<span class="fn">document</span>.querySelector(<span class="str">'#name'</span>)
+  .<span class="fn">addEventListener</span>(<span class="str">'input'</span>, <span class="fn">handleInput</span>(<span class="str">'name'</span>));
+
+<span class="cmt">// Practical: curried fetch with a base URL</span>
+<span class="kw">const</span> <span class="fn">fetchFrom</span> = baseUrl =&gt; path =&gt;
+  <span class="fn">fetch</span>(<span class="str">`${baseUrl}${path}`</span>).<span class="fn">then</span>(r =&gt; r.<span class="fn">json</span>());
+
+<span class="kw">const</span> apiGet = <span class="fn">fetchFrom</span>(<span class="str">'https://api.example.com'</span>);
+<span class="fn">apiGet</span>(<span class="str">'/users'</span>);    <span class="cmt">// fetches /users</span>
+<span class="fn">apiGet</span>(<span class="str">'/products'</span>); <span class="cmt">// fetches /products</span></code></pre>
+
+  <!-- SECTION 7 -->
+  <h2>7. Point-Free Style</h2>
+
+  <p><strong>Point-free</strong> (also called tacit) style means writing functions without explicitly mentioning their arguments. Instead of wrapping a function, you pass it directly.</p>
+
+<pre><code><span class="kw">const</span> numbers = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>];
+
+<span class="cmt">// Not point-free — argument (n) is explicitly named</span>
+<span class="kw">const</span> doubled = numbers.<span class="fn">map</span>(n =&gt; n * <span class="num">2</span>);
+
+<span class="cmt">// Point-free — pass the curried multiply(2) directly</span>
+<span class="kw">const</span> <span class="fn">multiply</span> = a =&gt; b =&gt; a * b;
+<span class="kw">const</span> doubled2 = numbers.<span class="fn">map</span>(<span class="fn">multiply</span>(<span class="num">2</span>));
+
+<span class="cmt">// Another example — filtering</span>
+<span class="kw">const</span> users = [
+  { name: <span class="str">'Karan'</span>, active: <span class="kw">true</span> },
+  { name: <span class="str">'Raj'</span>, active: <span class="kw">false</span> }
+];
+
+<span class="cmt">// Not point-free</span>
+<span class="kw">const</span> active = users.<span class="fn">filter</span>(u =&gt; u.active);
+
+<span class="cmt">// Point-free with a helper</span>
+<span class="kw">const</span> <span class="fn">prop</span> = key =&gt; obj =&gt; obj[key];
+<span class="kw">const</span> active2 = users.<span class="fn">filter</span>(<span class="fn">prop</span>(<span class="str">'active'</span>));</code></pre>
+
+  <div class="callout tip">
+    <strong>Don't over-do it</strong>
+    Point-free style can make pipelines cleaner and more readable. But taken too far, it becomes unreadable abstraction. The goal is clarity — use point-free when it helps, skip it when it obscures.
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Try to answer from memory before reading options carefully.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What makes a function "pure"?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> It uses only arrow function syntax</label>
+        <label class="option"><input type="radio" name="q1" value="b"> Same input always produces same output AND it has no side effects</label>
+        <label class="option"><input type="radio" name="q1" value="c"> It only uses <code>const</code> variables internally</label>
+        <label class="option"><input type="radio" name="q1" value="d"> It does not accept any arguments</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','A pure function has two requirements: determinism (same inputs → same outputs, always) and no side effects (it doesn\'t modify anything outside itself — no mutations, no I/O, no external state reads).')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. Is <code>console.log("hello")</code> a side effect?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> No — it doesn't change any variables</label>
+        <label class="option"><input type="radio" name="q2" value="b"> No — reading and writing the console is always pure</label>
+        <label class="option"><input type="radio" name="q2" value="c"> Yes — writing to the console is a side effect (it affects the outside world)</label>
+        <label class="option"><input type="radio" name="q2" value="d"> It depends on whether anything is listening</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','Side effects include ANY interaction with the outside world — network requests, DOM manipulation, writing to files, and yes, logging to the console. A function that calls console.log is impure because it affects state outside its own scope.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What does <code>add5(3)</code> return?</p>
+      <div class="question-code">const add = a => b => a + b;
+const add5 = add(5);</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> A function</label>
+        <label class="option"><input type="radio" name="q3" value="b"> <code>NaN</code></label>
+        <label class="option"><input type="radio" name="q3" value="c"> 8</label>
+        <label class="option"><input type="radio" name="q3" value="d"> 5</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','c','add is a curried function. add(5) partially applies it, returning the function b => 5 + b and closing over a=5. Calling add5(3) executes that inner function with b=3, returning 5 + 3 = 8.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What is function composition?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> Writing functions inside other functions for encapsulation</label>
+        <label class="option"><input type="radio" name="q4" value="b"> Calling a function with more arguments than it expects</label>
+        <label class="option"><input type="radio" name="q4" value="c"> Combining multiple functions so the output of one becomes the input of the next</label>
+        <label class="option"><input type="radio" name="q4" value="d"> Copying a function's behavior into a class method</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','c','Composition chains functions together: compose(f, g)(x) === f(g(x)). Each function does one focused thing, and you combine them to get complex behavior. It promotes small, testable pieces and readable data pipelines.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. After calling <code>Object.freeze(obj)</code>, can you still modify nested objects inside <code>obj</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> No — freeze recursively locks all nested objects too</label>
+        <label class="option"><input type="radio" name="q5" value="b"> Yes — freeze is shallow; nested objects are not frozen</label>
+        <label class="option"><input type="radio" name="q5" value="c"> Only if you pass <code>deep: true</code> as a second argument</label>
+        <label class="option"><input type="radio" name="q5" value="d"> No — freeze prevents all modifications to any value reachable from <code>obj</code></label>
+      </div>
+      <button class="check-btn" onclick="check('q5','b','Object.freeze() is shallow — it only prevents reassignment of the top-level properties. Any nested objects or arrays are still mutable. For truly immutable nested structures, you need to recursively freeze or use a library like Immer.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What is the key benefit of immutability for debugging?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> Immutable code runs faster because the engine can optimize it</label>
+        <label class="option"><input type="radio" name="q6" value="b"> Changes are trackable — each state is a new object, making it easy to compare before/after without unexpected mutations</label>
+        <label class="option"><input type="radio" name="q6" value="c"> Immutable values cannot cause runtime errors</label>
+        <label class="option"><input type="radio" name="q6" value="d"> Immutability eliminates the need for unit tests</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','b','When you mutate in place, multiple parts of your code can change the same object and you don\'t know who did it or when. With immutability, every change produces a new value — you can log, compare, and time-travel through states. This is exactly why Redux and React\'s reconciler rely on it.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Design Patterns in JavaScript</strong> — Module, Singleton, Observer, Factory, and Strategy patterns. These are the named solutions that senior engineers reference every day.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Currying and composition can feel abstract at first. Ask your teacher agent to walk through a real-world pipeline — something like processing a list of API responses — using pipe() step by step. Seeing it on real data makes it click instantly.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 23 — Functional Programming</div>
+    <div class="nav-links">
+      <a href="./0022-fetch-browser-storage.html">← Previous: Fetch &amp; Browser Storage</a>
+      <a href="./0024-design-patterns.html">Next: Design Patterns →</a>
+      <a href="https://eloquentjavascript.net/05_higher_order.html" target="_blank">Eloquent JS: Higher-Order Functions ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

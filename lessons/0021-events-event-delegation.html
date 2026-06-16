@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 21 — Events &amp; Event Delegation</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 21 of 30</div>
+    <h1>Events &amp; Event Delegation</h1>
+    <p class="subtitle">Events are the heartbeat of interactive UIs — delegation is what makes them scale.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read this <em>after</em> the lesson to deepen understanding:
+    <a href="https://javascript.info/events" target="_blank">javascript.info — Events</a>.
+    Pay special attention to the bubbling diagram — it clicks everything else into place.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. addEventListener — The Right Way to Attach Events</h2>
+
+  <p>There are three ways to respond to user events in the browser. Only one of them is correct for production code.</p>
+
+  <table>
+    <thead>
+      <tr><th>Method</th><th>Example</th><th>Problem</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>HTML attribute</td><td><code>onclick="doThing()"</code></td><td>Mixes behavior into HTML. Impossible to remove.</td></tr>
+      <tr><td>DOM property</td><td><code>el.onclick = fn</code></td><td>Only one listener per event — the second overwrites the first.</td></tr>
+      <tr><td><code>addEventListener</code></td><td><code>el.addEventListener('click', fn)</code></td><td>None. This is the standard.</td></tr>
+    </tbody>
+  </table>
+
+  <p><code>addEventListener</code> accepts a third argument — either a boolean (capture phase) or an options object:</p>
+
+<pre><code><span class="kw">const</span> btn = <span class="fn">document</span>.querySelector(<span class="str">'#myBtn'</span>);
+
+<span class="cmt">// Basic usage</span>
+btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, <span class="kw">function</span>(event) {
+  <span class="fn">console</span>.log(<span class="str">'clicked!'</span>, event);
+});
+
+<span class="cmt">// Options object — the modern way</span>
+btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, <span class="fn">handleClick</span>, {
+  once: <span class="kw">true</span>,     <span class="cmt">// auto-removes after first call</span>
+  capture: <span class="kw">false</span>, <span class="cmt">// use bubbling phase (default)</span>
+  passive: <span class="kw">true</span>   <span class="cmt">// tells browser: I won't call preventDefault()</span>
+                   <span class="cmt">// (scroll performance hint)</span>
+});
+
+<span class="cmt">// Multiple listeners on the SAME event — both fire</span>
+btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, <span class="fn">logClick</span>);
+btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, <span class="fn">trackAnalytics</span>);</code></pre>
+
+  <div class="callout tip">
+    <strong>Performance hint</strong>
+    Mark scroll and touch listeners as <code>passive: true</code> whenever you don't need <code>preventDefault()</code>. The browser can then optimize scrolling without waiting to see if you'll interrupt it.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. The Event Object</h2>
+
+  <p>When an event fires, the browser passes an <strong>Event object</strong> to your handler. It contains everything you need to know about what happened.</p>
+
+  <table>
+    <thead>
+      <tr><th>Property / Method</th><th>What it tells you</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>event.target</code></td><td>The element that <em>triggered</em> the event (could be a deep child)</td></tr>
+      <tr><td><code>event.currentTarget</code></td><td>The element the <em>listener is attached to</em> (always stable)</td></tr>
+      <tr><td><code>event.type</code></td><td>The event name: <code>"click"</code>, <code>"keydown"</code>, etc.</td></tr>
+      <tr><td><code>event.preventDefault()</code></td><td>Stop the browser's default action (form submit, link nav)</td></tr>
+      <tr><td><code>event.stopPropagation()</code></td><td>Stop the event from bubbling further up the DOM</td></tr>
+      <tr><td><code>event.key</code></td><td>Which key was pressed (keyboard events only)</td></tr>
+      <tr><td><code>event.clientX / clientY</code></td><td>Mouse coordinates relative to viewport</td></tr>
+    </tbody>
+  </table>
+
+<pre><code><span class="fn">document</span>.querySelector(<span class="str">'a'</span>).<span class="fn">addEventListener</span>(<span class="str">'click'</span>, <span class="kw">function</span>(event) {
+  event.<span class="fn">preventDefault</span>(); <span class="cmt">// don't navigate to the href</span>
+  <span class="fn">console</span>.log(<span class="str">'Link clicked but navigation blocked!'</span>);
+});
+
+<span class="fn">document</span>.querySelector(<span class="str">'form'</span>).<span class="fn">addEventListener</span>(<span class="str">'submit'</span>, <span class="kw">function</span>(e) {
+  e.<span class="fn">preventDefault</span>(); <span class="cmt">// don't do a page reload</span>
+  <span class="fn">handleFormData</span>(e.target); <span class="cmt">// e.target is the &lt;form&gt; element</span>
+});</code></pre>
+
+  <div class="callout warn">
+    <strong>target vs currentTarget — the classic confusion</strong>
+    Imagine a <code>&lt;button&gt;</code> with a <code>&lt;span&gt;</code> inside it. If the user clicks the span, <code>event.target</code> is the <code>&lt;span&gt;</code> — the thing actually clicked. <code>event.currentTarget</code> is the <code>&lt;button&gt;</code> where your listener lives. This distinction is critical for event delegation.
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. Event Bubbling &amp; Capturing</h2>
+
+  <p>When you click an element deep in the DOM, the event doesn't just fire on that element — it travels. There are <strong>three phases</strong>:</p>
+
+  <ol>
+    <li><strong>Capture phase</strong> — the event travels DOWN from <code>window</code> to the target</li>
+    <li><strong>Target phase</strong> — the event fires on the target element</li>
+    <li><strong>Bubble phase</strong> — the event travels UP from the target back to <code>window</code></li>
+  </ol>
+
+  <p>By default, <code>addEventListener</code> hooks into the <strong>bubble phase</strong> (the most useful one). Pass <code>true</code> or <code>{ capture: true }</code> to hook into the capture phase instead.</p>
+
+<pre><code><span class="cmt">// HTML: &lt;div id="outer"&gt;&lt;div id="inner"&gt;Click me&lt;/div&gt;&lt;/div&gt;</span>
+
+<span class="fn">document</span>.<span class="fn">getElementById</span>(<span class="str">'inner'</span>).<span class="fn">addEventListener</span>(<span class="str">'click'</span>, () =&gt;
+  <span class="fn">console</span>.log(<span class="str">'inner'</span>)
+);
+<span class="fn">document</span>.<span class="fn">getElementById</span>(<span class="str">'outer'</span>).<span class="fn">addEventListener</span>(<span class="str">'click'</span>, () =&gt;
+  <span class="fn">console</span>.log(<span class="str">'outer'</span>)
+);
+
+<span class="cmt">// Click "inner" → logs: "inner", then "outer"</span>
+<span class="cmt">// The event bubbles up from inner to outer</span>
+
+<span class="cmt">// To stop it bubbling:</span>
+<span class="fn">document</span>.<span class="fn">getElementById</span>(<span class="str">'inner'</span>).<span class="fn">addEventListener</span>(<span class="str">'click'</span>, (e) =&gt; {
+  e.<span class="fn">stopPropagation</span>(); <span class="cmt">// outer's listener will NOT fire</span>
+  <span class="fn">console</span>.log(<span class="str">'inner only'</span>);
+});</code></pre>
+
+  <div class="callout info">
+    <strong>Mental model</strong>
+    Think of bubbling like dropping a stone in water. The stone hits the bottom (target), then the ripple spreads outward (upward through ancestors). Capturing is the reverse — the ripple arriving before it hits the target.
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. Event Delegation — One Listener to Rule Them All</h2>
+
+  <p>Instead of attaching a listener to every child element, attach <strong>one listener to the parent</strong> and use <code>event.target</code> to figure out which child was clicked. This works because events bubble.</p>
+
+  <p><strong>Without delegation</strong> (bad at scale):</p>
+
+<pre><code><span class="cmt">// 100 todo items = 100 listeners. And new items get none.</span>
+<span class="fn">document</span>.<span class="fn">querySelectorAll</span>(<span class="str">'.todo-item'</span>).<span class="fn">forEach</span>(item =&gt; {
+  item.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, <span class="fn">handleItemClick</span>);
+});</code></pre>
+
+  <p><strong>With delegation</strong> (correct approach):</p>
+
+<pre><code><span class="cmt">// ONE listener on the parent handles ALL current AND future items</span>
+<span class="kw">const</span> list = <span class="fn">document</span>.querySelector(<span class="str">'#todo-list'</span>);
+
+list.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, <span class="kw">function</span>(event) {
+  <span class="cmt">// event.target is whatever was actually clicked</span>
+  <span class="cmt">// Use .closest() to handle clicks on child elements safely</span>
+  <span class="kw">const</span> item = event.target.<span class="fn">closest</span>(<span class="str">'.todo-item'</span>);
+  <span class="kw">if</span> (!item) <span class="kw">return</span>; <span class="cmt">// clicked outside any item — ignore</span>
+
+  <span class="fn">console</span>.log(<span class="str">'Todo clicked:'</span>, item.dataset.id);
+  item.classList.<span class="fn">toggle</span>(<span class="str">'done'</span>);
+});
+
+<span class="cmt">// Adding a new item dynamically — the listener ALREADY covers it</span>
+<span class="kw">function</span> <span class="fn">addTodo</span>(text) {
+  <span class="kw">const</span> li = <span class="fn">document</span>.<span class="fn">createElement</span>(<span class="str">'li'</span>);
+  li.className = <span class="str">'todo-item'</span>;
+  li.dataset.id = <span class="fn">Date</span>.now();
+  li.textContent = text;
+  list.<span class="fn">appendChild</span>(li);
+  <span class="cmt">// No need to add a new listener — delegation handles it</span>
+}</code></pre>
+
+  <div class="callout tip">
+    <strong>Why .closest() and not just event.target?</strong>
+    If your <code>.todo-item</code> contains a <code>&lt;span&gt;</code>, clicking the span makes <code>event.target</code> the span, not the item. <code>.closest('.todo-item')</code> walks UP from whatever was clicked until it finds the matching ancestor — giving you the right element every time.
+  </div>
+
+  <p><strong>Benefits of event delegation:</strong></p>
+  <ul>
+    <li>Works automatically for <strong>dynamically added elements</strong> — no re-binding needed</li>
+    <li><strong>Fewer event listeners</strong> in memory — better performance for large lists</li>
+    <li>Single place to manage behavior for a whole group of elements</li>
+  </ul>
+
+  <!-- SECTION 5 -->
+  <h2>5. Common Event Types Reference</h2>
+
+  <table>
+    <thead>
+      <tr><th>Category</th><th>Events</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Mouse</td><td><code>click</code>, <code>dblclick</code>, <code>mousedown</code>, <code>mouseup</code>, <code>mouseover</code>, <code>mouseout</code>, <code>mousemove</code></td><td><code>mouseover</code>/<code>mouseout</code> bubble; use <code>mouseenter</code>/<code>mouseleave</code> for no-bubble versions</td></tr>
+      <tr><td>Keyboard</td><td><code>keydown</code>, <code>keyup</code></td><td><code>keypress</code> is deprecated — use <code>keydown</code>. Check <code>event.key</code> for the key name.</td></tr>
+      <tr><td>Form</td><td><code>submit</code>, <code>change</code>, <code>input</code>, <code>focus</code>, <code>blur</code></td><td><code>input</code> fires on every keystroke; <code>change</code> fires when the field loses focus with a new value</td></tr>
+      <tr><td>Window</td><td><code>load</code>, <code>DOMContentLoaded</code>, <code>resize</code>, <code>scroll</code></td><td><code>DOMContentLoaded</code> fires when HTML is parsed; <code>load</code> waits for all images and stylesheets too</td></tr>
+    </tbody>
+  </table>
+
+<pre><code><span class="cmt">// DOMContentLoaded — your typical "run when DOM is ready" hook</span>
+<span class="fn">document</span>.<span class="fn">addEventListener</span>(<span class="str">'DOMContentLoaded'</span>, () =&gt; {
+  <span class="fn">initApp</span>();
+});
+
+<span class="cmt">// Keyboard: detect Enter key</span>
+<span class="fn">document</span>.<span class="fn">addEventListener</span>(<span class="str">'keydown'</span>, (e) =&gt; {
+  <span class="kw">if</span> (e.key === <span class="str">'Enter'</span>) <span class="fn">console</span>.log(<span class="str">'Enter pressed'</span>);
+  <span class="kw">if</span> (e.key === <span class="str">'Escape'</span>) <span class="fn">closeModal</span>();
+});
+
+<span class="cmt">// input fires on every keystroke — great for live search</span>
+<span class="fn">document</span>.querySelector(<span class="str">'#search'</span>).<span class="fn">addEventListener</span>(<span class="str">'input'</span>, (e) =&gt; {
+  <span class="fn">filterResults</span>(e.target.value);
+});</code></pre>
+
+  <!-- SECTION 6 -->
+  <h2>6. Removing Event Listeners</h2>
+
+  <p>To remove a listener, you must pass the <strong>exact same function reference</strong> that was used to add it. This is the most common mistake with event listener cleanup.</p>
+
+<pre><code><span class="cmt">// BAD — this does NOT work</span>
+btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, () =&gt; <span class="fn">console</span>.log(<span class="str">'hi'</span>));
+btn.<span class="fn">removeEventListener</span>(<span class="str">'click'</span>, () =&gt; <span class="fn">console</span>.log(<span class="str">'hi'</span>));
+<span class="cmt">// ^ new arrow function = new reference. removeEventListener can't find it.</span>
+
+<span class="cmt">// GOOD — store the reference</span>
+<span class="kw">function</span> <span class="fn">handleClick</span>() {
+  <span class="fn">console</span>.log(<span class="str">'hi'</span>);
+}
+btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, <span class="fn">handleClick</span>);
+<span class="cmt">// Later, when cleanup is needed:</span>
+btn.<span class="fn">removeEventListener</span>(<span class="str">'click'</span>, <span class="fn">handleClick</span>); <span class="cmt">// ✅ works</span>
+
+<span class="cmt">// EASIEST — use { once: true } to auto-remove after first call</span>
+btn.<span class="fn">addEventListener</span>(<span class="str">'click'</span>, <span class="fn">handleOnce</span>, { once: <span class="kw">true</span> });</code></pre>
+
+  <div class="callout danger">
+    <strong>Memory leak warning</strong>
+    Forgetting to remove event listeners from elements that get removed from the DOM can cause memory leaks. This is especially relevant in single-page apps where components mount and unmount. Always clean up in your component's unmount/destroy lifecycle.
+  </div>
+
+  <!-- SECTION 7 -->
+  <h2>7. Custom Events</h2>
+
+  <p>You can create and dispatch your own events — a clean way to communicate between different parts of your application without tight coupling.</p>
+
+<pre><code><span class="cmt">// Create a custom event with attached data</span>
+<span class="kw">const</span> event = <span class="kw">new</span> <span class="typ">CustomEvent</span>(<span class="str">'userLoggedIn'</span>, {
+  detail: { username: <span class="str">'karan'</span>, role: <span class="str">'admin'</span> },
+  bubbles: <span class="kw">true</span>,    <span class="cmt">// event will bubble up the DOM</span>
+  cancelable: <span class="kw">true</span>  <span class="cmt">// can be preventDefault()'d</span>
+});
+
+<span class="cmt">// Dispatch it from any element</span>
+<span class="fn">document</span>.<span class="fn">dispatchEvent</span>(event);
+
+<span class="cmt">// Listen for it anywhere</span>
+<span class="fn">document</span>.<span class="fn">addEventListener</span>(<span class="str">'userLoggedIn'</span>, (e) =&gt; {
+  <span class="fn">console</span>.log(<span class="str">'Welcome,'</span>, e.detail.username); <span class="cmt">// 'Welcome, karan'</span>
+  <span class="fn">updateNavbar</span>(e.detail);
+});
+
+<span class="cmt">// Real-world pattern: a component fires an event,</span>
+<span class="cmt">// another component listens — no direct coupling needed</span></code></pre>
+
+  <div class="callout info">
+    <strong>When to use Custom Events</strong>
+    Custom events are great for decoupled component communication — a dropdown that announces "item selected" without knowing who cares. But in larger apps, a dedicated state manager (like Redux or Zustand) is often cleaner. Custom events shine in vanilla JS or Web Component architectures.
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't look back at the lesson. Try to recall from memory — that's what builds retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What is the difference between <code>event.target</code> and <code>event.currentTarget</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> They are always the same element</label>
+        <label class="option"><input type="radio" name="q1" value="b"> <code>target</code> is the element that triggered the event; <code>currentTarget</code> is the element where the listener is attached</label>
+        <label class="option"><input type="radio" name="q1" value="c"> <code>currentTarget</code> is the element that triggered the event; <code>target</code> is the listener's element</label>
+        <label class="option"><input type="radio" name="q1" value="d"> <code>target</code> is the document root; <code>currentTarget</code> is the clicked element</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','event.target is where the click originated (could be a deep child). event.currentTarget is always the element the listener is attached to. They differ when events bubble.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What is event delegation?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> Removing an event listener and passing it to another element</label>
+        <label class="option"><input type="radio" name="q2" value="b"> Attaching a listener to a parent element and using <code>event.target</code> to handle events from child elements</label>
+        <label class="option"><input type="radio" name="q2" value="c"> Using <code>event.stopPropagation()</code> to control which elements receive events</label>
+        <label class="option"><input type="radio" name="q2" value="d"> Dispatching a custom event to child elements from a parent</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','b','Event delegation attaches ONE listener to a common ancestor. Because events bubble up, the parent catches clicks from any descendant. You then inspect event.target to identify which child was involved.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. Why does this fail to remove the listener?</p>
+      <div class="question-code">btn.addEventListener('click', () => console.log('hi'));
+btn.removeEventListener('click', () => console.log('hi'));</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> <code>removeEventListener</code> doesn't support arrow functions</label>
+        <label class="option"><input type="radio" name="q3" value="b"> You must call <code>removeEventListener</code> before <code>addEventListener</code></label>
+        <label class="option"><input type="radio" name="q3" value="c"> <code>removeEventListener</code> requires the exact same function reference; a new arrow function is a different object in memory</label>
+        <label class="option"><input type="radio" name="q3" value="d"> The event type must be capitalized when removing</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','c','Each arrow function expression creates a new function object. The two arrow functions look identical but are different references. removeEventListener compares by reference identity, not source code. Store the function in a variable to fix this.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What does <code>event.stopPropagation()</code> do?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> Prevents the browser's default action (like link navigation)</label>
+        <label class="option"><input type="radio" name="q4" value="b"> Removes all other event listeners on the element</label>
+        <label class="option"><input type="radio" name="q4" value="c"> Prevents the event from bubbling further up the DOM tree</label>
+        <label class="option"><input type="radio" name="q4" value="d"> Cancels the event entirely so no listeners fire</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','c','stopPropagation() stops the event from traveling further up (or down in capture phase). It does NOT prevent the default browser action — that is preventDefault(). Listeners on the current element still fire; it only stops ancestors from seeing the event.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. Which event fires when the DOM is fully parsed but <em>before</em> images and stylesheets have loaded?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> <code>load</code></label>
+        <label class="option"><input type="radio" name="q5" value="b"> <code>DOMContentLoaded</code></label>
+        <label class="option"><input type="radio" name="q5" value="c"> <code>ready</code></label>
+        <label class="option"><input type="radio" name="q5" value="d"> <code>DOMReady</code></label>
+      </div>
+      <button class="check-btn" onclick="check('q5','b','DOMContentLoaded fires as soon as the HTML has been parsed into a DOM tree. The window load event fires later, only after all resources (images, fonts, stylesheets) are fully downloaded. For most JS initialization work, DOMContentLoaded is what you want.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. Why is event delegation better for dynamically added elements?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> Dynamic elements can only be targeted with delegation, not direct listeners</label>
+        <label class="option"><input type="radio" name="q6" value="b"> Dynamically added elements don't have listeners attached yet — but a parent listener catches their events because events bubble up</label>
+        <label class="option"><input type="radio" name="q6" value="c"> Delegation is only useful for dynamic elements; static elements don't benefit from it</label>
+        <label class="option"><input type="radio" name="q6" value="d"> Dynamic elements dispatch custom events, which delegation can intercept</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','b','When you add a new element to the DOM, it has no listeners. If you were attaching listeners to each child individually, you would have to remember to add a listener to every new element too. With delegation, the parent listener was already there — it catches bubbled events from the new element automatically.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Fetch API &amp; Browser Storage</strong> — making HTTP requests, handling errors correctly, and persisting data with localStorage, sessionStorage, and cookies.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> If event bubbling still feels fuzzy, ask your teacher agent to draw out the DOM tree and trace a specific click event through capture, target, and bubble phases. A concrete walkthrough makes this click immediately.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 21 — Events &amp; Event Delegation</div>
+    <div class="nav-links">
+      <a href="./0020-modules-bundlers.html">← Previous: Modules &amp; Bundlers</a>
+      <a href="./0022-fetch-browser-storage.html">Next: Fetch &amp; Browser Storage →</a>
+      <a href="https://javascript.info/events" target="_blank">javascript.info: Events ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 20 — DOM Manipulation</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 20 of 30</div>
+    <h1>DOM Manipulation</h1>
+    <p class="subtitle">The DOM is your interface to the browser — learn to read and rewrite it.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read after the lesson:
+    <a href="https://javascript.info/dom-nodes" target="_blank">javascript.info — DOM nodes</a>.
+    Then continue with <a href="https://javascript.info/searching-elements-dom" target="_blank">Searching the DOM</a> and <a href="https://javascript.info/modifying-document" target="_blank">Modifying the Document</a>.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. What is the DOM?</h2>
+
+  <p>When the browser loads an HTML file, it parses it and builds an in-memory tree of objects called the <strong>Document Object Model (DOM)</strong>. Every HTML element, attribute, and piece of text becomes a <em>node</em> in this tree. JavaScript can read and modify this tree, which is how web pages become interactive.</p>
+
+  <pre><code><span class="cmt">&lt;!-- This HTML --&gt;</span>
+<span class="str">&lt;div id="app"&gt;</span>
+  <span class="str">&lt;h1&gt;</span>Hello<span class="str">&lt;/h1&gt;</span>
+  <span class="str">&lt;p class="intro"&gt;</span>World<span class="str">&lt;/p&gt;</span>
+<span class="str">&lt;/div&gt;</span>
+
+<span class="cmt">// Becomes this tree:</span>
+<span class="cmt">// document</span>
+<span class="cmt">//   └── html</span>
+<span class="cmt">//         └── body</span>
+<span class="cmt">//               └── div#app</span>
+<span class="cmt">//                     ├── h1 → "Hello"</span>
+<span class="cmt">//                     └── p.intro → "World"</span></code></pre>
+
+  <p>The <code>document</code> object is the entry point to the DOM from JavaScript. Everything hangs off <code>document</code>.</p>
+
+  <h3>Live vs Static Collections</h3>
+  <p>Some DOM query methods return <strong>live collections</strong> that automatically update when the DOM changes. Others return <strong>static snapshots</strong> that do not update. Knowing which is which prevents subtle bugs.</p>
+
+  <table>
+    <thead>
+      <tr><th>Method</th><th>Returns</th><th>Live?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>getElementById()</code></td><td>Element or null</td><td>N/A (single element)</td></tr>
+      <tr><td><code>querySelector()</code></td><td>Element or null</td><td>N/A (single element)</td></tr>
+      <tr><td><code>querySelectorAll()</code></td><td>NodeList</td><td>No — static snapshot</td></tr>
+      <tr><td><code>getElementsByClassName()</code></td><td>HTMLCollection</td><td>Yes — updates automatically</td></tr>
+      <tr><td><code>getElementsByTagName()</code></td><td>HTMLCollection</td><td>Yes — updates automatically</td></tr>
+      <tr><td><code>element.children</code></td><td>HTMLCollection</td><td>Yes — updates automatically</td></tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 2 -->
+  <h2>2. Selecting Elements</h2>
+
+  <p>Modern JavaScript code almost exclusively uses <code>querySelector</code> and <code>querySelectorAll</code>. They accept any valid CSS selector, making them extremely flexible.</p>
+
+  <pre><code><span class="cmt">// getElementById — fastest, by ID only, returns element or null</span>
+<span class="kw">const</span> app = document.<span class="fn">getElementById</span>(<span class="str">'app'</span>);
+
+<span class="cmt">// querySelector — returns FIRST match of any CSS selector</span>
+<span class="kw">const</span> heading  = document.<span class="fn">querySelector</span>(<span class="str">'h1'</span>);
+<span class="kw">const</span> firstBtn = document.<span class="fn">querySelector</span>(<span class="str">'.btn.primary'</span>);
+<span class="kw">const</span> navLink  = document.<span class="fn">querySelector</span>(<span class="str">'nav > a[href="/home"]'</span>);
+
+<span class="cmt">// querySelectorAll — returns ALL matches as a static NodeList</span>
+<span class="kw">const</span> items = document.<span class="fn">querySelectorAll</span>(<span class="str">'.list-item'</span>);
+items.<span class="fn">forEach</span>(item => <span class="fn">console</span>.log(item.textContent));
+
+<span class="cmt">// Scoped query — search within an element, not the whole document</span>
+<span class="kw">const</span> nav  = document.<span class="fn">querySelector</span>(<span class="str">'nav'</span>);
+<span class="kw">const</span> link = nav.<span class="fn">querySelector</span>(<span class="str">'a'</span>); <span class="cmt">// finds first <a> inside nav only</span></code></pre>
+
+  <div class="callout tip">
+    <strong>Always Check for null</strong>
+    <code>querySelector()</code> returns <code>null</code> if no match is found. Calling methods on <code>null</code> throws a TypeError. Always check: <code>const el = document.querySelector('.thing'); if (el) { ... }</code> — or use optional chaining: <code>document.querySelector('.thing')?.classList.add('active')</code>.
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. Reading &amp; Modifying Content</h2>
+
+  <p>There are three main ways to get or set the content of an element, and choosing the wrong one can introduce security vulnerabilities.</p>
+
+  <pre><code><span class="kw">const</span> el = document.<span class="fn">querySelector</span>(<span class="str">'.message'</span>);
+
+<span class="cmt">// textContent — plain text, SAFE</span>
+<span class="fn">console</span>.log(el.textContent);       <span class="cmt">// read</span>
+el.textContent = <span class="str">"Updated text"</span>;   <span class="cmt">// write — HTML is escaped automatically</span>
+
+<span class="cmt">// innerHTML — parses as HTML, DANGEROUS with user input</span>
+<span class="fn">console</span>.log(el.innerHTML);         <span class="cmt">// read — includes HTML tags</span>
+el.innerHTML = <span class="str">"&lt;strong&gt;Bold&lt;/strong&gt;"</span>; <span class="cmt">// write — parsed as HTML</span>
+
+<span class="cmt">// innerText — rendered text only (respects CSS visibility)</span>
+<span class="cmt">// Triggers a layout calculation — slower than textContent</span>
+<span class="fn">console</span>.log(el.innerText);         <span class="cmt">// read</span></code></pre>
+
+  <div class="callout danger">
+    <strong>innerHTML + User Input = XSS</strong>
+    Never set <code>innerHTML</code> to a string that contains user-provided data. A user could inject <code>&lt;script&gt;stealCookies()&lt;/script&gt;</code> or <code>&lt;img src="x" onerror="stealData()"&gt;</code>. Use <code>textContent</code> for text, or <code>DOMPurify</code> if you must render user-provided HTML.
+  </div>
+
+  <h3>Attributes and Data Attributes</h3>
+  <pre><code><span class="kw">const</span> link = document.<span class="fn">querySelector</span>(<span class="str">'a'</span>);
+
+<span class="cmt">// Standard attributes</span>
+link.<span class="fn">getAttribute</span>(<span class="str">'href'</span>);              <span class="cmt">// read attribute value</span>
+link.<span class="fn">setAttribute</span>(<span class="str">'href'</span>, <span class="str">'/about'</span>);   <span class="cmt">// set attribute</span>
+link.<span class="fn">removeAttribute</span>(<span class="str">'target'</span>);        <span class="cmt">// remove attribute</span>
+link.<span class="fn">hasAttribute</span>(<span class="str">'disabled'</span>);         <span class="cmt">// check — returns boolean</span>
+
+<span class="cmt">// data-* attributes via .dataset — camelCase conversion</span>
+<span class="cmt">// &lt;div data-user-id="42" data-role="admin"&gt;</span>
+<span class="kw">const</span> card = document.<span class="fn">querySelector</span>(<span class="str">'.user-card'</span>);
+<span class="fn">console</span>.log(card.dataset.userId); <span class="cmt">// "42" — data-user-id becomes userId</span>
+<span class="fn">console</span>.log(card.dataset.role);   <span class="cmt">// "admin"</span>
+card.dataset.verified = <span class="str">"true"</span>;   <span class="cmt">// adds data-verified="true" to the DOM</span></code></pre>
+
+  <!-- SECTION 4 -->
+  <h2>4. Modifying Styles &amp; Classes</h2>
+
+  <p>Avoid setting inline styles directly when possible — prefer toggling CSS classes so your styling stays in CSS where it belongs. Inline styles have the highest specificity and are hard to override.</p>
+
+  <pre><code><span class="kw">const</span> box = document.<span class="fn">querySelector</span>(<span class="str">'.box'</span>);
+
+<span class="cmt">// Inline styles — use camelCase for CSS property names</span>
+box.style.color           = <span class="str">'red'</span>;
+box.style.backgroundColor = <span class="str">'#f0f0f0'</span>; <span class="cmt">// background-color → backgroundColor</span>
+box.style.fontSize        = <span class="str">'1.5rem'</span>;
+
+<span class="cmt">// classList — the preferred way</span>
+box.classList.<span class="fn">add</span>(<span class="str">'active'</span>);          <span class="cmt">// adds class</span>
+box.classList.<span class="fn">remove</span>(<span class="str">'hidden'</span>);       <span class="cmt">// removes class</span>
+box.classList.<span class="fn">toggle</span>(<span class="str">'open'</span>);         <span class="cmt">// adds if absent, removes if present</span>
+box.classList.<span class="fn">toggle</span>(<span class="str">'open'</span>, <span class="kw">true</span>);  <span class="cmt">// force-add (second arg controls state)</span>
+box.classList.<span class="fn">contains</span>(<span class="str">'active'</span>);    <span class="cmt">// returns true/false</span>
+box.classList.<span class="fn">replace</span>(<span class="str">'old'</span>, <span class="str">'new'</span>); <span class="cmt">// replace one class with another</span>
+
+<span class="cmt">// Add multiple classes at once</span>
+box.classList.<span class="fn">add</span>(<span class="str">'card'</span>, <span class="str">'card--primary'</span>, <span class="str">'visible'</span>);</code></pre>
+
+  <div class="callout tip">
+    <strong>Reading Computed Styles</strong>
+    <code>element.style</code> only shows inline styles — not styles applied by CSS classes or stylesheets. To read the actual computed value of any CSS property, use <code>window.getComputedStyle(element).getPropertyValue('color')</code>.
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2>5. Creating &amp; Adding Elements</h2>
+
+  <p>Creating elements in JavaScript involves three steps: create the element, configure it, then insert it into the document. Elements that are not in the document are not visible — they exist in memory only.</p>
+
+  <pre><code><span class="cmt">// Step 1: Create</span>
+<span class="kw">const</span> card = document.<span class="fn">createElement</span>(<span class="str">'div'</span>);
+
+<span class="cmt">// Step 2: Configure</span>
+card.className   = <span class="str">'card'</span>;
+card.textContent = <span class="str">'Hello from JS!'</span>;
+card.<span class="fn">setAttribute</span>(<span class="str">'data-id'</span>, <span class="str">'123'</span>);
+
+<span class="cmt">// Step 3: Insert into the document</span>
+<span class="kw">const</span> container = document.<span class="fn">querySelector</span>(<span class="str">'.container'</span>);
+
+container.<span class="fn">append</span>(card);          <span class="cmt">// add at END — accepts strings and nodes</span>
+container.<span class="fn">prepend</span>(card);         <span class="cmt">// add at START</span>
+container.<span class="fn">append</span>(<span class="str">"plain text"</span>);  <span class="cmt">// strings are inserted as text nodes (safe)</span>
+
+card.<span class="fn">before</span>(<span class="str">"&lt;-- here"</span>);        <span class="cmt">// insert before card as sibling</span>
+card.<span class="fn">after</span>(<span class="str">"here --&gt;"</span>);          <span class="cmt">// insert after card as sibling</span>
+
+card.<span class="fn">remove</span>();                    <span class="cmt">// remove element from the DOM</span></code></pre>
+
+  <h3>Older insertBefore API</h3>
+  <pre><code><span class="cmt">// insertBefore — older API, still common in legacy code</span>
+<span class="cmt">// parent.insertBefore(newNode, referenceNode)</span>
+<span class="cmt">// inserts newNode immediately before referenceNode</span>
+<span class="kw">const</span> list = document.<span class="fn">querySelector</span>(<span class="str">'ul'</span>);
+<span class="kw">const</span> newItem = document.<span class="fn">createElement</span>(<span class="str">'li'</span>);
+newItem.textContent = <span class="str">'New first item'</span>;
+list.<span class="fn">insertBefore</span>(newItem, list.firstElementChild); <span class="cmt">// insert at start</span></code></pre>
+
+  <div class="callout info">
+    <strong>append() vs appendChild()</strong>
+    <code>append()</code> is the modern method: it accepts multiple arguments, can insert strings (as text nodes), and returns nothing. <code>appendChild()</code> is the older method: accepts only a single Node, returns the inserted node. In new code, prefer <code>append()</code>.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. Traversing the DOM</h2>
+
+  <p>Once you have a reference to one element, you can navigate to related elements using traversal properties. All properties listed below skip text nodes — they return only element nodes.</p>
+
+  <pre><code><span class="kw">const</span> el = document.<span class="fn">querySelector</span>(<span class="str">'.item'</span>);
+
+<span class="cmt">// Navigate UP</span>
+el.parentElement;                <span class="cmt">// direct parent element</span>
+el.<span class="fn">closest</span>(<span class="str">'.container'</span>);       <span class="cmt">// walk UP tree — first ancestor matching selector</span>
+
+<span class="cmt">// Navigate DOWN</span>
+el.children;                     <span class="cmt">// live HTMLCollection of child elements</span>
+el.firstElementChild;            <span class="cmt">// first child element</span>
+el.lastElementChild;             <span class="cmt">// last child element</span>
+
+<span class="cmt">// Navigate SIDEWAYS</span>
+el.nextElementSibling;           <span class="cmt">// next sibling element</span>
+el.previousElementSibling;      <span class="cmt">// previous sibling element</span></code></pre>
+
+  <pre><code><span class="cmt">// Practical example — event delegation using .closest()</span>
+document.<span class="fn">querySelector</span>(<span class="str">'.list'</span>)
+  .<span class="fn">addEventListener</span>(<span class="str">'click'</span>, (e) => {
+    <span class="cmt">// User might click a child of .list-item (e.g., a span inside it)</span>
+    <span class="cmt">// .closest() walks up the tree to find the .list-item ancestor</span>
+    <span class="kw">const</span> item = e.target.<span class="fn">closest</span>(<span class="str">'.list-item'</span>);
+    <span class="kw">if</span> (!item) <span class="kw">return</span>; <span class="cmt">// click was outside a list item</span>
+    <span class="fn">console</span>.log(<span class="str">"Clicked item:"</span>, item.dataset.id);
+  });</code></pre>
+
+  <div class="callout info">
+    <strong>element.closest() is Extremely Useful</strong>
+    <code>closest()</code> starts at the element itself and walks up the tree, returning the first element that matches the selector. It returns <code>null</code> if nothing matches. This is the foundation of event delegation — attaching one listener to a parent instead of many listeners to children.
+  </div>
+
+  <!-- SECTION 7 -->
+  <h2>7. Cloning, DocumentFragment &amp; Performance</h2>
+
+  <p>DOM manipulation is expensive because changing the DOM can trigger <strong>reflow</strong> (the browser recalculates layout) and <strong>repaint</strong> (the browser redraws pixels). Each is slow. The goal is to minimize how many times you touch the live DOM.</p>
+
+  <h3>Cloning Nodes</h3>
+  <pre><code><span class="kw">const</span> template = document.<span class="fn">querySelector</span>(<span class="str">'.card-template'</span>);
+
+<span class="cmt">// cloneNode(false) — shallow clone (no children)</span>
+<span class="kw">const</span> shallowCopy = template.<span class="fn">cloneNode</span>(<span class="kw">false</span>);
+
+<span class="cmt">// cloneNode(true) — deep clone (includes all descendants)</span>
+<span class="kw">const</span> deepCopy = template.<span class="fn">cloneNode</span>(<span class="kw">true</span>);
+deepCopy.<span class="fn">querySelector</span>(<span class="str">'h2'</span>).textContent = <span class="str">"New Card Title"</span>;
+document.<span class="fn">querySelector</span>(<span class="str">'.grid'</span>).<span class="fn">append</span>(deepCopy);</code></pre>
+
+  <h3>DocumentFragment — Batch DOM Updates</h3>
+  <pre><code><span class="cmt">// BAD — inserts into live DOM 100 times, triggers 100 reflows</span>
+<span class="kw">const</span> list = document.<span class="fn">querySelector</span>(<span class="str">'ul'</span>);
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; <span class="num">100</span>; i++) {
+  <span class="kw">const</span> li = document.<span class="fn">createElement</span>(<span class="str">'li'</span>);
+  li.textContent = <span class="str">`Item </span>${i}<span class="str">`</span>;
+  list.<span class="fn">append</span>(li); <span class="cmt">// live DOM insertion each time</span>
+}
+
+<span class="cmt">// GOOD — build off-screen, insert once, one reflow</span>
+<span class="kw">const</span> fragment = document.<span class="fn">createDocumentFragment</span>();
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; <span class="num">100</span>; i++) {
+  <span class="kw">const</span> li = document.<span class="fn">createElement</span>(<span class="str">'li'</span>);
+  li.textContent = <span class="str">`Item </span>${i}<span class="str">`</span>;
+  fragment.<span class="fn">append</span>(li); <span class="cmt">// off-tree — no reflow</span>
+}
+list.<span class="fn">append</span>(fragment); <span class="cmt">// ONE insertion — one reflow</span></code></pre>
+
+  <p>A <code>DocumentFragment</code> is a lightweight container that lives outside the document tree. You can build complex DOM structures inside it, then insert everything at once. When inserted, the fragment itself disappears — only its children are added.</p>
+
+  <div class="callout warn">
+    <strong>Modern Frameworks Abstract This</strong>
+    React, Vue, and Svelte use virtual DOMs or compiled templates to batch DOM updates automatically. But understanding manual DOM manipulation is still essential — for debugging, for building without frameworks, for performance analysis, and for interviews.
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What is the key difference between <code>textContent</code> and <code>innerHTML</code> when writing content into an element?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> textContent is faster; innerHTML is slower but shows formatted text</label>
+        <label class="option"><input type="radio" name="q1" value="b"> textContent sets plain text (safe — HTML is escaped); innerHTML parses as HTML (XSS risk with user input)</label>
+        <label class="option"><input type="radio" name="q1" value="c"> innerHTML only works in Chrome; textContent works in all browsers</label>
+        <label class="option"><input type="radio" name="q1" value="d"> They are identical — the names are just legacy naming</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','textContent treats the value as a plain text string — HTML tags are escaped and displayed as literal characters. innerHTML parses the string as HTML, inserting real elements. Never set innerHTML from user-provided data: it allows XSS attacks.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What does <code>element.classList.toggle('active')</code> do?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> Always adds the class 'active'</label>
+        <label class="option"><input type="radio" name="q2" value="b"> Always removes the class 'active'</label>
+        <label class="option"><input type="radio" name="q2" value="c"> Adds the class if absent, removes it if present</label>
+        <label class="option"><input type="radio" name="q2" value="d"> Replaces the current class with 'active'</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','classList.toggle() flips the class: adds it if the element does not have it, removes it if it does. It returns true if the class is now present, false if removed. An optional second boolean argument forces the state: toggle(\'active\', true) always adds it.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. <code>document.querySelectorAll('.item')</code> returns what type, and is it live?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> A live HTMLCollection that updates when the DOM changes</label>
+        <label class="option"><input type="radio" name="q3" value="b"> A static NodeList (snapshot) — does not update when the DOM changes</label>
+        <label class="option"><input type="radio" name="q3" value="c"> A plain JavaScript Array</label>
+        <label class="option"><input type="radio" name="q3" value="d"> A live NodeList that updates when the DOM changes</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','b','querySelectorAll() returns a static NodeList — a snapshot of matching elements at the moment of the call. If you add more .item elements to the DOM later, the NodeList does not update. getElementsByClassName() returns a live HTMLCollection that does update.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What does <code>element.closest('.container')</code> do?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> Searches downward through element's children for '.container'</label>
+        <label class="option"><input type="radio" name="q4" value="b"> Returns all ancestors matching '.container' as an array</label>
+        <label class="option"><input type="radio" name="q4" value="c"> Walks UP the DOM tree from element, returning the first ancestor (including self) matching '.container', or null</label>
+        <label class="option"><input type="radio" name="q4" value="d"> Finds the sibling element closest in distance to '.container'</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','c','closest() starts at the element itself, then walks up through its ancestors, returning the first one that matches the CSS selector. Returns null if nothing matches. Commonly used in event delegation to find which container was clicked regardless of which child element was the actual target.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. A user types their name into a form field and you want to display it on the page. What is the safest method?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> <code>element.innerHTML = userInput</code></label>
+        <label class="option"><input type="radio" name="q5" value="b"> <code>element.innerText = userInput</code></label>
+        <label class="option"><input type="radio" name="q5" value="c"> <code>element.textContent = userInput</code></label>
+        <label class="option"><input type="radio" name="q5" value="d"> <code>element.setAttribute('value', userInput)</code></label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','Use textContent. It treats the string as literal text — any HTML characters (&lt;, &gt;, &amp;, &quot;) are automatically escaped and displayed as text, not parsed as HTML. This prevents XSS. Never use innerHTML with user-provided data.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What is the key difference between <code>element.append(child)</code> and <code>element.appendChild(child)</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> appendChild() is newer; append() is deprecated</label>
+        <label class="option"><input type="radio" name="q6" value="b"> append() accepts multiple arguments and plain strings; appendChild() accepts only a single Node and returns it</label>
+        <label class="option"><input type="radio" name="q6" value="c"> append() inserts at the start; appendChild() inserts at the end</label>
+        <label class="option"><input type="radio" name="q6" value="d"> They are identical — just different naming conventions</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','b','append() is the modern method: it accepts multiple arguments (nodes and/or strings, which become text nodes), and returns undefined. appendChild() is the older API: it accepts only one Node argument and returns that node. In new code, prefer append().')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Events &amp; Event Delegation</strong> — now that you can select and modify DOM elements, you will learn how to respond to user interactions. Events are how every interactive UI feature is built.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent anything that was unclear. Good follow-up questions for this lesson: "What is the difference between a Node and an Element?" and "How does React's virtual DOM differ from direct DOM manipulation?" Both lead to much deeper understanding.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 20 — DOM Manipulation</div>
+    <div class="nav-links">
+      <a href="./0019-async-await.html">← Prev: async/await</a>
+      <a href="./0021-events.html">Next: Events &amp; Event Delegation →</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '&#10003; Correct! ' : '&#10007; Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

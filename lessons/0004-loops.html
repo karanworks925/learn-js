@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 04 — Loops</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 04 of 30</div>
+    <h1>Loops</h1>
+    <p class="subtitle">Repetition is the engine of programming — know all 5 ways JS does it.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read this after the lesson:
+    <a href="https://javascript.info/while-for" target="_blank">javascript.info — while and for loops</a>.
+    It covers all loop types with clear diagrams and exercises.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. The Classic <code>for</code> Loop</h2>
+
+  <p>The most explicit loop — you control the start, the stop condition, and the update step. Best when you know exactly how many times to loop, or when you need the index.</p>
+
+  <pre><code><span class="cmt">// Anatomy: for (initialization; condition; update)</span>
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; <span class="num">5</span>; i++) {
+  <span class="fn">console</span>.log(i); <span class="cmt">// 0, 1, 2, 3, 4</span>
+}
+
+<span class="cmt">// Iterating an array by index</span>
+<span class="kw">const</span> fruits = [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"cherry"</span>];
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; fruits.length; i++) {
+  <span class="fn">console</span>.log(i, fruits[i]); <span class="cmt">// 0 "apple", 1 "banana", 2 "cherry"</span>
+}
+
+<span class="cmt">// Counting down</span>
+<span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">10</span>; i &gt;= <span class="num">0</span>; i--) {
+  <span class="fn">console</span>.log(i); <span class="cmt">// 10, 9, 8, ... 0</span>
+}
+
+<span class="cmt">// Nested loops — O(n²) complexity, use with awareness</span>
+<span class="kw">for</span> (<span class="kw">let</span> row = <span class="num">0</span>; row &lt; <span class="num">3</span>; row++) {
+  <span class="kw">for</span> (<span class="kw">let</span> col = <span class="num">0</span>; col &lt; <span class="num">3</span>; col++) {
+    <span class="fn">console</span>.log(<span class="str">`[${row}][${col}]`</span>);
+  }
+} <span class="cmt">// 9 iterations total — grows quadratically</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Common Bug</strong>
+    Off-by-one errors: <code>i &lt; arr.length</code> is correct for zero-indexed arrays. <code>i &lt;= arr.length</code> will access <code>arr[arr.length]</code>, which is <code>undefined</code>.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. <code>while</code> Loop</h2>
+
+  <p>Use <code>while</code> when you do not know in advance how many iterations are needed — you loop as long as a condition holds true.</p>
+
+  <pre><code><span class="cmt">// Basic while loop</span>
+<span class="kw">let</span> i = <span class="num">0</span>;
+<span class="kw">while</span> (i &lt; <span class="num">5</span>) {
+  <span class="fn">console</span>.log(i); <span class="cmt">// 0, 1, 2, 3, 4</span>
+  i++;             <span class="cmt">// must update or you get an infinite loop</span>
+}
+
+<span class="cmt">// Practical: retry logic — keep trying until success or max attempts</span>
+<span class="kw">let</span> attempts = <span class="num">0</span>;
+<span class="kw">let</span> connected = <span class="kw">false</span>;
+
+<span class="kw">while</span> (!connected &amp;&amp; attempts &lt; <span class="num">3</span>) {
+  connected = <span class="fn">tryConnect</span>();  <span class="cmt">// some function that may succeed or fail</span>
+  attempts++;
+}
+
+<span class="cmt">// Reading until a sentinel value</span>
+<span class="kw">let</span> input = <span class="fn">getNextLine</span>();
+<span class="kw">while</span> (input !== <span class="str">"quit"</span>) {
+  <span class="fn">processLine</span>(input);
+  input = <span class="fn">getNextLine</span>();
+}</code></pre>
+
+  <div class="callout danger">
+    <strong>Infinite Loop Danger</strong>
+    Every <code>while</code> loop must have a path to make its condition false. If the condition never becomes false and there is no <code>break</code>, the loop runs forever and freezes the browser/process. Always double-check that your exit condition is reachable.
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. <code>do...while</code> Loop</h2>
+
+  <p>Like <code>while</code>, but the body runs <em>before</em> the condition is checked — so it always executes at least once.</p>
+
+  <pre><code><span class="cmt">// do...while — always executes once, then checks</span>
+<span class="kw">let</span> count = <span class="num">10</span>;
+<span class="kw">do</span> {
+  <span class="fn">console</span>.log(count); <span class="cmt">// runs ONCE even though count >= 5 already</span>
+  count++;
+} <span class="kw">while</span> (count &lt; <span class="num">5</span>); <span class="cmt">// logs just 10, then stops</span>
+
+<span class="cmt">// Classic use case: prompt until valid input</span>
+<span class="kw">let</span> answer;
+<span class="kw">do</span> {
+  answer = <span class="fn">prompt</span>(<span class="str">"Enter a number between 1 and 10:"</span>);
+} <span class="kw">while</span> (answer &lt; <span class="num">1</span> || answer &gt; <span class="num">10</span>);
+<span class="fn">console</span>.log(<span class="str">"You entered:"</span>, answer);</code></pre>
+
+  <div class="callout info">
+    <strong>When to Use do...while</strong>
+    When the action must happen at least once before you can know whether to continue — like showing a form before validating, or making a first network request before checking whether to retry.
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. <code>for...of</code> Loop — Modern Default for Arrays</h2>
+
+  <p><code>for...of</code> iterates over any <em>iterable</em> — arrays, strings, Maps, Sets, NodeLists — giving you the <strong>values</strong> directly. Prefer this over classic <code>for</code> loops when you do not need the index.</p>
+
+  <pre><code><span class="cmt">// Iterating array values</span>
+<span class="kw">const</span> scores = [<span class="num">88</span>, <span class="num">92</span>, <span class="num">75</span>, <span class="num">96</span>];
+<span class="kw">for</span> (<span class="kw">const</span> score <span class="kw">of</span> scores) {
+  <span class="fn">console</span>.log(score); <span class="cmt">// 88, 92, 75, 96</span>
+}
+
+<span class="cmt">// Getting both index and value with .entries()</span>
+<span class="kw">for</span> (<span class="kw">const</span> [i, score] <span class="kw">of</span> scores.<span class="fn">entries</span>()) {
+  <span class="fn">console</span>.log(<span class="str">`#${i + 1}: ${score}`</span>); <span class="cmt">// "#1: 88", "#2: 92", ...</span>
+}
+
+<span class="cmt">// Works on strings — iterates characters</span>
+<span class="kw">for</span> (<span class="kw">const</span> ch <span class="kw">of</span> <span class="str">"hello"</span>) {
+  <span class="fn">console</span>.log(ch); <span class="cmt">// 'h', 'e', 'l', 'l', 'o'</span>
+}
+
+<span class="cmt">// Works on Map — gives [key, value] pairs</span>
+<span class="kw">const</span> userRoles = <span class="kw">new</span> <span class="typ">Map</span>([
+  [<span class="str">"Karan"</span>, <span class="str">"admin"</span>],
+  [<span class="str">"Priya"</span>, <span class="str">"editor"</span>],
+]);
+<span class="kw">for</span> (<span class="kw">const</span> [name, role] <span class="kw">of</span> userRoles) {
+  <span class="fn">console</span>.log(<span class="str">`${name} is ${role}`</span>);
+}
+
+<span class="cmt">// Works on Set — unique values</span>
+<span class="kw">const</span> unique = <span class="kw">new</span> <span class="typ">Set</span>([<span class="num">1</span>, <span class="num">2</span>, <span class="num">2</span>, <span class="num">3</span>]);
+<span class="kw">for</span> (<span class="kw">const</span> val <span class="kw">of</span> unique) {
+  <span class="fn">console</span>.log(val); <span class="cmt">// 1, 2, 3 — duplicates are skipped</span>
+}</code></pre>
+
+  <div class="callout tip">
+    <strong>Default Choice</strong>
+    In modern JS, reach for <code>for...of</code> first when iterating arrays. Use <code>for</code> (classic) only when you specifically need the numeric index for reasons beyond reading the value.
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2>5. <code>for...in</code> Loop — For Objects, Use Carefully</h2>
+
+  <p><code>for...in</code> iterates over the <strong>enumerable property keys</strong> of an object. It is designed for plain objects — not arrays.</p>
+
+  <pre><code><span class="cmt">// for...in on an object — gets keys as strings</span>
+<span class="kw">const</span> person = { name: <span class="str">"Karan"</span>, age: <span class="num">22</span>, city: <span class="str">"Delhi"</span> };
+
+<span class="kw">for</span> (<span class="kw">const</span> key <span class="kw">in</span> person) {
+  <span class="fn">console</span>.log(key, person[key]);
+  <span class="cmt">// "name" "Karan"</span>
+  <span class="cmt">// "age"  22</span>
+  <span class="cmt">// "city" "Delhi"</span>
+}
+
+<span class="cmt">// Safer: use Object.keys(), Object.values(), Object.entries()</span>
+<span class="kw">for</span> (<span class="kw">const</span> [key, val] <span class="kw">of</span> <span class="typ">Object</span>.<span class="fn">entries</span>(person)) {
+  <span class="fn">console</span>.log(<span class="str">`${key}: ${val}`</span>);
+}</code></pre>
+
+  <pre><code><span class="cmt">// WHY for...in is dangerous on arrays</span>
+<span class="kw">const</span> arr = [<span class="str">"a"</span>, <span class="str">"b"</span>, <span class="str">"c"</span>];
+arr.customProp = <span class="str">"oops"</span>; <span class="cmt">// someone added a property to the array object</span>
+
+<span class="kw">for</span> (<span class="kw">const</span> key <span class="kw">in</span> arr) {
+  <span class="fn">console</span>.log(key); <span class="cmt">// "0", "1", "2", "customProp" ← unexpected!</span>
+}
+<span class="cmt">// Keys are STRINGS, and inherited or custom properties show up too</span>
+
+<span class="cmt">// Also inherits from the prototype chain:</span>
+<span class="cmt">// hasOwnProperty guard (old approach)</span>
+<span class="kw">for</span> (<span class="kw">const</span> key <span class="kw">in</span> person) {
+  <span class="kw">if</span> (person.<span class="fn">hasOwnProperty</span>(key)) { <span class="cmt">// skip inherited properties</span>
+    <span class="fn">console</span>.log(key);
+  }
+}</code></pre>
+
+  <div class="callout danger">
+    <strong>Never use for...in on arrays</strong>
+    It gives you string keys ("0", "1", "2"), iterates any extra properties added to the array, and may include inherited prototype properties. Use <code>for...of</code> or <code>forEach</code> for arrays. Use <code>Object.keys()</code>/<code>Object.entries()</code> for objects.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. <code>break</code> and <code>continue</code></h2>
+
+  <pre><code><span class="cmt">// break — exit the loop immediately</span>
+<span class="kw">const</span> users = [<span class="str">"alice"</span>, <span class="str">"bob"</span>, <span class="str">"karan"</span>, <span class="str">"diana"</span>];
+<span class="kw">let</span> found = <span class="kw">null</span>;
+
+<span class="kw">for</span> (<span class="kw">const</span> user <span class="kw">of</span> users) {
+  <span class="kw">if</span> (user === <span class="str">"karan"</span>) {
+    found = user;
+    <span class="kw">break</span>; <span class="cmt">// stop looping — no need to check the rest</span>
+  }
+}
+<span class="fn">console</span>.log(found); <span class="cmt">// "karan"</span>
+
+<span class="cmt">// continue — skip to the next iteration</span>
+<span class="kw">const</span> numbers = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>];
+<span class="kw">for</span> (<span class="kw">const</span> n <span class="kw">of</span> numbers) {
+  <span class="kw">if</span> (n % <span class="num">2</span> === <span class="num">0</span>) <span class="kw">continue</span>; <span class="cmt">// skip even numbers</span>
+  <span class="fn">console</span>.log(n); <span class="cmt">// 1, 3, 5</span>
+}</code></pre>
+
+  <pre><code><span class="cmt">// Labeled break — exit an OUTER loop from an inner loop</span>
+<span class="cmt">// (Rarely needed — use with a comment explaining why)</span>
+<span class="fn">outer</span>: <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i &lt; <span class="num">3</span>; i++) {
+  <span class="kw">for</span> (<span class="kw">let</span> j = <span class="num">0</span>; j &lt; <span class="num">3</span>; j++) {
+    <span class="kw">if</span> (i === <span class="num">1</span> &amp;&amp; j === <span class="num">1</span>) {
+      <span class="kw">break</span> <span class="fn">outer</span>; <span class="cmt">// exits both loops at once</span>
+    }
+    <span class="fn">console</span>.log(i, j);
+  }
+}
+<span class="cmt">// Logs: 0 0, 0 1, 0 2, 1 0 — then stops entirely</span></code></pre>
+
+  <!-- SECTION 7 -->
+  <h2>7. Choosing the Right Loop</h2>
+
+  <table>
+    <thead>
+      <tr><th>Loop</th><th>Best For</th><th>Gets Values?</th><th>Gets Keys/Index?</th><th>Works On</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>for</code></td><td>Known count, need index</td><td>Via <code>arr[i]</code></td><td>Yes — <code>i</code></td><td>Arrays, any counter</td></tr>
+      <tr><td><code>while</code></td><td>Unknown count, condition-driven</td><td>Manually</td><td>Manually</td><td>Anything</td></tr>
+      <tr><td><code>do...while</code></td><td>Must run at least once</td><td>Manually</td><td>Manually</td><td>Anything</td></tr>
+      <tr><td><code>for...of</code></td><td>Iterating values of an iterable</td><td>Yes — directly</td><td>Via <code>.entries()</code></td><td>Arrays, strings, Map, Set</td></tr>
+      <tr><td><code>for...in</code></td><td>Object property keys</td><td>Via <code>obj[key]</code></td><td>Yes — keys (strings)</td><td>Objects (avoid on arrays)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout tip">
+    <strong>forEach Preview</strong>
+    Arrays also have a <code>.forEach(callback)</code> method — it is effectively a <code>for...of</code> loop but as a function call. You will cover it in Lesson 11 (Array Higher-Order Methods). Note: <code>forEach</code> cannot be exited with <code>break</code> — use <code>for...of</code> when you need to break early.
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">⚡ Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. Which loop always executes its body at least once?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> for</label>
+        <label class="option"><input type="radio" name="q1" value="b"> while</label>
+        <label class="option"><input type="radio" name="q1" value="c"> do...while</label>
+        <label class="option"><input type="radio" name="q1" value="d"> for...of</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','c','do...while checks its condition AFTER the body runs — not before. So the body always executes at least once, even if the condition is false from the start. Every other loop checks the condition before the first iteration.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What does <code>for...of</code> give you on each iteration?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> The index (numeric position)</label>
+        <label class="option"><input type="radio" name="q2" value="b"> The key (as a string)</label>
+        <label class="option"><input type="radio" name="q2" value="c"> The value of each element</label>
+        <label class="option"><input type="radio" name="q2" value="d"> A [key, value] pair</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','for...of iterates over the VALUES of any iterable. For an array [10, 20, 30], each iteration gives you 10, then 20, then 30. If you need both index and value, use arr.entries() which yields [index, value] pairs.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What does <code>for...in</code> iterate over?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> The values of an array</label>
+        <label class="option"><input type="radio" name="q3" value="b"> The enumerable property keys of an object (as strings)</label>
+        <label class="option"><input type="radio" name="q3" value="c"> The characters of a string</label>
+        <label class="option"><input type="radio" name="q3" value="d"> The entries of a Map</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','b','for...in iterates over the enumerable property KEYS of an object, giving each key as a string. For an object {a: 1, b: 2}, you get &quot;a&quot; then &quot;b&quot;. It also traverses the prototype chain, which is why hasOwnProperty checks are often needed.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What does <code>continue</code> do inside a loop?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> Exits the loop entirely</label>
+        <label class="option"><input type="radio" name="q4" value="b"> Pauses the loop and waits</label>
+        <label class="option"><input type="radio" name="q4" value="c"> Skips the rest of the current iteration and jumps to the next one</label>
+        <label class="option"><input type="radio" name="q4" value="d"> Restarts the loop from the beginning</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','c','continue skips the remaining code in the current iteration and jumps to the next iteration (or the update step in a classic for loop). It does NOT exit the loop — that is what break does.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. What does each iteration of <code>for (const ch of "hello")</code> produce?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> The Unicode code point of each character</label>
+        <label class="option"><input type="radio" name="q5" value="b"> An index number</label>
+        <label class="option"><input type="radio" name="q5" value="c"> The individual characters: 'h', 'e', 'l', 'l', 'o'</label>
+        <label class="option"><input type="radio" name="q5" value="d"> The entire string on every iteration</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','Strings are iterable in JavaScript. for...of on a string gives you one character per iteration — as a string of length 1. This correctly handles multi-byte Unicode characters (emoji, etc.) better than indexing with [i].')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. Why is <code>for...in</code> dangerous on arrays?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> It is slower than for...of</label>
+        <label class="option"><input type="radio" name="q6" value="b"> It iterates string keys ("0", "1") and may include inherited prototype properties or custom properties added to the array</label>
+        <label class="option"><input type="radio" name="q6" value="c"> It throws a TypeError on arrays</label>
+        <label class="option"><input type="radio" name="q6" value="d"> It only works on the first 10 elements</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','b','for...in gives you array indices as strings, not numbers. Worse, if anyone added a property to the array object (like arr.customProp), or if the Array prototype has been extended, those show up too. Use for...of for arrays — always.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Arrays: Basics &amp; Core Methods</strong> — creating arrays, mutating methods (push/pop/splice), non-mutating methods (slice/concat), searching, sorting, and spreading. Arrays are everywhere in real JS code.</p>
+
+  <div class="teacher-note">
+    Questions? Ask your teacher agent anything unclear. Just type your question.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 04 — Loops</div>
+    <div class="nav-links">
+      <a href="./0003-functions.html">← Prev: Functions</a>
+      <a href="./0005-arrays-basics.html">Next: Arrays: Basics →</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

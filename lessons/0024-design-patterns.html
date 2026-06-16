@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 24 — Design Patterns in JavaScript</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 24 of 30</div>
+    <h1>Design Patterns in JavaScript</h1>
+    <p class="subtitle">Named solutions to recurring problems — every senior dev speaks this language.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read this <em>after</em> the lesson:
+    <a href="https://www.patterns.dev" target="_blank">patterns.dev</a> — an excellent, JS-specific patterns reference with modern examples including React patterns. Start with the Design Patterns section.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. What Are Design Patterns?</h2>
+
+  <p>Design patterns are <strong>reusable solutions to commonly occurring software design problems</strong>. They're not code you copy-paste — they're <em>conceptual templates</em>: proven approaches you adapt to your situation.</p>
+
+  <p>They matter in your career for two reasons:</p>
+  <ol>
+    <li><strong>Shared vocabulary.</strong> When a senior engineer says "that's a Strategy pattern" or "use an EventEmitter here", you need to know what they mean — and be able to say it yourself.</li>
+    <li><strong>Proven structure.</strong> When you recognize a pattern, you avoid reinventing the wheel and avoid the specific mistakes that pattern was designed to prevent.</li>
+  </ol>
+
+  <table>
+    <thead>
+      <tr><th>Category</th><th>What it covers</th><th>Examples</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Creational</td><td>How objects are created</td><td>Singleton, Factory, Builder</td></tr>
+      <tr><td>Structural</td><td>How objects are composed</td><td>Module, Decorator, Adapter, Facade</td></tr>
+      <tr><td>Behavioral</td><td>How objects communicate</td><td>Observer, Strategy, Command, Iterator</td></tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 2 -->
+  <h2>2. Module Pattern</h2>
+
+  <p>The Module pattern creates <strong>private state</strong> using closures and exposes only a public API. Before ES modules existed, this was <em>the</em> way to encapsulate code in JavaScript.</p>
+
+<pre><code><span class="cmt">// Classic Module Pattern (IIFE + closure)</span>
+<span class="kw">const</span> Counter = (<span class="kw">function</span>() {
+  <span class="cmt">// Private — not accessible from outside</span>
+  <span class="kw">let</span> count = <span class="num">0</span>;
+
+  <span class="kw">function</span> <span class="fn">validate</span>(n) {
+    <span class="kw">return</span> <span class="kw">typeof</span> n === <span class="str">'number'</span>;
+  }
+
+  <span class="cmt">// Public API — returned object</span>
+  <span class="kw">return</span> {
+    <span class="fn">increment</span>() { count++; },
+    <span class="fn">decrement</span>() { count = <span class="fn">Math</span>.max(<span class="num">0</span>, count - <span class="num">1</span>); },
+    <span class="fn">add</span>(n) { <span class="kw">if</span> (<span class="fn">validate</span>(n)) count += n; },
+    <span class="fn">getCount</span>() { <span class="kw">return</span> count; }
+  };
+})(); <span class="cmt">// IIFE — immediately invoked</span>
+
+<span class="typ">Counter</span>.<span class="fn">increment</span>();
+<span class="typ">Counter</span>.<span class="fn">increment</span>();
+<span class="fn">console</span>.log(<span class="typ">Counter</span>.<span class="fn">getCount</span>()); <span class="cmt">// 2</span>
+<span class="fn">console</span>.log(<span class="typ">Counter</span>.count);       <span class="cmt">// undefined — private!</span>
+
+<span class="cmt">// Modern equivalent: ES module (use this in new code)</span>
+<span class="cmt">// counter.js</span>
+<span class="kw">let</span> count = <span class="num">0</span>;
+<span class="kw">export const</span> <span class="fn">increment</span> = () =&gt; count++;
+<span class="kw">export const</span> <span class="fn">getCount</span> = () =&gt; count;</code></pre>
+
+  <!-- SECTION 3 -->
+  <h2>3. Singleton Pattern</h2>
+
+  <p>The Singleton ensures that <strong>only one instance</strong> of something is ever created. Subsequent calls return the same instance.</p>
+
+<pre><code><span class="cmt">// Singleton using a closure</span>
+<span class="kw">const</span> AppConfig = (<span class="kw">function</span>() {
+  <span class="kw">let</span> instance; <span class="cmt">// stored in closure — private</span>
+
+  <span class="kw">function</span> <span class="fn">createInstance</span>() {
+    <span class="kw">return</span> {
+      apiUrl: <span class="str">'https://api.example.com'</span>,
+      timeout: <span class="num">5000</span>,
+      debug: <span class="kw">false</span>
+    };
+  }
+
+  <span class="kw">return</span> {
+    <span class="fn">getInstance</span>() {
+      <span class="kw">if</span> (!instance) {
+        instance = <span class="fn">createInstance</span>(); <span class="cmt">// create once</span>
+      }
+      <span class="kw">return</span> instance; <span class="cmt">// return cached forever after</span>
+    }
+  };
+})();
+
+<span class="kw">const</span> cfg1 = <span class="typ">AppConfig</span>.<span class="fn">getInstance</span>();
+<span class="kw">const</span> cfg2 = <span class="typ">AppConfig</span>.<span class="fn">getInstance</span>();
+<span class="fn">console</span>.log(cfg1 === cfg2); <span class="cmt">// true — same object</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Singletons and testing don't mix well</strong>
+    Because a singleton holds global state, tests that run in sequence can bleed state into each other. It's fine for app-wide config, but use dependency injection instead of singletons for services that need to be mockable in tests.
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. Observer / Pub-Sub Pattern</h2>
+
+  <p>One of the most important patterns in front-end development. It decouples <em>producers</em> of events from <em>consumers</em>.</p>
+
+  <p><strong>Observer</strong>: the subject (publisher) directly calls methods on its observers. They know each other.<br>
+  <strong>Pub-Sub</strong>: events travel through a broker/event bus. Publisher and subscriber never reference each other directly — fully decoupled.</p>
+
+<pre><code><span class="cmt">// Simple EventEmitter (pub-sub broker)</span>
+<span class="kw">class</span> <span class="typ">EventEmitter</span> {
+  <span class="fn">constructor</span>() {
+    <span class="kw">this</span>.events = {}; <span class="cmt">// { eventName: [handler, handler, ...] }</span>
+  }
+
+  <span class="fn">on</span>(event, handler) {
+    <span class="kw">if</span> (!<span class="kw">this</span>.events[event]) <span class="kw">this</span>.events[event] = [];
+    <span class="kw">this</span>.events[event].<span class="fn">push</span>(handler);
+    <span class="kw">return</span> <span class="kw">this</span>; <span class="cmt">// chainable</span>
+  }
+
+  <span class="fn">off</span>(event, handler) {
+    <span class="kw">if</span> (!<span class="kw">this</span>.events[event]) <span class="kw">return</span>;
+    <span class="kw">this</span>.events[event] = <span class="kw">this</span>.events[event]
+      .<span class="fn">filter</span>(h =&gt; h !== handler);
+  }
+
+  <span class="fn">emit</span>(event, data) {
+    (<span class="kw">this</span>.events[event] || []).<span class="fn">forEach</span>(h =&gt; <span class="fn">h</span>(data));
+  }
+}
+
+<span class="cmt">// Usage</span>
+<span class="kw">const</span> bus = <span class="kw">new</span> <span class="typ">EventEmitter</span>();
+
+<span class="cmt">// Subscriber A — doesn't know about B</span>
+bus.<span class="fn">on</span>(<span class="str">'userLoggedIn'</span>, ({ username }) =&gt; {
+  <span class="fn">console</span>.log(<span class="str">`Welcome, ${username}!`</span>);
+});
+
+<span class="cmt">// Subscriber B — also doesn't know about A</span>
+bus.<span class="fn">on</span>(<span class="str">'userLoggedIn'</span>, ({ username }) =&gt; {
+  <span class="fn">logToAnalytics</span>(<span class="str">'login'</span>, username);
+});
+
+<span class="cmt">// Publisher — doesn't know who's listening</span>
+bus.<span class="fn">emit</span>(<span class="str">'userLoggedIn'</span>, { username: <span class="str">'karan'</span> });
+<span class="cmt">// Both subscribers fire</span></code></pre>
+
+  <div class="callout info">
+    <strong>You already use this pattern</strong>
+    DOM's <code>addEventListener</code> is pub-sub. Node.js's <code>EventEmitter</code> is pub-sub. Redux's store subscription is observer. React's Context updates are observer. This is one of the most widely used patterns in all of software.
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2>5. Factory Pattern</h2>
+
+  <p>A Factory is a function (or method) that <strong>creates and returns objects</strong> without the caller needing to know the class or use <code>new</code>. It centralizes object creation logic and can return different types based on input.</p>
+
+<pre><code><span class="cmt">// Factory function — no 'new' required by the caller</span>
+<span class="kw">function</span> <span class="fn">createUser</span>(type, name) {
+  <span class="kw">const</span> base = {
+    name,
+    createdAt: <span class="kw">new</span> <span class="typ">Date</span>().toISOString(),
+    <span class="fn">greet</span>() { <span class="kw">return</span> <span class="str">`Hi, I'm ${<span class="kw">this</span>.name}`</span>; }
+  };
+
+  <span class="kw">if</span> (type === <span class="str">'admin'</span>) {
+    <span class="kw">return</span> { ...base, role: <span class="str">'admin'</span>, permissions: [<span class="str">'read'</span>, <span class="str">'write'</span>, <span class="str">'delete'</span>] };
+  }
+  <span class="kw">if</span> (type === <span class="str">'editor'</span>) {
+    <span class="kw">return</span> { ...base, role: <span class="str">'editor'</span>, permissions: [<span class="str">'read'</span>, <span class="str">'write'</span>] };
+  }
+  <span class="kw">return</span> { ...base, role: <span class="str">'viewer'</span>, permissions: [<span class="str">'read'</span>] };
+}
+
+<span class="kw">const</span> admin = <span class="fn">createUser</span>(<span class="str">'admin'</span>, <span class="str">'Karan'</span>);
+<span class="kw">const</span> viewer = <span class="fn">createUser</span>(<span class="str">'viewer'</span>, <span class="str">'Raj'</span>);
+
+<span class="fn">console</span>.log(admin.permissions); <span class="cmt">// ['read', 'write', 'delete']</span>
+<span class="fn">console</span>.log(admin.<span class="fn">greet</span>());    <span class="cmt">// "Hi, I'm Karan"</span></code></pre>
+
+  <div class="callout tip">
+    <strong>Factory vs Constructor</strong>
+    Constructor functions (or classes with <code>new</code>) always return the same type of object. Factories can return different shapes based on input, can return objects that have already been created (caching), and don't require the <code>new</code> keyword — which means no errors if the caller forgets it.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. Strategy Pattern</h2>
+
+  <p>The Strategy pattern defines a <strong>family of interchangeable algorithms</strong> (strategies) and lets you swap between them at runtime — without changing the code that uses them.</p>
+
+  <p>It eliminates long <code>if/else</code> or <code>switch</code> chains that select behavior, replacing them with objects you swap in.</p>
+
+<pre><code><span class="cmt">// Without Strategy — messy and hard to extend</span>
+<span class="kw">function</span> <span class="fn">processPayment</span>(amount, method) {
+  <span class="kw">if</span> (method === <span class="str">'stripe'</span>) { <span class="cmt">/* stripe logic */</span> }
+  <span class="kw">else if</span> (method === <span class="str">'paypal'</span>) { <span class="cmt">/* paypal logic */</span> }
+  <span class="kw">else if</span> (method === <span class="str">'crypto'</span>) { <span class="cmt">/* crypto logic */</span> }
+  <span class="cmt">// Adding a 4th method means editing this function</span>
+}
+
+<span class="cmt">// With Strategy — each algorithm is its own object</span>
+<span class="kw">const</span> paymentStrategies = {
+  stripe: {
+    <span class="fn">pay</span>(amount) { <span class="fn">console</span>.log(<span class="str">`Stripe: charged $${amount}`</span>); }
+  },
+  paypal: {
+    <span class="fn">pay</span>(amount) { <span class="fn">console</span>.log(<span class="str">`PayPal: sent $${amount}`</span>); }
+  },
+  crypto: {
+    <span class="fn">pay</span>(amount) { <span class="fn">console</span>.log(<span class="str">`Crypto: transferred $${amount} in BTC`</span>); }
+  }
+};
+
+<span class="kw">function</span> <span class="fn">processPayment</span>(amount, method) {
+  <span class="kw">const</span> strategy = paymentStrategies[method];
+  <span class="kw">if</span> (!strategy) <span class="kw">throw new</span> <span class="typ">Error</span>(<span class="str">`Unknown payment method: ${method}`</span>);
+  strategy.<span class="fn">pay</span>(amount);
+}
+
+<span class="fn">processPayment</span>(<span class="num">99</span>, <span class="str">'stripe'</span>);  <span class="cmt">// "Stripe: charged $99"</span>
+<span class="fn">processPayment</span>(<span class="num">99</span>, <span class="str">'paypal'</span>);  <span class="cmt">// "PayPal: sent $99"</span>
+<span class="cmt">// Adding a 4th: just add to the object — no if/else changes needed</span></code></pre>
+
+  <!-- SECTION 7 -->
+  <h2>7. Anti-Patterns to Avoid</h2>
+
+  <p>An anti-pattern is a common response to a recurring problem that seems reasonable but makes things worse. Knowing them is as important as knowing the patterns.</p>
+
+  <table>
+    <thead>
+      <tr><th>Anti-pattern</th><th>What it looks like</th><th>The problem</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>God Object</td><td>One class/module that handles everything: auth, UI, data, networking</td><td>Violates single responsibility; impossible to test or maintain</td></tr>
+      <tr><td>Callback Hell</td><td>Deeply nested callbacks: <code>a(b(c(d(e()))))</code></td><td>Unreadable, error-prone; use async/await instead</td></tr>
+      <tr><td>Global Namespace Pollution</td><td>Attaching everything to <code>window</code>: <code>window.myApp = ...</code></td><td>Name collisions, hard to debug, tight coupling</td></tr>
+      <tr><td>Premature Optimization</td><td>Spending hours optimizing code that isn't a bottleneck</td><td>"Premature optimization is the root of all evil" — Knuth. Profile first.</td></tr>
+      <tr><td>Spaghetti Code</td><td>No structure, logic scattered everywhere, no separation of concerns</td><td>Unmaintainable; every change breaks something else</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout danger">
+    <strong>The God Object is the most common senior-dev red flag</strong>
+    In code reviews, one of the first things a senior engineer looks for is a class or file that's doing too much. If your <code>App.js</code> imports 40 things and has 1000 lines, that's a God Object. Break it up by concern — each module should have one clear job.
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Try to recall from memory before reading the options.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What is the Singleton pattern used for?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> Creating a new object every time a factory function is called</label>
+        <label class="option"><input type="radio" name="q1" value="b"> Ensuring only one instance of something exists — used for shared state like configs or connection pools</label>
+        <label class="option"><input type="radio" name="q1" value="c"> Allowing multiple subscribers to listen to a single event source</label>
+        <label class="option"><input type="radio" name="q1" value="d"> Swapping algorithms at runtime without changing the calling code</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','The Singleton pattern ensures that only ONE instance is ever created. Subsequent calls to getInstance() return the same cached object. Classic use cases: app-wide config objects, database connection pools, logging services.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What is the core mechanism that makes the Module pattern work?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> Prototype chains — private methods live on the prototype</label>
+        <label class="option"><input type="radio" name="q2" value="b"> ES module <code>export</code> keywords</label>
+        <label class="option"><input type="radio" name="q2" value="c"> Closures — inner functions retain access to the private variables of the outer function even after it returns</label>
+        <label class="option"><input type="radio" name="q2" value="d"> WeakMaps that hold private state keyed to the instance</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','The Module pattern uses an IIFE to create a scope. Private variables live in that scope. The returned public API (inner functions) close over those variables — they can read and write them via closure, but outside code cannot access them directly.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What is the difference between the Observer pattern and Pub-Sub?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> They are identical — just different names for the same thing</label>
+        <label class="option"><input type="radio" name="q3" value="b"> Observer: subject directly notifies observers (coupled); Pub-Sub: events go through a broker/bus (decoupled)</label>
+        <label class="option"><input type="radio" name="q3" value="c"> Pub-Sub is synchronous; Observer is asynchronous</label>
+        <label class="option"><input type="radio" name="q3" value="d"> Observer is a Creational pattern; Pub-Sub is a Structural pattern</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','b','In Observer, the subject holds references to its observers and calls them directly — they are coupled. In Pub-Sub, the publisher and subscriber never reference each other; events flow through an intermediary message broker. Pub-Sub is more decoupled and scales better across large applications.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What does a Factory pattern do?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> Ensures only one instance of a class is created</label>
+        <label class="option"><input type="radio" name="q4" value="b"> Adds methods to an object after it's created</label>
+        <label class="option"><input type="radio" name="q4" value="c"> Creates and returns objects without the caller needing to know the class or use <code>new</code> directly</label>
+        <label class="option"><input type="radio" name="q4" value="d"> Converts one interface to another that the client expects</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','c','A Factory centralizes object creation. The caller says what it wants (e.g. createUser(\"admin\", \"Karan\")), and the factory decides how to create it — which shape, which methods, maybe from cache. The caller doesn\'t need to know about classes or constructors.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. In the Strategy pattern, what do you swap at runtime?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> The object's prototype</label>
+        <label class="option"><input type="radio" name="q5" value="b"> The algorithm (strategy) — same interface, different implementation</label>
+        <label class="option"><input type="radio" name="q5" value="c"> The event handlers attached to the object</label>
+        <label class="option"><input type="radio" name="q5" value="d"> The database connection being used</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','b','Strategy lets you define a family of algorithms that all share the same interface (e.g., they all have a .pay() method), then select which one to use at runtime. This replaces if/else chains and makes adding new strategies trivial — just add a new object.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What is the "God Object" anti-pattern?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> An object that uses too much memory at runtime</label>
+        <label class="option"><input type="radio" name="q6" value="b"> An object attached to the global <code>window</code> scope</label>
+        <label class="option"><input type="radio" name="q6" value="c"> A single object that knows about and does too much — violates single responsibility and is hard to maintain or test</label>
+        <label class="option"><input type="radio" name="q6" value="d"> A class that inherits from more than two parent classes</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','c','A God Object is a module or class that has grown to handle everything. It\'s the opposite of the Single Responsibility Principle. It\'s hard to test (too many dependencies), hard to change (everything depends on it), and impossible for new team members to understand quickly.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Iterators, Generators &amp; Symbols</strong> — JavaScript's metaprogramming tools. These are senior-level topics that appear in framework internals, interview questions, and real production code. The <code>Symbol.iterator</code> protocol is what makes <code>for...of</code> work.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Design patterns become natural only through practice. Ask your teacher agent: "Show me a scenario where I'd choose Strategy over a simple if/else" or "When does Observer become Pub-Sub in a real codebase?" — working through real decisions is how this solidifies.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 24 — Design Patterns in JavaScript</div>
+    <div class="nav-links">
+      <a href="./0023-functional-programming.html">← Previous: Functional Programming</a>
+      <a href="./0025-iterators-generators-symbols.html">Next: Iterators, Generators &amp; Symbols →</a>
+      <a href="https://www.patterns.dev" target="_blank">patterns.dev ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

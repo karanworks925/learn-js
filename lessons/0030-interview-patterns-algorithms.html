@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 30 — Interview Patterns &amp; Algorithm Fundamentals</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+
+    .capstone-banner {
+      background: linear-gradient(135deg, #1e1e2e 0%, #2d2b55 100%);
+      color: #cdd6f4;
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 2rem 0;
+      text-align: center;
+    }
+    .capstone-banner h2 {
+      border: none;
+      color: #f9e2af;
+      margin: 0 0 0.5rem;
+      font-size: 1.5rem;
+    }
+    .capstone-banner p {
+      color: #a6adc8;
+      margin: 0;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 30 of 30</div>
+    <h1>Interview Patterns &amp; Algorithm Fundamentals</h1>
+    <p class="subtitle">You made it. Now let's make sure you can prove it in an interview.</p>
+  </header>
+
+  <div class="capstone-banner">
+    <h2>Lesson 30 of 30 — The Capstone</h2>
+    <p>This is the final lesson of the JavaScript Mastery series. Everything before this has built toward this moment. Read carefully, practice the code, and walk into your interviews with confidence.</p>
+  </div>
+
+  <div class="primary-source">
+    <strong>Primary Sources for this lesson</strong>
+    Practice problems after this lesson:
+    <a href="https://neetcode.io" target="_blank">NeetCode.io</a> (structured roadmap) and
+    <a href="https://javascript.info" target="_blank">javascript.info</a> (language reference).
+    NeetCode's roadmap is the most efficient path to interview-ready algorithm skills.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. How to Approach a Coding Interview</h2>
+
+  <p>The code is only half of what you're being evaluated on. Interviewers also assess your communication, your ability to handle ambiguity, and your engineering judgment. Never write code in silence.</p>
+
+  <ol>
+    <li><strong>Clarify the problem.</strong> Ask questions before touching the keyboard. What are the constraints? What's the expected input/output? Are there edge cases? What about empty input, duplicates, very large inputs?</li>
+    <li><strong>Work through examples aloud.</strong> Pick a small concrete example and trace through it manually. This surfaces misunderstandings before you write code.</li>
+    <li><strong>State your approach before coding.</strong> "I'm going to use a hash map to get O(n) time. The trade-off is O(n) space." The interviewer may guide you if you're heading somewhere wrong.</li>
+    <li><strong>Code the solution, narrating as you go.</strong> "I'm creating a set to track seen values... here I'm iterating... this condition handles the edge case where..."</li>
+    <li><strong>Test with edge cases.</strong> After your solution works on the happy path, manually trace through: empty input, single element, negative numbers, duplicates.</li>
+    <li><strong>Analyze time and space complexity.</strong> State Big-O proactively. If you can optimize, say so: "This is O(n²) — I could improve it to O(n) with a hash map if needed."</li>
+  </ol>
+
+  <div class="callout danger">
+    <strong>The #1 Interview Mistake</strong>
+    Jumping straight to code without clarifying the problem. Candidates who start coding immediately frequently solve the wrong problem, or solve a simpler version of the real problem. Ask questions. It signals seniority, not uncertainty.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. Big-O in JavaScript Context</h2>
+
+  <p>Big-O is the language of complexity. You need to be able to state it quickly and correctly for any code you write.</p>
+
+  <table>
+    <thead>
+      <tr><th>Complexity</th><th>Name</th><th>JavaScript Examples</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>O(1)</code></td><td>Constant</td><td>Object property access <code>obj.key</code>, array index <code>arr[i]</code>, Map.get(), Set.has()</td></tr>
+      <tr><td><code>O(log n)</code></td><td>Logarithmic</td><td>Binary search on sorted array</td></tr>
+      <tr><td><code>O(n)</code></td><td>Linear</td><td><code>.find()</code>, <code>.includes()</code>, <code>.filter()</code>, <code>.map()</code>, <code>.forEach()</code>, <code>.reduce()</code></td></tr>
+      <tr><td><code>O(n log n)</code></td><td>Linearithmic</td><td><code>.sort()</code> — V8 uses TimSort</td></tr>
+      <tr><td><code>O(n²)</code></td><td>Quadratic</td><td>Nested loops over the same array</td></tr>
+      <tr><td><code>O(2ⁿ)</code></td><td>Exponential</td><td>Naive recursive Fibonacci, power sets</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <strong>The Array.includes() Trap</strong>
+    Using <code>arr.includes(val)</code> inside a loop is O(n²) — it's a linear scan inside a linear loop. Replace the array with a <code>Set</code> or <code>Map</code> and the lookup drops to O(1), making the whole thing O(n). This swap comes up in almost every interview.
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. The Hash Map Pattern — O(1) Lookups</h2>
+
+  <p>The most important interview pattern. When you find yourself doing a nested loop to find pairs or check for previous values, stop — you almost certainly want a Map.</p>
+
+  <h3>Classic Problem: Two Sum</h3>
+  <p>Given an array of integers and a target, find the indices of two numbers that add up to the target.</p>
+
+  <pre><code><span class="cmt">// NAIVE: O(n²) — check every pair</span>
+<span class="kw">function</span> <span class="fn">twoSumNaive</span>(nums, target) {
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < nums.length; i++) {
+    <span class="kw">for</span> (<span class="kw">let</span> j = i + <span class="num">1</span>; j < nums.length; j++) {
+      <span class="kw">if</span> (nums[i] + nums[j] === target) {
+        <span class="kw">return</span> [i, j];
+      }
+    }
+  }
+}
+
+<span class="cmt">// OPTIMAL: O(n) — use a Map to track seen numbers</span>
+<span class="kw">function</span> <span class="fn">twoSum</span>(nums, target) {
+  <span class="kw">const</span> seen = <span class="kw">new</span> <span class="typ">Map</span>(); <span class="cmt">// value → index</span>
+
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < nums.length; i++) {
+    <span class="kw">const</span> complement = target - nums[i];
+
+    <span class="kw">if</span> (seen.<span class="fn">has</span>(complement)) {
+      <span class="kw">return</span> [seen.<span class="fn">get</span>(complement), i]; <span class="cmt">// found it!</span>
+    }
+
+    seen.<span class="fn">set</span>(nums[i], i); <span class="cmt">// remember this number and its index</span>
+  }
+}
+
+<span class="cmt">// Example:</span>
+<span class="fn">twoSum</span>([<span class="num">2</span>, <span class="num">7</span>, <span class="num">11</span>, <span class="num">15</span>], <span class="num">9</span>); <span class="cmt">// [0, 1] — 2 + 7 = 9</span>
+<span class="fn">twoSum</span>([<span class="num">3</span>, <span class="num">2</span>, <span class="num">4</span>], <span class="num">6</span>);        <span class="cmt">// [1, 2] — 2 + 4 = 6</span></code></pre>
+
+  <div class="callout tip">
+    <strong>The Pattern</strong>
+    For each element, ask: "have I seen the number I need to pair with this?" Store what you've seen in a Map. One pass, O(n) time, O(n) space. This pattern solves dozens of interview problems.
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. Two Pointers Pattern</h2>
+
+  <p>Use two pointers when you need to compare or operate on pairs of elements — especially in sorted arrays or strings. Often converts an O(n²) solution to O(n).</p>
+
+  <pre><code><span class="cmt">// Check if a string is a palindrome (reads same forwards and backwards)</span>
+<span class="kw">function</span> <span class="fn">isPalindrome</span>(s) {
+  <span class="cmt">// Normalize: lowercase, remove non-alphanumeric</span>
+  s = s.<span class="fn">toLowerCase</span>().<span class="fn">replace</span>(<span class="str">/[^a-z0-9]/g</span>, <span class="str">""</span>);
+
+  <span class="kw">let</span> left = <span class="num">0</span>;
+  <span class="kw">let</span> right = s.length - <span class="num">1</span>;
+
+  <span class="kw">while</span> (left < right) {
+    <span class="kw">if</span> (s[left] !== s[right]) <span class="kw">return</span> <span class="kw">false</span>;
+    left++;
+    right--;
+  }
+  <span class="kw">return</span> <span class="kw">true</span>;
+}
+
+<span class="fn">isPalindrome</span>(<span class="str">"A man, a plan, a canal: Panama"</span>); <span class="cmt">// true</span>
+<span class="fn">isPalindrome</span>(<span class="str">"race a car"</span>);                    <span class="cmt">// false</span></code></pre>
+
+  <div class="callout info">
+    <strong>Two Pointer Variants</strong>
+    Pointers starting at both ends (palindrome check, container with most water). Both pointers starting at the left, moving at different speeds (remove duplicates, fast/slow pointer for cycle detection). The key insight: you're avoiding the need to check every possible pair.
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2>5. Sliding Window Pattern</h2>
+
+  <p>The sliding window maintains a contiguous subarray (or substring) and slides it across the input. It converts many O(n²) brute-force solutions into O(n).</p>
+
+  <pre><code><span class="cmt">// Max sum subarray of exactly size k</span>
+<span class="kw">function</span> <span class="fn">maxSumSubarray</span>(nums, k) {
+  <span class="kw">if</span> (nums.length < k) <span class="kw">return</span> <span class="kw">null</span>;
+
+  <span class="cmt">// Build the initial window</span>
+  <span class="kw">let</span> windowSum = <span class="num">0</span>;
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < k; i++) windowSum += nums[i];
+
+  <span class="kw">let</span> maxSum = windowSum;
+
+  <span class="cmt">// Slide the window: add next element, remove first element</span>
+  <span class="kw">for</span> (<span class="kw">let</span> i = k; i < nums.length; i++) {
+    windowSum += nums[i] - nums[i - k]; <span class="cmt">// slide right</span>
+    maxSum = <span class="fn">Math</span>.<span class="fn">max</span>(maxSum, windowSum);
+  }
+
+  <span class="kw">return</span> maxSum;
+}
+
+<span class="fn">maxSumSubarray</span>([<span class="num">2</span>, <span class="num">1</span>, <span class="num">5</span>, <span class="num">1</span>, <span class="num">3</span>, <span class="num">2</span>], <span class="num">3</span>); <span class="cmt">// 9 — [5, 1, 3]</span>
+<span class="fn">maxSumSubarray</span>([<span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">5</span>], <span class="num">2</span>);       <span class="cmt">// 7 — [3, 4]</span></code></pre>
+
+  <!-- SECTION 6 -->
+  <h2>6. Classic JS-Specific Interview Questions</h2>
+
+  <p>These implementations come up in JavaScript interviews specifically — know them by heart. If asked, write them from scratch without hesitation.</p>
+
+  <h3>Debounce — Implement from Memory</h3>
+
+  <pre><code><span class="kw">function</span> <span class="fn">debounce</span>(fn, delay) {
+  <span class="kw">let</span> timer;
+  <span class="kw">return</span> <span class="kw">function</span>(...args) {
+    <span class="fn">clearTimeout</span>(timer);
+    timer = <span class="fn">setTimeout</span>(() => fn.<span class="fn">apply</span>(<span class="kw">this</span>, args), delay);
+  };
+}
+<span class="cmt">// Time: O(1) per call. Delays execution until N ms of silence.</span></code></pre>
+
+  <h3>Deep Clone an Object</h3>
+
+  <pre><code><span class="cmt">// Modern approach — handles most cases (not functions, DOM nodes, etc.):</span>
+<span class="kw">const</span> clone = <span class="fn">structuredClone</span>(obj);
+
+<span class="cmt">// JSON approach — simple but lossy (loses undefined, functions, Dates become strings):</span>
+<span class="kw">const</span> clone = <span class="fn">JSON</span>.<span class="fn">parse</span>(<span class="fn">JSON</span>.<span class="fn">stringify</span>(obj));
+
+<span class="cmt">// Manual recursive approach — demonstrates understanding:</span>
+<span class="kw">function</span> <span class="fn">deepClone</span>(obj) {
+  <span class="kw">if</span> (obj === <span class="kw">null</span> || <span class="kw">typeof</span> obj !== <span class="str">"object"</span>) <span class="kw">return</span> obj;
+  <span class="kw">if</span> (<span class="fn">Array</span>.<span class="fn">isArray</span>(obj)) <span class="kw">return</span> obj.<span class="fn">map</span>(<span class="fn">deepClone</span>);
+
+  <span class="kw">const</span> cloned = {};
+  <span class="kw">for</span> (<span class="kw">const</span> key <span class="kw">in</span> obj) {
+    <span class="kw">if</span> (obj.<span class="fn">hasOwnProperty</span>(key)) {
+      cloned[key] = <span class="fn">deepClone</span>(obj[key]);
+    }
+  }
+  <span class="kw">return</span> cloned;
+}</code></pre>
+
+  <h3>Flatten a Nested Array</h3>
+
+  <pre><code><span class="cmt">// Built-in — know this:</span>
+[<span class="num">1</span>, [<span class="num">2</span>, [<span class="num">3</span>, [<span class="num">4</span>]]]].<span class="fn">flat</span>(<span class="typ">Infinity</span>); <span class="cmt">// [1, 2, 3, 4]</span>
+
+<span class="cmt">// Recursive implementation (to show understanding):</span>
+<span class="kw">function</span> <span class="fn">flatten</span>(arr) {
+  <span class="kw">return</span> arr.<span class="fn">reduce</span>((acc, val) =>
+    <span class="fn">Array</span>.<span class="fn">isArray</span>(val) ? acc.<span class="fn">concat</span>(<span class="fn">flatten</span>(val)) : [...acc, val],
+  []);
+}
+
+<span class="fn">flatten</span>([<span class="num">1</span>, [<span class="num">2</span>, [<span class="num">3</span>, [<span class="num">4</span>]]]]); <span class="cmt">// [1, 2, 3, 4]</span></code></pre>
+
+  <h3>Implement Array.prototype.map from Scratch</h3>
+
+  <pre><code><span class="typ">Array</span>.prototype.<span class="fn">myMap</span> = <span class="kw">function</span>(fn) {
+  <span class="kw">const</span> result = [];
+  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="num">0</span>; i < <span class="kw">this</span>.length; i++) {
+    <span class="kw">if</span> (i <span class="kw">in</span> <span class="kw">this</span>) { <span class="cmt">// skip holes in sparse arrays</span>
+      result.<span class="fn">push</span>(<span class="fn">fn</span>(<span class="kw">this</span>[i], i, <span class="kw">this</span>));
+    }
+  }
+  <span class="kw">return</span> result;
+};
+
+<span class="cmt">// Verify it works:</span>
+[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>].<span class="fn">myMap</span>(x => x * <span class="num">2</span>); <span class="cmt">// [2, 4, 6]</span>
+[<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>].<span class="fn">myMap</span>((x, i) => <span class="str">`${i}:${x}`</span>); <span class="cmt">// ["0:1", "1:2", "2:3"]</span></code></pre>
+
+  <h3>Deep Equality Check</h3>
+
+  <pre><code><span class="kw">function</span> <span class="fn">deepEqual</span>(a, b) {
+  <span class="cmt">// Same reference or same primitive</span>
+  <span class="kw">if</span> (a === b) <span class="kw">return</span> <span class="kw">true</span>;
+
+  <span class="cmt">// Either is null or not an object</span>
+  <span class="kw">if</span> (a === <span class="kw">null</span> || b === <span class="kw">null</span>) <span class="kw">return</span> <span class="kw">false</span>;
+  <span class="kw">if</span> (<span class="kw">typeof</span> a !== <span class="str">"object"</span> || <span class="kw">typeof</span> b !== <span class="str">"object"</span>) <span class="kw">return</span> <span class="kw">false</span>;
+
+  <span class="kw">const</span> keysA = <span class="fn">Object</span>.<span class="fn">keys</span>(a);
+  <span class="kw">const</span> keysB = <span class="fn">Object</span>.<span class="fn">keys</span>(b);
+
+  <span class="cmt">// Different number of keys</span>
+  <span class="kw">if</span> (keysA.length !== keysB.length) <span class="kw">return</span> <span class="kw">false</span>;
+
+  <span class="cmt">// Recursively compare all keys</span>
+  <span class="kw">return</span> keysA.<span class="fn">every</span>(key => <span class="fn">deepEqual</span>(a[key], b[key]));
+}
+
+<span class="fn">deepEqual</span>({ a: <span class="num">1</span>, b: { c: <span class="num">2</span> } }, { a: <span class="num">1</span>, b: { c: <span class="num">2</span> } }); <span class="cmt">// true</span>
+<span class="fn">deepEqual</span>({ a: <span class="num">1</span> }, { a: <span class="num">2</span> });                           <span class="cmt">// false</span></code></pre>
+
+  <!-- SECTION 7 -->
+  <h2>7. What Separates Junior from Senior in Interviews</h2>
+
+  <p>The difference is rarely about knowing more algorithms. It's about the approach, communication, and depth of thinking.</p>
+
+  <table>
+    <thead>
+      <tr><th>Junior Behavior</th><th>Senior Behavior</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>"It works" — done</td><td>"Here are the tradeoffs between the approaches"</td></tr>
+      <tr><td>Starts coding immediately</td><td>Asks about constraints and edge cases first</td></tr>
+      <tr><td>Solves the example given</td><td>Considers empty input, large N, duplicate values</td></tr>
+      <tr><td>Doesn't mention complexity</td><td>States Big-O proactively, discusses space vs time</td></tr>
+      <tr><td>Code is clever</td><td>Code is readable — simple names, clear structure</td></tr>
+      <tr><td>Gets stuck silently</td><td>Narrates thinking even when uncertain</td></tr>
+      <tr><td>Accepts the first solution</td><td>Asks "can I optimize this further?"</td></tr>
+      <tr><td>Doesn't know when to stop</td><td>Recognizes over-engineering and chooses simplicity</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout tip">
+    <strong>Interview Readiness Checklist</strong>
+    Can you implement debounce, deep clone, flatten, and myMap from memory? Can you state Big-O for your solution unprompted? Can you code a Two Sum in O(n) without hints? Can you explain your thinking out loud continuously? If you can do all four, you are interview-ready.
+  </div>
+
+  <div class="callout info">
+    <strong>Resources for Practice</strong>
+    <ul style="margin: 0.5rem 0 0;">
+      <li><a href="https://neetcode.io" target="_blank">NeetCode.io</a> — curated problem list with video solutions, organized by pattern</li>
+      <li><a href="https://leetcode.com" target="_blank">LeetCode</a> — largest problem bank; focus on Easy and Medium</li>
+      <li><a href="https://javascript.info" target="_blank">javascript.info</a> — deepen language fundamentals</li>
+      <li><a href="https://frontendmasters.com/courses/algorithms/" target="_blank">Frontend Masters: Algorithms</a> — taught in JS by ThePrimeagen</li>
+    </ul>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Final Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      The final quiz of the series. Don't peek. This is where everything comes together.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What data structure gives O(1) average-case lookup, and which JavaScript built-in provides it?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> Binary search tree — provided by Array.sort()</label>
+        <label class="option"><input type="radio" name="q1" value="b"> Hash map — provided by JavaScript's Map object (or plain objects with string keys)</label>
+        <label class="option"><input type="radio" name="q1" value="c"> Linked list — provided by Array</label>
+        <label class="option"><input type="radio" name="q1" value="d"> Heap — provided by Math.min()</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','Hash maps give O(1) average-case get/set/has. In JS: Map for general keys, Set for unique-value collections, plain objects for string keys. This is the most important data structure for interview optimization.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. Two Sum problem: find two numbers in an array that add to a target. What is the optimal time complexity and the data structure that achieves it?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> O(n²) — check every pair with nested loops</label>
+        <label class="option"><input type="radio" name="q2" value="b"> O(n log n) — sort first then binary search</label>
+        <label class="option"><input type="radio" name="q2" value="c"> O(n) — using a hash map to store seen numbers and check for the complement in one pass</label>
+        <label class="option"><input type="radio" name="q2" value="d"> O(log n) — binary search on the original array</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','One pass: for each number, check if (target - number) exists in the Map. If yes, you found your pair. If no, add the number to the Map. O(n) time, O(n) space — the canonical hash map pattern.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What does debounce do vs throttle?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> They are the same — just different names in different libraries</label>
+        <label class="option"><input type="radio" name="q3" value="b"> Debounce fires after calls stop for N ms; throttle fires at most once per N ms interval</label>
+        <label class="option"><input type="radio" name="q3" value="c"> Throttle fires after calls stop; debounce fires on a fixed interval</label>
+        <label class="option"><input type="radio" name="q3" value="d"> Debounce is for sync functions; throttle is for async</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','b','Debounce: waits for silence, then fires once — ideal for search inputs. Throttle: fires on a regular cadence regardless of call frequency — ideal for scroll/mousemove events. Both appear in JS interviews and take-home projects.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What does <code>[1,[2,[3,[4]]]].flat(Infinity)</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> [1, [2, [3, [4]]]] — Infinity is not a valid depth</label>
+        <label class="option"><input type="radio" name="q4" value="b"> [1, 2, [3, [4]]] — only flattens one level</label>
+        <label class="option"><input type="radio" name="q4" value="c"> [1, 2, 3, 4] — flat with Infinity fully flattens any depth of nesting</label>
+        <label class="option"><input type="radio" name="q4" value="d"> TypeError — Infinity is not a number</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','c','Array.flat(depth) flattens up to the given depth. flat(Infinity) recursively flattens all levels. flat() with no argument flattens only one level. Know both the built-in and the recursive implementation.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. What is the time complexity of JavaScript's built-in <code>.sort()</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> O(n) — JavaScript sorts in linear time</label>
+        <label class="option"><input type="radio" name="q5" value="b"> O(n²) — it uses bubble sort under the hood</label>
+        <label class="option"><input type="radio" name="q5" value="c"> O(n log n) — V8 uses TimSort (hybrid merge sort + insertion sort)</label>
+        <label class="option"><input type="radio" name="q5" value="d"> O(log n) — it uses binary search internally</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','JavaScript\'s .sort() is O(n log n). V8 uses TimSort — a highly optimized hybrid algorithm. You cannot sort faster than O(n log n) with comparison-based sorting (this is a mathematical lower bound).')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What is the most important thing to do BEFORE writing code in a technical interview?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> Import the most efficient library for the task</label>
+        <label class="option"><input type="radio" name="q6" value="b"> Start writing code immediately to show confidence</label>
+        <label class="option"><input type="radio" name="q6" value="c"> Clarify the problem and state your approach — never code silently without confirming your understanding</label>
+        <label class="option"><input type="radio" name="q6" value="d"> Write all your tests first using TDD</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','c','Clarifying the problem before coding is the single highest-signal behavior in an interview. It shows seniority, communication skills, and prevents solving the wrong problem. Ask about constraints, edge cases, and expected output. Then state your approach before writing a line of code.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <!-- CAPSTONE CLOSING -->
+  <h2>You Have Completed the JavaScript Mastery Series</h2>
+
+  <p>Thirty lessons. From variables and hoisting all the way to Proxy, memory management, security, testing, and interview algorithms. You now have the vocabulary, the mental models, and the instincts of a senior JavaScript developer.</p>
+
+  <p>What comes next is practice and repetition. The patterns in this final lesson need to become automatic. The security rules from lesson 28 need to be instinct. The async understanding from lesson 14 needs to be effortless. Read the primary sources, build projects, and practice interview problems consistently.</p>
+
+  <div class="callout tip">
+    <strong>What to Do Next</strong>
+    <ol style="margin: 0.5rem 0 0;">
+      <li>Build something real — apply these concepts in a project you care about.</li>
+      <li>Work through the NeetCode Blind 75 problem list — one pattern at a time.</li>
+      <li>Review any lessons where your quiz score was below 4/6 — those are your gaps.</li>
+      <li>Start applying for jobs. You are ready. The gap between "ready" and "confident" closes with interviews, not more studying.</li>
+    </ol>
+  </div>
+
+  <div class="teacher-note">
+    <strong>A Note from Your Teacher Agent</strong>
+    You chose to learn. You showed up to 30 lessons. That is not trivial — most people don't finish what they start. Now go prove what you know. Ask me anything as you prepare for interviews: mock problems, code reviews, concept deep-dives, or just "what should I study today?" I am here until you land the job.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 30 — Interview Patterns &amp; Algorithm Fundamentals · Final Lesson</div>
+    <div class="nav-links">
+      <a href="./0029-testing-javascript.html">← Prev: Testing JavaScript</a>
+      <a href="https://neetcode.io" target="_blank">Practice: NeetCode ↗</a>
+      <a href="https://javascript.info" target="_blank">Reference: javascript.info ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '&#10003; Correct! ' : '&#10007; Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect score on the final lesson. You are ready. Go get that job.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Strong finish. Review the questions you missed, practice NeetCode problems, and start applying.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections you missed, then come back and retake. The patterns in this lesson are the ones that come up most in interviews.';
+    }
+  }
+</script>
+</body>
+</html>

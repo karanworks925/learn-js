@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 05 — Arrays: Basics &amp; Core Methods</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 05 of 30</div>
+    <h1>Arrays: Basics &amp; Core Methods</h1>
+    <p class="subtitle">Arrays are the most-used data structure in JavaScript — know every method cold.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Bookmark this page — it is the definitive reference:
+    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array" target="_blank">MDN — Array</a>.
+    Read the method list on the left sidebar. Every method covered in this lesson has an MDN page worth reading.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. Creating Arrays</h2>
+
+  <p>Arrays in JavaScript are ordered, zero-indexed collections. Under the hood, they are objects — which has important implications.</p>
+
+  <pre><code><span class="cmt">// Array literal — always prefer this</span>
+<span class="kw">const</span> empty = [];
+<span class="kw">const</span> fruits = [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"cherry"</span>];
+<span class="kw">const</span> mixed  = [<span class="num">1</span>, <span class="str">"two"</span>, <span class="kw">true</span>, <span class="kw">null</span>]; <span class="cmt">// JS allows mixed types (avoid in practice)</span>
+
+<span class="cmt">// new Array() — avoid; confusing behavior</span>
+<span class="kw">new</span> <span class="typ">Array</span>(<span class="num">3</span>)      <span class="cmt">// [ &lt;3 empty slots&gt; ] — NOT [3]</span>
+<span class="kw">new</span> <span class="typ">Array</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>) <span class="cmt">// [1, 2, 3] — different behavior with 1 vs multiple args</span>
+
+<span class="cmt">// Array.from() — create from iterables or with a mapping function</span>
+<span class="typ">Array</span>.<span class="fn">from</span>(<span class="str">"hello"</span>)         <span class="cmt">// ["h","e","l","l","o"]</span>
+<span class="typ">Array</span>.<span class="fn">from</span>({ length: <span class="num">5</span> }, (_, i) =&gt; i) <span class="cmt">// [0, 1, 2, 3, 4]</span>
+<span class="typ">Array</span>.<span class="fn">from</span>(<span class="kw">new</span> <span class="typ">Set</span>([<span class="num">1</span>, <span class="num">2</span>, <span class="num">2</span>, <span class="num">3</span>])) <span class="cmt">// [1, 2, 3] — deduplicate with Set</span>
+
+<span class="cmt">// Array.of() — creates from arguments (avoids the new Array(3) confusion)</span>
+<span class="typ">Array</span>.<span class="fn">of</span>(<span class="num">3</span>)        <span class="cmt">// [3] — just the number 3</span>
+<span class="typ">Array</span>.<span class="fn">of</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>)  <span class="cmt">// [1, 2, 3]</span>
+
+<span class="cmt">// Arrays are objects — use Array.isArray() to check</span>
+<span class="kw">typeof</span> []           <span class="cmt">// "object" — not helpful</span>
+<span class="typ">Array</span>.<span class="fn">isArray</span>([])   <span class="cmt">// true  — correct way</span>
+<span class="typ">Array</span>.<span class="fn">isArray</span>({})   <span class="cmt">// false</span></code></pre>
+
+  <!-- SECTION 2 -->
+  <h2>2. Accessing and Modifying Elements</h2>
+
+  <pre><code><span class="kw">const</span> arr = [<span class="str">"a"</span>, <span class="str">"b"</span>, <span class="str">"c"</span>, <span class="str">"d"</span>];
+
+<span class="cmt">// Zero-based indexing</span>
+arr[<span class="num">0</span>]              <span class="cmt">// "a" — first element</span>
+arr[arr.length - <span class="num">1</span>] <span class="cmt">// "d" — last element (classic way)</span>
+arr.<span class="fn">at</span>(-<span class="num">1</span>)          <span class="cmt">// "d" — last element (modern ES2022 way)</span>
+arr.<span class="fn">at</span>(-<span class="num">2</span>)          <span class="cmt">// "c" — second to last</span>
+arr[<span class="num">99</span>]             <span class="cmt">// undefined — no error for out-of-bounds access</span>
+
+<span class="cmt">// Direct assignment — arrays are dynamic</span>
+arr[<span class="num">1</span>] = <span class="str">"B"</span>;        <span class="cmt">// ["a", "B", "c", "d"]</span>
+arr[<span class="num">10</span>] = <span class="str">"z"</span>;       <span class="cmt">// creates sparse array with empty slots 4-9 — avoid this</span>
+
+<span class="cmt">// .length is always one more than the highest index</span>
+<span class="fn">console</span>.log(arr.length); <span class="cmt">// 11 (after the arr[10] assignment above)</span></code></pre>
+
+  <div class="callout tip">
+    <strong>Use .at() for Last Elements</strong>
+    <code>arr.at(-1)</code> is cleaner than <code>arr[arr.length - 1]</code>. It also works on strings. Available in all modern browsers and Node 16.6+.
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. Adding and Removing Elements (Mutating Methods)</h2>
+
+  <p>These methods change the original array in place. Know what each one <em>returns</em> — that trips people up in interviews.</p>
+
+  <table>
+    <thead>
+      <tr><th>Method</th><th>What it does</th><th>Returns</th><th>Mutates?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>push(...items)</code></td><td>Add to end</td><td>New length</td><td>Yes</td></tr>
+      <tr><td><code>pop()</code></td><td>Remove from end</td><td>Removed element</td><td>Yes</td></tr>
+      <tr><td><code>unshift(...items)</code></td><td>Add to start</td><td>New length</td><td>Yes</td></tr>
+      <tr><td><code>shift()</code></td><td>Remove from start</td><td>Removed element</td><td>Yes</td></tr>
+      <tr><td><code>splice(start, deleteCount, ...items)</code></td><td>Insert/remove anywhere</td><td>Array of removed items</td><td>Yes</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code><span class="kw">const</span> arr = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>];
+
+<span class="cmt">// push — returns NEW LENGTH (not the array!)</span>
+<span class="kw">const</span> newLen = arr.<span class="fn">push</span>(<span class="num">4</span>);  <span class="cmt">// arr = [1,2,3,4], newLen = 4</span>
+
+<span class="cmt">// pop — returns the REMOVED ELEMENT</span>
+<span class="kw">const</span> last = arr.<span class="fn">pop</span>();      <span class="cmt">// arr = [1,2,3], last = 4</span>
+
+<span class="cmt">// unshift — adds to the START, returns new length</span>
+arr.<span class="fn">unshift</span>(<span class="num">0</span>);              <span class="cmt">// arr = [0,1,2,3]</span>
+
+<span class="cmt">// shift — removes from START, returns removed element</span>
+<span class="kw">const</span> first = arr.<span class="fn">shift</span>();   <span class="cmt">// arr = [1,2,3], first = 0</span>
+
+<span class="cmt">// splice — the Swiss Army knife</span>
+<span class="kw">const</span> items = [<span class="str">"a"</span>, <span class="str">"b"</span>, <span class="str">"c"</span>, <span class="str">"d"</span>];
+
+<span class="cmt">// Remove 2 elements starting at index 1</span>
+<span class="kw">const</span> removed = items.<span class="fn">splice</span>(<span class="num">1</span>, <span class="num">2</span>); <span class="cmt">// removed = ["b","c"], items = ["a","d"]</span>
+
+<span class="cmt">// Insert without removing: deleteCount = 0</span>
+items.<span class="fn">splice</span>(<span class="num">1</span>, <span class="num">0</span>, <span class="str">"x"</span>, <span class="str">"y"</span>);    <span class="cmt">// items = ["a","x","y","d"]</span>
+
+<span class="cmt">// Replace elements</span>
+items.<span class="fn">splice</span>(<span class="num">2</span>, <span class="num">1</span>, <span class="str">"Z"</span>);          <span class="cmt">// replace "y" with "Z"</span></code></pre>
+
+  <!-- SECTION 4 -->
+  <h2>4. Non-Mutating Methods</h2>
+
+  <p>These methods return a new array and leave the original untouched. Prefer these in functional-style code.</p>
+
+  <pre><code><span class="kw">const</span> original = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>];
+
+<span class="cmt">// slice(start, end) — copy a portion (end index is EXCLUDED)</span>
+original.<span class="fn">slice</span>(<span class="num">1</span>, <span class="num">3</span>)   <span class="cmt">// [2, 3] — indices 1 and 2 only</span>
+original.<span class="fn">slice</span>(<span class="num">2</span>)      <span class="cmt">// [3, 4, 5] — from index 2 to end</span>
+original.<span class="fn">slice</span>(-<span class="num">2</span>)     <span class="cmt">// [4, 5] — last 2 elements</span>
+original.<span class="fn">slice</span>()       <span class="cmt">// [1,2,3,4,5] — shallow copy of entire array</span>
+
+<span class="cmt">// concat — merge arrays without mutating</span>
+<span class="kw">const</span> a = [<span class="num">1</span>, <span class="num">2</span>];
+<span class="kw">const</span> b = [<span class="num">3</span>, <span class="num">4</span>];
+<span class="kw">const</span> merged = a.<span class="fn">concat</span>(b);        <span class="cmt">// [1, 2, 3, 4] — a and b unchanged</span>
+<span class="kw">const</span> merged2 = a.<span class="fn">concat</span>(b, [<span class="num">5</span>]);  <span class="cmt">// [1, 2, 3, 4, 5]</span>
+
+<span class="cmt">// Spread syntax — modern and more readable than concat</span>
+<span class="kw">const</span> merged3 = [...a, ...b];       <span class="cmt">// [1, 2, 3, 4]</span>
+<span class="kw">const</span> withExtra = [...a, <span class="num">99</span>, ...b]; <span class="cmt">// [1, 2, 99, 3, 4]</span></code></pre>
+
+  <div class="callout info">
+    <strong>slice vs splice</strong>
+    One letter different, completely different behavior. <code>slice</code> is non-mutating and safe. <code>splice</code> mutates the original. A memory trick: spli<strong>c</strong>e <strong>c</strong>hanges things.
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2>5. Searching Arrays</h2>
+
+  <pre><code><span class="kw">const</span> scores = [<span class="num">85</span>, <span class="num">92</span>, <span class="num">78</span>, <span class="num">92</span>, <span class="num">65</span>];
+
+<span class="cmt">// indexOf — first index of value, -1 if not found</span>
+scores.<span class="fn">indexOf</span>(<span class="num">92</span>)      <span class="cmt">// 1 (first occurrence)</span>
+scores.<span class="fn">indexOf</span>(<span class="num">99</span>)      <span class="cmt">// -1 (not found)</span>
+
+<span class="cmt">// lastIndexOf — searches from the end</span>
+scores.<span class="fn">lastIndexOf</span>(<span class="num">92</span>)  <span class="cmt">// 3 (last occurrence)</span>
+
+<span class="cmt">// includes — returns boolean (use this for existence checks)</span>
+scores.<span class="fn">includes</span>(<span class="num">78</span>)     <span class="cmt">// true</span>
+scores.<span class="fn">includes</span>(<span class="num">100</span>)    <span class="cmt">// false</span>
+<span class="cmt">// Note: indexOf uses ===, so NaN is never found. includes handles NaN correctly.</span>
+[<span class="typ">NaN</span>].<span class="fn">indexOf</span>(<span class="typ">NaN</span>)     <span class="cmt">// -1  — bug!</span>
+[<span class="typ">NaN</span>].<span class="fn">includes</span>(<span class="typ">NaN</span>)   <span class="cmt">// true — correct</span>
+
+<span class="cmt">// find — returns first ELEMENT passing the test function</span>
+<span class="kw">const</span> users = [
+  { id: <span class="num">1</span>, name: <span class="str">"Alice"</span> },
+  { id: <span class="num">2</span>, name: <span class="str">"Bob"</span> },
+  { id: <span class="num">3</span>, name: <span class="str">"Karan"</span> },
+];
+<span class="kw">const</span> user = users.<span class="fn">find</span>(u =&gt; u.id === <span class="num">2</span>); <span class="cmt">// { id: 2, name: "Bob" }</span>
+<span class="kw">const</span> notFound = users.<span class="fn">find</span>(u =&gt; u.id === <span class="num">99</span>); <span class="cmt">// undefined</span>
+
+<span class="cmt">// findIndex — returns index of first element passing the test</span>
+<span class="kw">const</span> idx = users.<span class="fn">findIndex</span>(u =&gt; u.name === <span class="str">"Karan"</span>); <span class="cmt">// 2</span></code></pre>
+
+  <!-- SECTION 6 -->
+  <h2>6. Array Transformation</h2>
+
+  <p>These methods reshape or reorder the array. Know which ones mutate.</p>
+
+  <pre><code><span class="cmt">// join — convert array to string</span>
+[<span class="str">"a"</span>, <span class="str">"b"</span>, <span class="str">"c"</span>].<span class="fn">join</span>(<span class="str">"-"</span>)     <span class="cmt">// "a-b-c"</span>
+[<span class="str">"a"</span>, <span class="str">"b"</span>, <span class="str">"c"</span>].<span class="fn">join</span>(<span class="str">""</span>)      <span class="cmt">// "abc"</span>
+[<span class="str">"a"</span>, <span class="str">"b"</span>, <span class="str">"c"</span>].<span class="fn">join</span>()        <span class="cmt">// "a,b,c" — default separator is comma</span>
+
+<span class="cmt">// reverse — MUTATES the array in place</span>
+<span class="kw">const</span> arr = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>];
+arr.<span class="fn">reverse</span>(); <span class="cmt">// arr is now [3, 2, 1] — the original is changed!</span>
+
+<span class="cmt">// Non-mutating reverse (copy first)</span>
+<span class="kw">const</span> reversed = [...arr].<span class="fn">reverse</span>(); <span class="cmt">// safe — original untouched</span>
+
+<span class="cmt">// sort — MUTATES; default sort is ALPHABETICAL (converts to strings first)</span>
+[<span class="num">3</span>, <span class="num">1</span>, <span class="num">10</span>].<span class="fn">sort</span>()                  <span class="cmt">// [1, 10, 3] ← "10" < "3" alphabetically!</span>
+
+<span class="cmt">// Correct numeric sort with a comparator function</span>
+[<span class="num">3</span>, <span class="num">1</span>, <span class="num">10</span>].<span class="fn">sort</span>((a, b) =&gt; a - b)  <span class="cmt">// [1, 3, 10] — ascending</span>
+[<span class="num">3</span>, <span class="num">1</span>, <span class="num">10</span>].<span class="fn">sort</span>((a, b) =&gt; b - a)  <span class="cmt">// [10, 3, 1] — descending</span>
+
+<span class="cmt">// Sorting strings correctly (locale-aware)</span>
+[<span class="str">"banana"</span>, <span class="str">"apple"</span>, <span class="str">"cherry"</span>].<span class="fn">sort</span>() <span class="cmt">// ["apple","banana","cherry"] — fine for ASCII</span>
+
+<span class="cmt">// flat — flatten nested arrays</span>
+[<span class="num">1</span>, [<span class="num">2</span>, [<span class="num">3</span>, [<span class="num">4</span>]]]].<span class="fn">flat</span>()       <span class="cmt">// [1, 2, [3, [4]]]    — depth 1 (default)</span>
+[<span class="num">1</span>, [<span class="num">2</span>, [<span class="num">3</span>, [<span class="num">4</span>]]]].<span class="fn">flat</span>(<span class="num">2</span>)     <span class="cmt">// [1, 2, 3, [4]]      — depth 2</span>
+[<span class="num">1</span>, [<span class="num">2</span>, [<span class="num">3</span>, [<span class="num">4</span>]]]].<span class="fn">flat</span>(<span class="typ">Infinity</span>) <span class="cmt">// [1, 2, 3, 4]         — fully flat</span>
+
+<span class="cmt">// flatMap — map then flat(1) in one step</span>
+[<span class="str">"hello world"</span>, <span class="str">"foo bar"</span>].<span class="fn">flatMap</span>(s =&gt; s.<span class="fn">split</span>(<span class="str">" "</span>))
+<span class="cmt">// ["hello", "world", "foo", "bar"]</span></code></pre>
+
+  <div class="callout danger">
+    <strong>Sort Gotcha — the Most Common Array Interview Trap</strong>
+    <code>[3, 1, 10].sort()</code> returns <code>[1, 10, 3]</code> because JS converts numbers to strings and sorts lexicographically ("10" comes before "3"). Always provide a comparator when sorting numbers: <code>.sort((a, b) => a - b)</code>.
+  </div>
+
+  <!-- SECTION 7 -->
+  <h2>7. Spread &amp; Array Copying</h2>
+
+  <pre><code><span class="cmt">// Shallow copy with spread — preferred modern syntax</span>
+<span class="kw">const</span> original = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>];
+<span class="kw">const</span> copy = [...original];
+copy.<span class="fn">push</span>(<span class="num">4</span>);
+<span class="fn">console</span>.log(original); <span class="cmt">// [1, 2, 3] — unchanged</span>
+<span class="fn">console</span>.log(copy);     <span class="cmt">// [1, 2, 3, 4]</span>
+
+<span class="cmt">// Shallow copy with Array.from()</span>
+<span class="kw">const</span> copy2 = <span class="typ">Array</span>.<span class="fn">from</span>(original); <span class="cmt">// same result</span>
+
+<span class="cmt">// SHALLOW means nested objects still share a reference</span>
+<span class="kw">const</span> users = [{ name: <span class="str">"Alice"</span> }, { name: <span class="str">"Bob"</span> }];
+<span class="kw">const</span> usersCopy = [...users];
+
+usersCopy[<span class="num">0</span>].name = <span class="str">"Alicia"</span>;     <span class="cmt">// modifies the SAME object!</span>
+<span class="fn">console</span>.log(users[<span class="num">0</span>].name);        <span class="cmt">// "Alicia" — original is affected</span>
+
+<span class="cmt">// Deep copy (when you need full independence)</span>
+<span class="kw">const</span> deepCopy = <span class="typ">JSON</span>.<span class="fn">parse</span>(<span class="typ">JSON</span>.<span class="fn">stringify</span>(users)); <span class="cmt">// works for plain data</span>
+<span class="cmt">// structuredClone(users) — modern and handles more types (Node 17+, modern browsers)</span></code></pre>
+
+  <div class="callout warn">
+    <strong>Shallow vs Deep Copy</strong>
+    Spread (<code>[...arr]</code>) creates a new array, but objects inside it are still the same references. If you mutate a nested object in the copy, the original changes too. For truly independent copies, use <code>structuredClone()</code> or a library like Lodash's <code>_.cloneDeep()</code>.
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">⚡ Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What does <code>[1, 2, 3].push(4)</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> [1, 2, 3, 4]</label>
+        <label class="option"><input type="radio" name="q1" value="b"> 4</label>
+        <label class="option"><input type="radio" name="q1" value="c"> undefined</label>
+        <label class="option"><input type="radio" name="q1" value="d"> 3</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','push() returns the NEW LENGTH of the array after adding the element — not the array itself, and not the pushed element. After pushing 4 to [1,2,3], the length is 4, so push returns 4. The array is mutated in place.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What does <code>[1, 2, 3].pop()</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> [1, 2]</label>
+        <label class="option"><input type="radio" name="q2" value="b"> 2</label>
+        <label class="option"><input type="radio" name="q2" value="c"> 3</label>
+        <label class="option"><input type="radio" name="q2" value="d"> undefined</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','pop() removes the LAST element and returns it. The original array is mutated to [1, 2]. The removed element (3) is what pop() returns — not the array, not the new length.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What does <code>[3, 1, 10].sort()</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> [1, 3, 10]</label>
+        <label class="option"><input type="radio" name="q3" value="b"> [1, 10, 3]</label>
+        <label class="option"><input type="radio" name="q3" value="c"> [3, 1, 10]</label>
+        <label class="option"><input type="radio" name="q3" value="d"> [10, 3, 1]</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','b','sort() with no comparator converts elements to strings and sorts lexicographically. As strings: &quot;10&quot; &lt; &quot;3&quot; because &quot;1&quot; &lt; &quot;3&quot; in character order. So the result is [1, 10, 3] — not numerically sorted. Always pass (a, b) => a - b for numbers.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What is the key difference between <code>slice</code> and <code>splice</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> slice is for strings; splice is for arrays</label>
+        <label class="option"><input type="radio" name="q4" value="b"> slice does not mutate (returns a copy); splice mutates the original array</label>
+        <label class="option"><input type="radio" name="q4" value="c"> splice does not mutate; slice mutates</label>
+        <label class="option"><input type="radio" name="q4" value="d"> They are identical — just different names</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','b','slice is non-destructive — it returns a new array and never changes the original. splice is destructive — it modifies the original array in place and returns the removed elements. Memory trick: spli-C-e C-hanges things.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. What does <code>[1, 2, 3].includes(2)</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> 1 (the index)</label>
+        <label class="option"><input type="radio" name="q5" value="b"> undefined</label>
+        <label class="option"><input type="radio" name="q5" value="c"> true</label>
+        <label class="option"><input type="radio" name="q5" value="d"> false</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','includes() always returns a boolean — true if the value is in the array, false otherwise. Unlike indexOf() which returns the index (or -1), includes() gives you a clean true/false — use it for existence checks.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What does <code>[1, [2, [3]]].flat(1)</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> [1, 2, 3]</label>
+        <label class="option"><input type="radio" name="q6" value="b"> [1, [2, [3]]]</label>
+        <label class="option"><input type="radio" name="q6" value="c"> [1, 2, [3]]</label>
+        <label class="option"><input type="radio" name="q6" value="d"> [[1, 2], [3]]</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','c','flat(1) flattens exactly one level of nesting. [1, [2, [3]]] has two levels of nesting. After one level: 1 stays as 1, [2, [3]] becomes 2 and [3] — but [3] is not further flattened. Result: [1, 2, [3]]. Use flat(Infinity) to fully flatten.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Objects: Basics &amp; Patterns</strong> — object literals, property access, shorthand syntax, computed keys, destructuring, and spreading. Objects are the other half of JavaScript's data model.</p>
+
+  <div class="teacher-note">
+    Questions? Ask your teacher agent anything unclear. Just type your question.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 05 — Arrays: Basics &amp; Core Methods</div>
+    <div class="nav-links">
+      <a href="./0004-loops.html">← Prev: Loops</a>
+      <a href="./0006-objects-basics.html">Next: Objects: Basics →</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

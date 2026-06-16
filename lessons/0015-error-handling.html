@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 15 — Error Handling</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 15 of 30</div>
+    <h1>Error Handling</h1>
+    <p class="subtitle">Production code fails gracefully — beginners don't handle errors; seniors do.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read this <em>after</em> the lesson:
+    <a href="https://javascript.info/try-catch" target="_blank">javascript.info — Error Handling, "try...catch"</a>.
+    The section on custom errors and rethrowing is especially important for real applications.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. The Error Object</h2>
+
+  <p>When something goes wrong in JavaScript, an <strong>Error object</strong> is thrown. You can create one explicitly with <code>new Error("message")</code> or it can be thrown automatically by the engine.</p>
+
+  <p>Every Error object has at minimum three properties:</p>
+  <ul>
+    <li><code>message</code> — the human-readable description you pass in</li>
+    <li><code>name</code> — the type of error (e.g. <code>"TypeError"</code>, <code>"RangeError"</code>)</li>
+    <li><code>stack</code> — a multi-line string showing the call stack at the moment the error was created</li>
+  </ul>
+
+  <pre><code><span class="kw">const</span> err = <span class="kw">new</span> <span class="typ">Error</span>(<span class="str">"Something went wrong"</span>);
+
+<span class="fn">console</span>.log(err.message); <span class="cmt">// "Something went wrong"</span>
+<span class="fn">console</span>.log(err.name);    <span class="cmt">// "Error"</span>
+<span class="fn">console</span>.log(err.stack);
+<span class="cmt">// Error: Something went wrong</span>
+<span class="cmt">//     at &lt;anonymous&gt;:1:13</span>
+<span class="cmt">//     at ...</span>
+
+<span class="cmt">// Throwing an error stops execution and unwinds the call stack</span>
+<span class="kw">function</span> <span class="fn">divide</span>(a, b) {
+  <span class="kw">if</span> (b === <span class="num">0</span>) <span class="kw">throw</span> <span class="kw">new</span> <span class="typ">Error</span>(<span class="str">"Cannot divide by zero"</span>);
+  <span class="kw">return</span> a / b;
+}
+
+<span class="fn">divide</span>(<span class="num">10</span>, <span class="num">2</span>);  <span class="cmt">// 5</span>
+<span class="fn">divide</span>(<span class="num">10</span>, <span class="num">0</span>);  <span class="cmt">// throws Error: Cannot divide by zero</span></code></pre>
+
+  <div class="callout info">
+    <strong>The stack property is invaluable for debugging</strong>
+    In production, always log <code>err.stack</code>, not just <code>err.message</code>. The stack tells you exactly where in your code the error originated, including all the function calls that led there.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. Built-in Error Types</h2>
+
+  <p>JavaScript has several built-in error classes, all of which extend <code>Error</code>. Knowing which type corresponds to which situation helps you read error messages much faster.</p>
+
+  <table>
+    <thead>
+      <tr><th>Type</th><th>When it occurs</th><th>Example</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>Error</code></td><td>Base class — generic errors you throw yourself</td><td><code>throw new Error("oops")</code></td></tr>
+      <tr><td><code>TypeError</code></td><td>Operation on wrong type — calling a non-function, accessing property of null/undefined</td><td><code>null.prop</code>, <code>undefined()</code></td></tr>
+      <tr><td><code>ReferenceError</code></td><td>Accessing a variable that doesn't exist</td><td><code>console.log(x)</code> when x is undeclared</td></tr>
+      <tr><td><code>SyntaxError</code></td><td>Invalid JavaScript syntax — caught at parse time, before code runs</td><td><code>JSON.parse("{")</code></td></tr>
+      <tr><td><code>RangeError</code></td><td>Value outside an allowable range</td><td><code>new Array(-1)</code>, infinite recursion</td></tr>
+      <tr><td><code>URIError</code></td><td>Malformed URI in decodeURIComponent etc.</td><td><code>decodeURIComponent("%")</code></td></tr>
+      <tr><td><code>EvalError</code></td><td>Related to <code>eval()</code> — rarely seen in practice</td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code><span class="cmt">// These are thrown by the engine, not by you</span>
+<span class="kw">null</span>.property;          <span class="cmt">// TypeError: Cannot read properties of null</span>
+undeclaredVar;          <span class="cmt">// ReferenceError: undeclaredVar is not defined</span>
+<span class="kw">new</span> <span class="typ">Array</span>(-<span class="num">1</span>);         <span class="cmt">// RangeError: Invalid array length</span>
+<span class="fn">JSON</span>.<span class="fn">parse</span>(<span class="str">"{"</span>);       <span class="cmt">// SyntaxError: Unexpected end of JSON input</span></code></pre>
+
+  <!-- SECTION 3 -->
+  <h2>3. try / catch / finally</h2>
+
+  <p><code>try</code> wraps the risky code. <code>catch</code> handles errors if any are thrown. <code>finally</code> runs no matter what — whether an error was thrown or not, whether there's a <code>return</code> in try or catch.</p>
+
+  <pre><code><span class="kw">function</span> <span class="fn">parseJSON</span>(str) {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> data = <span class="fn">JSON</span>.<span class="fn">parse</span>(str);
+    <span class="fn">console</span>.log(<span class="str">"Parsed successfully"</span>);
+    <span class="kw">return</span> data;
+  } <span class="kw">catch</span> (err) {
+    <span class="fn">console</span>.log(<span class="str">"Failed to parse:"</span>, err.message);
+    <span class="kw">return</span> <span class="kw">null</span>;
+  } <span class="kw">finally</span> {
+    <span class="fn">console</span>.log(<span class="str">"parseJSON finished"</span>); <span class="cmt">// always runs</span>
+  }
+}
+
+<span class="fn">parseJSON</span>(<span class="str">'{"name":"Karan"}'</span>);
+<span class="cmt">// Parsed successfully</span>
+<span class="cmt">// parseJSON finished</span>
+
+<span class="fn">parseJSON</span>(<span class="str">"invalid json"</span>);
+<span class="cmt">// Failed to parse: Unexpected token i...</span>
+<span class="cmt">// parseJSON finished</span></code></pre>
+
+  <h3>finally always runs — even after return</h3>
+
+  <pre><code><span class="kw">function</span> <span class="fn">test</span>() {
+  <span class="kw">try</span> {
+    <span class="kw">return</span> <span class="str">"from try"</span>;
+  } <span class="kw">finally</span> {
+    <span class="fn">console</span>.log(<span class="str">"finally ran!"</span>); <span class="cmt">// this ALWAYS executes</span>
+  }
+}
+
+<span class="fn">test</span>();
+<span class="cmt">// finally ran!</span>
+<span class="cmt">// "from try"</span></code></pre>
+
+  <div class="callout tip">
+    <strong>finally is for cleanup</strong>
+    Use <code>finally</code> for cleanup tasks that must happen regardless of success or failure: closing database connections, stopping loading spinners, releasing resources. If you only use try/catch, a thrown error prevents cleanup code from running.
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. Rethrowing Errors</h2>
+
+  <p>A catch block should only handle errors it <em>knows how to fix</em>. If an unexpected error type arrives, rethrow it so it can propagate to a higher-level handler. Swallowing all errors silently is one of the most harmful patterns in production code.</p>
+
+  <pre><code><span class="kw">function</span> <span class="fn">processInput</span>(data) {
+  <span class="kw">try</span> {
+    <span class="kw">if</span> (<span class="kw">typeof</span> data !== <span class="str">"string"</span>) {
+      <span class="kw">throw</span> <span class="kw">new</span> <span class="typ">TypeError</span>(<span class="str">"data must be a string"</span>);
+    }
+    <span class="kw">return</span> data.<span class="fn">trim</span>().<span class="fn">toUpperCase</span>();
+  } <span class="kw">catch</span> (err) {
+    <span class="cmt">// Handle only what we expect — TypeError from our own validation</span>
+    <span class="kw">if</span> (err <span class="kw">instanceof</span> <span class="typ">TypeError</span>) {
+      <span class="fn">console</span>.warn(<span class="str">"Type warning:"</span>, err.message);
+      <span class="kw">return</span> <span class="str">""</span>; <span class="cmt">// graceful fallback</span>
+    }
+    <span class="cmt">// Something unexpected — rethrow so it doesn't disappear</span>
+    <span class="kw">throw</span> err;
+  }
+}
+
+<span class="fn">processInput</span>(<span class="str">"  hello  "</span>); <span class="cmt">// "HELLO"</span>
+<span class="fn">processInput</span>(<span class="num">42</span>);          <span class="cmt">// "" (TypeError caught and handled)</span></code></pre>
+
+  <div class="callout danger">
+    <strong>Never do this</strong>
+    <code>try { ... } catch (err) { }</code> — an empty catch block silently buries errors. You will never know what went wrong. At minimum, log the error in every catch block.
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2>5. Custom Error Classes</h2>
+
+  <p>In real applications you'll have errors that carry more context than a plain message — a field name, an HTTP status code, an error code. Create custom error classes by extending <code>Error</code>.</p>
+
+  <pre><code><span class="kw">class</span> <span class="typ">ValidationError</span> <span class="kw">extends</span> <span class="typ">Error</span> {
+  <span class="fn">constructor</span>(message, field) {
+    <span class="kw">super</span>(message);         <span class="cmt">// sets this.message</span>
+    <span class="kw">this</span>.name = <span class="str">"ValidationError"</span>; <span class="cmt">// overrides "Error"</span>
+    <span class="kw">this</span>.field = field;     <span class="cmt">// extra context</span>
+  }
+}
+
+<span class="kw">class</span> <span class="typ">NotFoundError</span> <span class="kw">extends</span> <span class="typ">Error</span> {
+  <span class="fn">constructor</span>(resource) {
+    <span class="kw">super</span>(<span class="str">`</span><span class="num">${resource}</span><span class="str"> not found`</span>);
+    <span class="kw">this</span>.name = <span class="str">"NotFoundError"</span>;
+    <span class="kw">this</span>.statusCode = <span class="num">404</span>;
+  }
+}
+
+<span class="kw">function</span> <span class="fn">validateAge</span>(age) {
+  <span class="kw">if</span> (<span class="kw">typeof</span> age !== <span class="str">"number"</span>) {
+    <span class="kw">throw</span> <span class="kw">new</span> <span class="typ">ValidationError</span>(<span class="str">"Age must be a number"</span>, <span class="str">"age"</span>);
+  }
+  <span class="kw">if</span> (age &lt; <span class="num">0</span> || age &gt; <span class="num">150</span>) {
+    <span class="kw">throw</span> <span class="kw">new</span> <span class="typ">ValidationError</span>(<span class="str">"Age out of valid range"</span>, <span class="str">"age"</span>);
+  }
+}
+
+<span class="kw">try</span> {
+  <span class="fn">validateAge</span>(<span class="str">"old"</span>);
+} <span class="kw">catch</span> (err) {
+  <span class="kw">if</span> (err <span class="kw">instanceof</span> <span class="typ">ValidationError</span>) {
+    <span class="fn">console</span>.log(<span class="str">`Validation failed on field "</span><span class="num">${err.field}</span><span class="str">": </span><span class="num">${err.message}</span><span class="str">`</span>);
+    <span class="cmt">// Validation failed on field "age": Age must be a number</span>
+  } <span class="kw">else</span> {
+    <span class="kw">throw</span> err; <span class="cmt">// unexpected — rethrow</span>
+  }
+}</code></pre>
+
+  <div class="callout info">
+    <strong>Always set this.name in custom errors</strong>
+    If you don't set <code>this.name</code>, all custom errors will log as <code>"Error"</code>, which makes debugging much harder. Setting the name makes <code>err.toString()</code> and logs show <code>"ValidationError: ..."</code> instead of just <code>"Error: ..."</code>.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. Error Handling in Async Code</h2>
+
+  <p>Asynchronous errors cannot be caught with a synchronous <code>try/catch</code> around a callback. But with Promises and async/await, errors are fully catchable.</p>
+
+  <pre><code><span class="cmt">// PROMISES — use .catch()</span>
+<span class="fn">fetch</span>(<span class="str">"https://api.example.com/data"</span>)
+  .<span class="fn">then</span>(res => res.<span class="fn">json</span>())
+  .<span class="fn">then</span>(data => <span class="fn">console</span>.log(data))
+  .<span class="fn">catch</span>(err => <span class="fn">console</span>.error(<span class="str">"Fetch failed:"</span>, err.message));
+
+<span class="cmt">// ASYNC/AWAIT — use try/catch</span>
+<span class="kw">async function</span> <span class="fn">loadUser</span>(id) {
+  <span class="kw">try</span> {
+    <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">`/api/users/</span><span class="num">${id}</span><span class="str">`</span>);
+    <span class="kw">if</span> (!res.ok) {
+      <span class="kw">throw</span> <span class="kw">new</span> <span class="typ">Error</span>(<span class="str">`HTTP error: </span><span class="num">${res.status}</span><span class="str">`</span>);
+    }
+    <span class="kw">const</span> user = <span class="kw">await</span> res.<span class="fn">json</span>();
+    <span class="kw">return</span> user;
+  } <span class="kw">catch</span> (err) {
+    <span class="cmt">// Catches: network errors, JSON parse errors, AND our thrown error</span>
+    <span class="fn">console</span>.error(<span class="str">"loadUser failed:"</span>, err.message);
+    <span class="kw">return</span> <span class="kw">null</span>;
+  }
+}</code></pre>
+
+  <div class="callout warn">
+    <strong>await turns rejected promises into thrown errors</strong>
+    When you <code>await</code> a rejected promise, JavaScript converts the rejection into a regular thrown error. That's why <code>try/catch</code> works perfectly with async/await — rejections and thrown errors are treated identically.
+  </div>
+
+  <h3>Unhandled Promise Rejections</h3>
+  <pre><code><span class="cmt">// If a promise rejection is never caught, the browser/Node emits a warning</span>
+<span class="cmt">// In Node 15+ it actually crashes the process</span>
+
+<span class="cmt">// Listen for unhandled rejections globally (use in monitoring/logging layers)</span>
+window.<span class="fn">addEventListener</span>(<span class="str">"unhandledrejection"</span>, (event) => {
+  <span class="fn">console</span>.error(<span class="str">"Unhandled rejection:"</span>, event.reason);
+  <span class="cmt">// Send to your error monitoring service (Sentry, Datadog, etc.)</span>
+});</code></pre>
+
+  <!-- SECTION 7 -->
+  <h2>7. Global Error Handling</h2>
+
+  <p>In production, you need to catch errors that slip through all your try/catch blocks. Two global hooks let you do this:</p>
+
+  <pre><code><span class="cmt">// Synchronous errors that weren't caught</span>
+window.<span class="fn">onerror</span> = <span class="kw">function</span>(message, source, line, col, error) {
+  <span class="fn">console</span>.error(<span class="str">"Uncaught error:"</span>, message, <span class="str">"at"</span>, source, line);
+  <span class="cmt">// return true to suppress the default browser error display</span>
+  <span class="kw">return</span> <span class="kw">true</span>;
+};
+
+<span class="cmt">// Unhandled promise rejections</span>
+window.<span class="fn">addEventListener</span>(<span class="str">"unhandledrejection"</span>, (event) => {
+  <span class="fn">console</span>.error(<span class="str">"Unhandled promise rejection:"</span>, event.reason);
+  event.<span class="fn">preventDefault</span>(); <span class="cmt">// suppress default console output</span>
+});
+
+<span class="cmt">// In practice, use a service like Sentry:</span>
+<span class="cmt">// Sentry.init({ dsn: "..." }) handles both hooks automatically</span></code></pre>
+
+  <table>
+    <thead>
+      <tr><th>Hook</th><th>Catches</th><th>Use for</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>window.onerror</code></td><td>Uncaught synchronous runtime errors</td><td>Global fallback logging</td></tr>
+      <tr><td><code>unhandledrejection</code> event</td><td>Unhandled promise rejections</td><td>Missing .catch() or missing try/catch in async</td></tr>
+    </tbody>
+  </table>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What properties does an Error object have by default?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> code and description</label>
+        <label class="option"><input type="radio" name="q1" value="b"> message, name, and stack</label>
+        <label class="option"><input type="radio" name="q1" value="c"> message and type</label>
+        <label class="option"><input type="radio" name="q1" value="d"> error and reason</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','Every Error object has at minimum: message (the description), name (the error type e.g. &quot;TypeError&quot;), and stack (the call stack trace). Always log the stack in production.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. Does <code>finally</code> run if there is a <code>return</code> inside <code>try</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> No — return exits immediately before finally</label>
+        <label class="option"><input type="radio" name="q2" value="b"> Only if an error was thrown</label>
+        <label class="option"><input type="radio" name="q2" value="c"> Yes — finally always runs, even after return</label>
+        <label class="option"><input type="radio" name="q2" value="d"> Only in strict mode</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','finally is guaranteed to run — after try, after catch, and even after a return statement. The return value is preserved but finally executes first. This is why finally is used for cleanup code.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What error type is thrown when you access a property on <code>null</code>?</p>
+      <div class="question-code">const x = null;
+x.name; // what type of error?</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> ReferenceError</label>
+        <label class="option"><input type="radio" name="q3" value="b"> NullPointerError</label>
+        <label class="option"><input type="radio" name="q3" value="c"> SyntaxError</label>
+        <label class="option"><input type="radio" name="q3" value="d"> TypeError</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','d','Accessing a property on null (or undefined) throws a TypeError — specifically &quot;Cannot read properties of null&quot;. This is the single most common runtime error in JavaScript.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. How do you create a custom error class?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> Use Object.create(Error.prototype) and set properties manually</label>
+        <label class="option"><input type="radio" name="q4" value="b"> Extend the Error class, call super(message) in the constructor, and set this.name</label>
+        <label class="option"><input type="radio" name="q4" value="c"> Wrap a string in a special ErrorType() constructor</label>
+        <label class="option"><input type="radio" name="q4" value="d"> Add a type property to a plain Error instance</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','b','Extend Error, call super(message) to set this.message, and set this.name to your custom name. You can also add extra properties (field, code, statusCode etc.) for richer error context.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. What does the catch block handle here?</p>
+      <div class="question-code">async function run() {
+  try {
+    await fetchData();
+  } catch (err) {
+    console.error(err);
+  }
+}</div>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> Only synchronous throws from inside run()</label>
+        <label class="option"><input type="radio" name="q5" value="b"> Only network errors from fetch()</label>
+        <label class="option"><input type="radio" name="q5" value="c"> Both synchronous throws AND rejected Promises — await converts rejections into throws</label>
+        <label class="option"><input type="radio" name="q5" value="d"> Nothing — you need .catch() on the promise for async errors</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','await unwraps a rejected promise and converts the rejection into a thrown error. So the catch block catches both: synchronous throws and promise rejections from the awaited call.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What is the purpose of rethrowing an error?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> To create a new error with a better message</label>
+        <label class="option"><input type="radio" name="q6" value="b"> To prevent the finally block from running</label>
+        <label class="option"><input type="radio" name="q6" value="c"> To handle only specific errors you know how to fix, and let unexpected errors propagate to a higher-level handler</label>
+        <label class="option"><input type="radio" name="q6" value="d"> To convert the error into a warning</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','c','Rethrowing lets you be selective. Catch only what you can handle (e.g. a ValidationError), then rethrow anything unexpected. This prevents silently swallowing errors you didn\'t anticipate and keeps bugs visible.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Promises &amp; the Event Loop</strong> — how asynchronous JavaScript actually works, the microtask queue, and how Promises resolve in order. This is what makes senior developers stand out in technical interviews.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent to help you design a custom error hierarchy for a real project you're building. Thinking through which error types you need, what extra data they carry, and where they get caught is one of the best exercises for making this knowledge stick.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 15 — Error Handling</div>
+    <div class="nav-links">
+      <a href="./0014-classes-inheritance.html">← Previous: Classes &amp; Inheritance</a>
+      <a href="./0016-promises-event-loop.html">Next: Promises &amp; the Event Loop →</a>
+      <a href="https://javascript.info/try-catch" target="_blank">javascript.info: Error Handling ↗</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '✅ Correct! ' : '❌ Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

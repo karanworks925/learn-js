@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 16 — Modules</title>
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --accent-light: #eff6ff;
+      --border: #e2e8f0;
+      --code-bg: #1e1e2e;
+      --code-text: #cdd6f4;
+      --green: #16a34a;
+      --red: #dc2626;
+      --yellow: #ca8a04;
+      --green-bg: #f0fdf4;
+      --red-bg: #fef2f2;
+      --yellow-bg: #fefce8;
+      --serif: "Georgia", "Times New Roman", serif;
+      --mono: "Fira Code", "Cascadia Code", "Consolas", monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--serif);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      font-size: 18px;
+      padding: 2rem 1rem 6rem;
+    }
+    .container { max-width: 680px; margin: 0 auto; }
+    header { margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--border); }
+    .lesson-meta { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 0.5rem; }
+    h1 { font-size: 2rem; line-height: 1.25; margin-bottom: 0.75rem; }
+    .subtitle { color: var(--muted); font-size: 1rem; font-style: italic; }
+    h2 { font-size: 1.25rem; margin: 2.5rem 0 0.75rem; padding-bottom: 0.25rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1rem; font-weight: bold; margin: 1.5rem 0 0.5rem; }
+    p { margin-bottom: 1rem; }
+    a { color: var(--accent); }
+    ul, ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.35rem; }
+    code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      background: #f1f5f9;
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+      color: #c026d3;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      line-height: 1.6;
+      padding: 1.25rem 1.5rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 1rem 0 1.5rem;
+    }
+    pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+    .kw { color: #cba6f7; }
+    .fn { color: #89b4fa; }
+    .str { color: #a6e3a1; }
+    .num { color: #fab387; }
+    .cmt { color: #6c7086; font-style: italic; }
+    .typ { color: #f9e2af; }
+
+    .callout {
+      border-left: 4px solid;
+      padding: 0.85rem 1rem;
+      margin: 1.25rem 0;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.92rem;
+    }
+    .callout.info { border-color: var(--accent); background: var(--accent-light); }
+    .callout.warn { border-color: var(--yellow); background: var(--yellow-bg); }
+    .callout.danger { border-color: var(--red); background: var(--red-bg); }
+    .callout.tip { border-color: var(--green); background: var(--green-bg); }
+    .callout strong { display: block; margin-bottom: 0.2rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: 0.9rem; }
+    th { background: #f1f5f9; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--border); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 0.5rem 0.75rem; border: 1px solid var(--border); vertical-align: top; }
+    tr:nth-child(even) td { background: #fafafa; }
+
+    /* Quiz */
+    .quiz { margin: 2.5rem 0; }
+    .quiz-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 1.25rem; padding: 0.75rem 1rem; background: #1e1e2e; color: #cdd6f4; border-radius: 8px 8px 0 0; }
+    .question-block { margin-bottom: 2rem; }
+    .question-text { font-weight: bold; margin-bottom: 0.75rem; font-size: 0.95rem; }
+    .question-code {
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      white-space: pre;
+    }
+    .options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .option {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.6rem 0.85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-family: var(--mono);
+      transition: border-color 0.15s, background 0.15s;
+      background: white;
+    }
+    .option:hover { border-color: var(--accent); background: var(--accent-light); }
+    .option input { accent-color: var(--accent); }
+    .option.correct { border-color: var(--green); background: var(--green-bg); }
+    .option.wrong { border-color: var(--red); background: var(--red-bg); }
+    .feedback { margin-top: 0.6rem; font-size: 0.88rem; padding: 0.6rem 0.85rem; border-radius: 6px; display: none; }
+    .feedback.show { display: block; }
+    .feedback.correct { background: var(--green-bg); color: var(--green); }
+    .feedback.wrong { background: var(--red-bg); color: var(--red); }
+    .check-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.25rem;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-family: var(--serif);
+    }
+    .check-btn:hover { background: #1d4ed8; }
+    .check-btn:disabled { background: #94a3b8; cursor: default; }
+
+    .score-banner { text-align: center; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; display: none; }
+    .score-banner.show { display: block; }
+    .score-number { font-size: 2.5rem; font-weight: bold; }
+
+    footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    .nav-links { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .primary-source { margin: 2rem 0; padding: 1rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .primary-source strong { display: block; margin-bottom: 0.25rem; }
+    .teacher-note { margin: 3rem 0 0; padding: 1rem 1.25rem; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="lesson-meta">JavaScript Mastery · Lesson 16 of 30</div>
+    <h1>Modules</h1>
+    <p class="subtitle">Modules let you split code into files and compose them — the foundation of every real project.</p>
+  </header>
+
+  <div class="primary-source">
+    <strong>Primary Source for this lesson</strong>
+    Read this after the lesson to solidify what you learn:
+    <a href="https://javascript.info/modules-intro" target="_blank">javascript.info — Modules Introduction</a>.
+    This is the highest-quality JS learning resource available.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2>1. Why Modules?</h2>
+
+  <p>Before modules existed, all JavaScript lived in a single file or was loaded via multiple <code>&lt;script&gt;</code> tags that all shared the same global scope. This caused real problems in large codebases.</p>
+
+  <ul>
+    <li><strong>Global scope pollution</strong> — every variable was shared; any script could overwrite anything</li>
+    <li><strong>No encapsulation</strong> — no way to make something private</li>
+    <li><strong>Load order dependency</strong> — scripts had to be included in exactly the right order</li>
+  </ul>
+
+  <h3>The IIFE Workaround</h3>
+  <p>Before modules, developers used Immediately Invoked Function Expressions to create a private scope and expose only what was needed:</p>
+
+  <pre><code><span class="kw">const</span> <span class="typ">Utils</span> = (<span class="kw">function</span>() {
+  <span class="kw">const</span> _private = <span class="str">"hidden"</span>; <span class="cmt">// not accessible outside</span>
+
+  <span class="kw">function</span> <span class="fn">greet</span>(name) {
+    <span class="kw">return</span> <span class="str">"Hello, "</span> + name;
+  }
+
+  <span class="kw">return</span> { greet }; <span class="cmt">// only expose what's needed</span>
+})();
+
+<span class="typ">Utils</span>.<span class="fn">greet</span>(<span class="str">"Karan"</span>); <span class="cmt">// "Hello, Karan"</span></code></pre>
+
+  <h3>CommonJS — Node.js Modules</h3>
+  <p>Node.js introduced CommonJS (CJS) before the language had a module system. It uses <code>require()</code> to import and <code>module.exports</code> to export. It is still widely used in Node.js environments today.</p>
+
+  <pre><code><span class="cmt">// math.js — CommonJS export</span>
+<span class="kw">function</span> <span class="fn">add</span>(a, b) { <span class="kw">return</span> a + b; }
+<span class="typ">module</span>.exports = { add };
+
+<span class="cmt">// main.js — CommonJS import</span>
+<span class="kw">const</span> { add } = <span class="fn">require</span>(<span class="str">'./math'</span>);
+<span class="fn">console</span>.log(<span class="fn">add</span>(<span class="num">2</span>, <span class="num">3</span>)); <span class="cmt">// 5</span></code></pre>
+
+  <h3>ES Modules — The Standard Today</h3>
+  <p>ES Modules (ESM) were standardized in ES2015 (ES6). They use <code>import</code> and <code>export</code> syntax and are now the official module system for both browsers and modern Node.js.</p>
+
+  <div class="callout info">
+    <strong>The Modern Default</strong>
+    In any new project today — React, Vue, Svelte, modern Node.js — you will use ES Modules. Understanding both ESM and CommonJS is required for senior-level work because you will encounter both.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2>2. Named Exports</h2>
+
+  <p>Named exports let you export multiple values from a single module. The name used when exporting must match the name used when importing (unless you rename it).</p>
+
+  <pre><code><span class="cmt">// utils.js — three ways to write named exports</span>
+
+<span class="cmt">// Method 1: export inline</span>
+<span class="kw">export</span> <span class="kw">const</span> name = <span class="str">"Karan"</span>;
+<span class="kw">export</span> <span class="kw">function</span> <span class="fn">greet</span>(who) {
+  <span class="kw">return</span> <span class="str">`Hello, </span>${who}<span class="str">!`</span>;
+}
+
+<span class="cmt">// Method 2: export list at the end of the file (equally valid)</span>
+<span class="kw">const</span> version = <span class="str">"1.0.0"</span>;
+<span class="kw">function</span> <span class="fn">farewell</span>(who) { <span class="kw">return</span> <span class="str">`Bye, </span>${who}<span class="str">!`</span>; }
+<span class="kw">export</span> { version, farewell };</code></pre>
+
+  <pre><code><span class="cmt">// main.js — importing named exports</span>
+
+<span class="cmt">// Basic named import</span>
+<span class="kw">import</span> { name, greet } <span class="kw">from</span> <span class="str">'./utils.js'</span>;
+<span class="fn">console</span>.log(<span class="fn">greet</span>(name)); <span class="cmt">// "Hello, Karan!"</span>
+
+<span class="cmt">// Renaming on import — useful to avoid name collisions</span>
+<span class="kw">import</span> { greet <span class="kw">as</span> hello } <span class="kw">from</span> <span class="str">'./utils.js'</span>;
+<span class="fn">hello</span>(<span class="str">"World"</span>); <span class="cmt">// "Hello, World!"</span>
+
+<span class="cmt">// Namespace import — get everything as one object</span>
+<span class="kw">import</span> * <span class="kw">as</span> utils <span class="kw">from</span> <span class="str">'./utils.js'</span>;
+utils.<span class="fn">greet</span>(<span class="str">"Karan"</span>); <span class="cmt">// "Hello, Karan!"</span>
+<span class="fn">console</span>.log(utils.name); <span class="cmt">// "Karan"</span></code></pre>
+
+  <div class="callout tip">
+    <strong>Tip</strong>
+    Prefer specific named imports (<code>import { greet }</code>) over namespace imports (<code>import * as utils</code>) — bundlers like Webpack and Vite can tree-shake (remove unused code) with named imports but not always with namespace imports.
+  </div>
+
+  <!-- SECTION 3 -->
+  <h2>3. Default Export</h2>
+
+  <p>A module can have <strong>exactly one</strong> default export. It represents the main thing the module provides. When importing, you can use any name you want.</p>
+
+  <pre><code><span class="cmt">// Button.js — default export</span>
+<span class="kw">export default function</span> <span class="fn">Button</span>({ label, onClick }) {
+  <span class="cmt">// component logic...</span>
+}
+
+<span class="cmt">// You can also export a class, object, or any value as default:</span>
+<span class="kw">export default</span> { apiUrl: <span class="str">"https://api.example.com"</span> };</code></pre>
+
+  <pre><code><span class="cmt">// main.js — importing the default export</span>
+<span class="kw">import</span> <span class="typ">Button</span> <span class="kw">from</span> <span class="str">'./Button.js'</span>;    <span class="cmt">// named "Button" by convention</span>
+<span class="kw">import</span> <span class="typ">Btn</span>    <span class="kw">from</span> <span class="str">'./Button.js'</span>;    <span class="cmt">// same thing, different local name</span>
+
+<span class="cmt">// Mix default and named imports in one statement:</span>
+<span class="kw">import</span> <span class="typ">App</span>, { version, greet } <span class="kw">from</span> <span class="str">'./app.js'</span>;</code></pre>
+
+  <h3>Default vs Named — When to Use Each</h3>
+  <table>
+    <thead>
+      <tr><th>Situation</th><th>Use</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>A file exports one main thing (a component, a class, a config object)</td><td>Default export</td></tr>
+      <tr><td>A file exports multiple utilities or functions</td><td>Named exports</td></tr>
+      <tr><td>You want to enforce a consistent name across the codebase</td><td>Named export (name is enforced at import)</td></tr>
+      <tr><td>You want flexible naming at the import site</td><td>Default export (consumer picks the name)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <strong>Style Warning</strong>
+    Many style guides (including Airbnb's) discourage anonymous default exports like <code>export default function() {}</code> because they appear as "anonymous" in stack traces. Always name your exported functions even when using default export.
+  </div>
+
+  <!-- SECTION 4 -->
+  <h2>4. Re-exporting &amp; Barrel Exports</h2>
+
+  <p>As projects grow, you often want a single entry point that re-exports from many files. This is called a <strong>barrel export</strong> and is typically done in an <code>index.js</code> file.</p>
+
+  <pre><code><span class="cmt">// components/Button.js</span>
+<span class="kw">export default function</span> <span class="fn">Button</span>() {}
+
+<span class="cmt">// components/Input.js</span>
+<span class="kw">export</span> <span class="kw">function</span> <span class="fn">Input</span>() {}
+<span class="kw">export</span> <span class="kw">function</span> <span class="fn">Textarea</span>() {}
+
+<span class="cmt">// components/index.js — the barrel file</span>
+<span class="kw">export</span> { <span class="kw">default</span> } <span class="kw">from</span> <span class="str">'./Button.js'</span>;      <span class="cmt">// re-export default</span>
+<span class="kw">export</span> { <span class="kw">default</span> <span class="kw">as</span> <span class="typ">Button</span> } <span class="kw">from</span> <span class="str">'./Button.js'</span>; <span class="cmt">// re-export default as named</span>
+<span class="kw">export</span> { <span class="typ">Input</span>, <span class="typ">Textarea</span> } <span class="kw">from</span> <span class="str">'./Input.js'</span>;  <span class="cmt">// re-export named</span></code></pre>
+
+  <pre><code><span class="cmt">// Now consumers import from ONE place instead of many:</span>
+<span class="kw">import</span> { <span class="typ">Button</span>, <span class="typ">Input</span>, <span class="typ">Textarea</span> } <span class="kw">from</span> <span class="str">'./components'</span>;
+<span class="cmt">// Instead of:</span>
+<span class="kw">import</span> <span class="typ">Button</span>   <span class="kw">from</span> <span class="str">'./components/Button.js'</span>;
+<span class="kw">import</span> { <span class="typ">Input</span> } <span class="kw">from</span> <span class="str">'./components/Input.js'</span>;</code></pre>
+
+  <div class="callout info">
+    <strong>Barrel Files in Practice</strong>
+    Every popular UI library (React, Material UI, Chakra UI) uses barrel exports. When you do <code>import {'{'} useState, useEffect {'}'} from 'react'</code>, you are using React's barrel export from its main index file.
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2>5. CommonJS vs ESM — Side by Side</h2>
+
+  <table>
+    <thead>
+      <tr><th>Feature</th><th>CommonJS (CJS)</th><th>ES Modules (ESM)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Import syntax</td><td><code>require('./module')</code></td><td><code>import x from './module.js'</code></td></tr>
+      <tr><td>Export syntax</td><td><code>module.exports = ...</code></td><td><code>export ...</code></td></tr>
+      <tr><td>Loading</td><td>Synchronous</td><td>Asynchronous</td></tr>
+      <tr><td>Analysis</td><td>Dynamic (run-time)</td><td>Static (parse-time)</td></tr>
+      <tr><td>Tree shaking</td><td>Not possible</td><td>Supported by bundlers</td></tr>
+      <tr><td>Top-level await</td><td>Not supported</td><td>Supported</td></tr>
+      <tr><td>Browser support</td><td>No (needs bundler)</td><td>Yes (<code>&lt;script type="module"&gt;</code>)</td></tr>
+      <tr><td>Node.js support</td><td>Default (.js files)</td><td>.mjs or "type":"module"</td></tr>
+    </tbody>
+  </table>
+
+  <p>The key architectural difference is that ESM imports are <strong>static</strong> — they must appear at the top level of a file, and the engine knows the full import/export graph before any code runs. This is what enables tree-shaking.</p>
+
+  <div class="callout tip">
+    <strong>Node.js Interop</strong>
+    To use ESM in Node.js: either name your file <code>.mjs</code>, or add <code>"type": "module"</code> to your <code>package.json</code>. You cannot use <code>import</code> in a regular <code>.js</code> file without this configuration.
+  </div>
+
+  <!-- SECTION 6 -->
+  <h2>6. Dynamic import()</h2>
+
+  <p>Sometimes you don't want to load a module at startup — you want to load it <em>on demand</em>. Dynamic <code>import()</code> returns a Promise and can appear anywhere in your code, not just at the top level.</p>
+
+  <pre><code><span class="cmt">// Static import — always loaded at startup</span>
+<span class="kw">import</span> { heavyChart } <span class="kw">from</span> <span class="str">'./charts.js'</span>;
+
+<span class="cmt">// Dynamic import — loaded only when needed</span>
+<span class="kw">async function</span> <span class="fn">showChart</span>() {
+  <span class="cmt">// This only loads charts.js when the user clicks "Show Chart"</span>
+  <span class="kw">const</span> { heavyChart } = <span class="kw">await</span> <span class="fn">import</span>(<span class="str">'./charts.js'</span>);
+  <span class="fn">heavyChart</span>();
+}
+
+<span class="cmt">// Dynamic import works with expressions too (unlike static import)</span>
+<span class="kw">const</span> locale = <span class="str">"fr"</span>;
+<span class="kw">const</span> messages = <span class="kw">await</span> <span class="fn">import</span>(<span class="str">`./locales/</span>${locale}<span class="str">.js`</span>);</code></pre>
+
+  <p>Dynamic <code>import()</code> is the basis of <strong>code splitting</strong> in React (via <code>React.lazy()</code>) and all modern bundlers. Instead of sending one giant JavaScript bundle, the app loads only what the user needs right now.</p>
+
+  <div class="callout info">
+    <strong>What import() Returns</strong>
+    It returns a Promise that resolves to a <strong>module namespace object</strong> — equivalent to what you get from <code>import * as module</code>. So if your module has a default export, access it as <code>module.default</code>.
+  </div>
+
+  <!-- SECTION 7 -->
+  <h2>7. Module Scope</h2>
+
+  <p>Every ES Module runs in <strong>its own scope</strong>. Top-level variables are local to that module — they are not added to <code>window</code> or the global object.</p>
+
+  <pre><code><span class="cmt">// module-a.js</span>
+<span class="kw">const</span> secret = <span class="str">"only mine"</span>;
+<span class="fn">console</span>.log(<span class="kw">this</span>); <span class="cmt">// undefined in strict mode (modules are always strict)</span>
+
+<span class="cmt">// module-b.js</span>
+<span class="fn">console</span>.log(secret); <span class="cmt">// ❌ ReferenceError — not accessible</span>
+<span class="fn">console</span>.log(<span class="kw">typeof</span> secret); <span class="cmt">// "undefined"</span></code></pre>
+
+  <div class="callout info">
+    <strong>Modules Are Always Strict</strong>
+    ES Modules run in strict mode automatically — you do not need to write <code>"use strict"</code>. This means: no undeclared variables, no duplicate parameter names, <code>this</code> is <code>undefined</code> at the top level (not <code>window</code>).
+  </div>
+
+  <p>Modules are also <strong>singletons</strong> — if two files import the same module, they both get the same instance. Exports are live bindings: if a module changes an exported value, all importers see the updated value.</p>
+
+  <pre><code><span class="cmt">// counter.js</span>
+<span class="kw">export let</span> count = <span class="num">0</span>;
+<span class="kw">export function</span> <span class="fn">increment</span>() { count++; }
+
+<span class="cmt">// a.js</span>
+<span class="kw">import</span> { count, increment } <span class="kw">from</span> <span class="str">'./counter.js'</span>;
+<span class="fn">increment</span>();
+<span class="fn">console</span>.log(count); <span class="cmt">// 1 — live binding reflects the change</span></code></pre>
+
+  <!-- QUIZ -->
+  <div class="quiz">
+    <div class="quiz-title">Retrieval Practice — 6 Questions</div>
+    <p style="font-size:0.9rem; color: var(--muted); margin-bottom: 1.5rem;">
+      Don't peek back at the lesson. Try to recall from memory. This is what builds long-term retention.
+    </p>
+
+    <!-- Q1 -->
+    <div class="question-block" id="q1">
+      <p class="question-text">1. How many default exports can one module file have?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q1" value="a"> As many as needed — default just means "main"</label>
+        <label class="option"><input type="radio" name="q1" value="b"> Only one</label>
+        <label class="option"><input type="radio" name="q1" value="c"> Two — one for development, one for production</label>
+        <label class="option"><input type="radio" name="q1" value="d"> There is no limit, but they must be named differently</label>
+      </div>
+      <button class="check-btn" onclick="check('q1','b','Each module can have exactly one default export. This is enforced by the language — a syntax error is thrown if you try to write two default exports in one file.')">Check</button>
+      <div class="feedback" id="q1-feedback"></div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="question-block" id="q2">
+      <p class="question-text">2. You write <code>import * as utils from './utils.js'</code>. How do you call a function named <code>add</code> from it?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q2" value="a"> <code>add()</code></label>
+        <label class="option"><input type="radio" name="q2" value="b"> <code>utils(add)</code></label>
+        <label class="option"><input type="radio" name="q2" value="c"> <code>utils.add()</code></label>
+        <label class="option"><input type="radio" name="q2" value="d"> <code>import.add()</code></label>
+      </div>
+      <button class="check-btn" onclick="check('q2','c','import * as utils creates a namespace object. All exports of the module become properties of that object, so you access them with dot notation: utils.add().')">Check</button>
+      <div class="feedback" id="q2-feedback"></div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="question-block" id="q3">
+      <p class="question-text">3. What is a "barrel export" (or "barrel file")?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q3" value="a"> A module that only exports one thing</label>
+        <label class="option"><input type="radio" name="q3" value="b"> An index file that re-exports from multiple modules, providing a single import point</label>
+        <label class="option"><input type="radio" name="q3" value="c"> A CommonJS pattern for bundling modules together</label>
+        <label class="option"><input type="radio" name="q3" value="d"> A way to encrypt module exports</label>
+      </div>
+      <button class="check-btn" onclick="check('q3','b','A barrel file (typically index.js) re-exports from multiple modules so consumers can import everything from one path. This is the pattern used by virtually every major JS library.')">Check</button>
+      <div class="feedback" id="q3-feedback"></div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="question-block" id="q4">
+      <p class="question-text">4. What does <code>const m = await import('./mod.js')</code> return?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q4" value="a"> The default export directly</label>
+        <label class="option"><input type="radio" name="q4" value="b"> A module namespace object (like import * as) — access default as m.default</label>
+        <label class="option"><input type="radio" name="q4" value="c"> A Promise that never resolves</label>
+        <label class="option"><input type="radio" name="q4" value="d"> A string containing the module's source code</label>
+      </div>
+      <button class="check-btn" onclick="check('q4','b','Dynamic import() returns a Promise that resolves to a module namespace object — the same shape as import * as m. Named exports are m.exportName; the default export is m.default.')">Check</button>
+      <div class="feedback" id="q4-feedback"></div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="question-block" id="q5">
+      <p class="question-text">5. In an ES Module, are top-level variables (declared with <code>const</code> or <code>let</code>) accessible on <code>window</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q5" value="a"> Yes — they become global like in a regular script</label>
+        <label class="option"><input type="radio" name="q5" value="b"> Only if the module is loaded with type="module"</label>
+        <label class="option"><input type="radio" name="q5" value="c"> No — modules have their own scope; variables are not attached to window</label>
+        <label class="option"><input type="radio" name="q5" value="d"> Only var declarations become global</label>
+      </div>
+      <button class="check-btn" onclick="check('q5','c','Every ES Module has its own scope. Top-level variables — even var — are NOT added to the global object (window in browsers). This is one of the main benefits of modules over plain scripts.')">Check</button>
+      <div class="feedback" id="q5-feedback"></div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="question-block" id="q6">
+      <p class="question-text">6. What is the key architectural difference between CommonJS <code>require()</code> and ESM <code>import</code>?</p>
+      <div class="options">
+        <label class="option"><input type="radio" name="q6" value="a"> CommonJS is faster; ESM is slower</label>
+        <label class="option"><input type="radio" name="q6" value="b"> CommonJS only works in browsers; ESM only in Node.js</label>
+        <label class="option"><input type="radio" name="q6" value="c"> CommonJS is synchronous and dynamic; ESM is asynchronous and statically analyzed at parse time</label>
+        <label class="option"><input type="radio" name="q6" value="d"> They are identical; the syntax is just different</label>
+      </div>
+      <button class="check-btn" onclick="check('q6','c','CommonJS require() can appear anywhere in code and runs synchronously. ESM import must be at the top level and is resolved statically before code runs — enabling tree-shaking and circular dependency detection at build time.')">Check</button>
+      <div class="feedback" id="q6-feedback"></div>
+    </div>
+
+    <div class="score-banner" id="score-banner">
+      <div class="score-number" id="score-number"></div>
+      <div id="score-message"></div>
+    </div>
+  </div>
+
+  <h2>What's Next</h2>
+  <p>Next lesson: <strong>The Event Loop</strong> — the single most important concept for understanding how JavaScript handles concurrency. Once you understand the event loop, async JavaScript will finally make complete sense.</p>
+
+  <div class="teacher-note">
+    <strong>Questions?</strong> Ask your teacher agent anything that was unclear, surprising, or that you want to go deeper on. Good follow-up questions for this lesson: "What happens when two modules import each other (circular dependencies)?" and "How does tree-shaking actually work?"
+  </div>
+
+  <footer>
+    <div>JavaScript Mastery · Lesson 16 — Modules</div>
+    <div class="nav-links">
+      <a href="./0015-iterators-generators.html">← Prev: Iterators &amp; Generators</a>
+      <a href="./0017-event-loop.html">Next: The Event Loop →</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  let answered = {};
+  const total = 6;
+
+  function check(qId, correct, explanation) {
+    const selected = document.querySelector(`input[name="${qId}"]:checked`);
+    if (!selected) return;
+
+    const val = selected.value;
+    const feedback = document.getElementById(`${qId}-feedback`);
+    const options = document.querySelectorAll(`#${qId} .option`);
+    const btn = document.querySelector(`#${qId} .check-btn`);
+
+    btn.disabled = true;
+    options.forEach(opt => {
+      const input = opt.querySelector('input');
+      if (input.value === correct) opt.classList.add('correct');
+      else if (input.value === val && val !== correct) opt.classList.add('wrong');
+      input.disabled = true;
+    });
+
+    const isCorrect = val === correct;
+    answered[qId] = isCorrect;
+    feedback.innerHTML = (isCorrect ? '&#10003; Correct! ' : '&#10007; Not quite. ') + explanation;
+    feedback.className = `feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+    if (Object.keys(answered).length === total) showScore();
+  }
+
+  function showScore() {
+    const score = Object.values(answered).filter(Boolean).length;
+    const banner = document.getElementById('score-banner');
+    const num = document.getElementById('score-number');
+    const msg = document.getElementById('score-message');
+    banner.classList.add('show');
+    num.textContent = `${score} / ${total}`;
+    if (score === total) {
+      banner.style.background = '#f0fdf4';
+      msg.textContent = 'Perfect. You know this cold. Ask your teacher what to tackle next, or read the primary source.';
+    } else if (score >= 4) {
+      banner.style.background = '#fffbeb';
+      msg.textContent = 'Good foundation. Review the questions you missed, then read the primary source to fill in the gaps.';
+    } else {
+      banner.style.background = '#fef2f2';
+      msg.textContent = 'Re-read the sections covering the ones you missed, then take the quiz again from memory.';
+    }
+  }
+</script>
+</body>
+</html>
